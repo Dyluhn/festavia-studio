@@ -321,6 +321,11 @@ static bool aps_received(esp_zb_apsde_data_ind_t ind)
     return control;
 }
 
+unsigned hm_pending_transfers(void)
+{
+    return tx_accepted >= tx_confirmations ? tx_accepted - tx_confirmations : 0;
+}
+
 static void aps_confirmed(esp_zb_apsde_data_confirm_t confirm)
 {
     if (confirm.src_endpoint != CLIENT_EP) return;
@@ -445,7 +450,7 @@ static void handle_request(cJSON *request)
         cJSON_AddNumberToObject(obj, "rx_control_frames", rx_control_frames);
         cJSON_AddNumberToObject(obj, "aps_confirms_during_send", confirms_during_send);
         cJSON_AddNumberToObject(obj, "aps_confirms_without_header", confirms_without_header);
-        cJSON_AddNumberToObject(obj, "outbound_in_use", 0);
+        cJSON_AddNumberToObject(obj, "outbound_in_use", hm_pending_transfers());
         cJSON_AddNumberToObject(obj, "lamp_endpoint", LAMP_EP);
         cJSON_AddNumberToObject(obj, "client_endpoint", CLIENT_EP);
         add_network(obj);

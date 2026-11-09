@@ -12,6 +12,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 ("play", "Play", "mdi:play"),
                 ("stop", "Stop and restore", "mdi:stop"),
                 ("off", "Lights off", "mdi:lightbulb-off"),
+                *(
+                    [("release", "Return control to Hue", "mdi:bridge")]
+                    if entry.runtime_data.data["mode"] == "native"
+                    else []
+                ),
             ]
         ]
     )
@@ -27,4 +32,6 @@ class StudioButton(StudioEntity, ButtonEntity):
             await self.coordinator.play()
         else:
             async with self.coordinator.action_lock:
-                await self.coordinator.command(self.key)
+                await self.coordinator.command(
+                    self.key, {"manual": True} if self.key == "release" else None
+                )

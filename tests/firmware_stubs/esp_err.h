@@ -6,3 +6,5 @@ typedef int esp_err_t;
 #define ESP_ERR_INVALID_SIZE 1
 #define ESP_ERR_NO_MEM 2
 #define ESP_ERROR_CHECK(value) assert((value)==ESP_OK)
+
+#define ESP_ERR_NVS_NOT_FOUND 0x1102

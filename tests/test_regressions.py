@@ -179,6 +179,31 @@ class TransportTests(unittest.TestCase):
                 instance.command("player_start")
             self.assertEqual(call.call_count, 1)
 
+    def test_stop_and_release_reconnect_evicted_socket_before_one_write(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config = Path(folder) / "credentials.json"
+            net_client.save_credentials(
+                config, {"url": "https://192.168.1.2", "token": "a" * 64, "tls_sha256": "b" * 64}
+            )
+            instance = player.Player({"credentials": str(config)})
+            for operation, final in (("stop", "restored"), ("release", "released")):
+                with patch.object(
+                    instance,
+                    "command",
+                    side_effect=[
+                        OSError("evicted idle connection"),
+                        {"armed": False, "state": "idle"},
+                        {"ok": True},
+                        {"armed": False, "state": final},
+                    ],
+                ) as command:
+                    self.assertEqual(getattr(instance, operation)()["state"], final)
+                self.assertEqual(
+                    [call.args[0] for call in command.call_args_list],
+                    ["player_status", "player_status", "player_" + operation, "player_status"],
+                )
+            instance.close()
+
 
 class USBTests(unittest.TestCase):
     def test_provision_saves_token_before_mutation_and_verifies_the_saved_pin(self):

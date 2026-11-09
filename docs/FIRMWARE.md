@@ -1,6 +1,6 @@
 # Firmware
 
-Bundled hardware-tested image: Hue Mesh Lab 0.3.7, ESP32-C6, UART0 115200,
+Bundled hardware-tested image: Hue Mesh Lab 0.3.8, ESP32-C6, UART0 115200,
 4 MB flash, two 1.875 MiB application slots, HTTPS certificate pinning and
 authenticated OTA. A USB-to-UART bridge is required for this console build.
 
@@ -15,8 +15,8 @@ It joins an existing selected Hue PAN as an additional Zigbee router; it does no
 replace or modify bridge firmware. No network-key export, light reset, touchlink
 takeover or Zigbee-network merging is used.
 
-App SHA-256: `01dccd94bb09b0ce83f343e39256146e6a9addd289fb59b14e31e2056f45e2db`.
-Factory SHA-256: `9170cb56a49a4f9e69d406a26a66d3558633f88e2e0d956115ee8f0bf4a8dfa8`.
+App SHA-256: `3ca56210bee319b35e5140f741393d7cc695754af17aa8884776097aeab0663d`.
+Factory SHA-256: `755727d484756ee5e4faab11b6496e491259e4d95f47d831f633f9639ee7123c`.
 The factory image covers the entire 4 MB flash, including blank Zigbee/NVS storage
 for a new installation. Use the app image for updates that preserve pairing.
 The USB installation tool verifies the manifest before first flashing. The Wi-Fi
@@ -49,10 +49,10 @@ paced at up to 10 requested fps.
 
 Acknowledged power queries monitor reachability independently of animation
 frames. Successful APS acknowledgements or valid power responses keep playback
-alive through missed status replies; losing both for 15 seconds starts recovery.
+alive through missed status replies; losing both for 15 seconds ends playback. With Hue takeover enabled it yields without restoration; otherwise it restores the recovery capsule.
 Starting or replacing a scene grants a fresh 15-second contact window.
 Unacknowledged animation confirmations cannot extend that deadline. A valid
-external-off reply immediately preserves off and starts recovery. Native palette
+external-off reply immediately preserves off. With Hue takeover enabled it yields without restoration; otherwise it starts recovery. Native palette
 frames contain no power-on command. Status reports expose power-response/target
 ACK ages, uptime, accepted/confirmed sends and SDK buffer counts.
 
@@ -61,6 +61,17 @@ fixture changes and survives reboot. Native startup sets the selected low level
 while off before turning on; recovery turns off before restoring attributes and
 then restores captured power, preserving external off.
 
+With **Allow Hue takeover** enabled, HA maintains a ten-second ownership lease
+with a separate HTTPS connection. A missed lease stops native output without
+restoring a stale capsule. The release tombstone is committed before discarding
+the capsule and survives a reboot. Release drains accepted transmissions for at
+least two seconds; lost confirmations have a thirty-second retirement bound.
+Status exposes outstanding transfers and the lost-confirmation count. Reboot
+before playback starts recovers setup; reboot after confirmed native playback
+yields when Hue takeover is enabled. Disabling the option retains autonomous
+playback during HA outages. Manual Return control to Hue works in either mode.
+The HTTPS server reclaims idle sockets and enables TCP keepalive for reconnection.
+
 The raw protocol remains available for development. General-purpose control is
-capability-gated by the integration. Firmware 0.3.7 itself is an advanced lab transport;
+capability-gated by the integration. Firmware 0.3.8 itself is an advanced lab transport;
 do not expose its private connection file or raw API to untrusted users.

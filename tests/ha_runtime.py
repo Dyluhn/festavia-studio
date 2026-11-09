@@ -14,6 +14,7 @@ from pathlib import Path
 import shutil
 import sys
 import tempfile
+import time
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -63,12 +64,15 @@ class Wire:
             "armed": False,
             "playing": False,
             "native_palette_supported": True,
+            "hue_takeover_supported": True,
             "reason": "idle",
             "frames": 0,
             "sent": 0,
             "acked": 0,
             "failures": 0,
         }
+        self.hue_queues = {}
+        self.hue_deadline = 0
         self.lights = {
             identifier: {
                 "id": identifier,
@@ -129,6 +133,15 @@ class Wire:
                 "entertainment_configuration": [],
             }
             return 200, {"errors": [], "data": resources[kind]}
+        if (
+            self.player.get("playing")
+            and self.player.get("hue_takeover")
+            and self.hue_deadline
+            and time.monotonic() >= self.hue_deadline
+        ):
+            self.player.update(
+                state="released", armed=False, playing=False, reason="hue_watchdog_expired"
+            )
         if headers.get("Authorization") != "Bearer " + self.token or self.device_auth:
             return 401, {"secret": "must-not-leak"}
         if path == "/api/events?after=0":
@@ -136,7 +149,7 @@ class Wire:
         if path == "/api/status":
             return 200, {
                 "target": "esp32c6",
-                "version": "0.3.4",
+                "version": "0.3.8",
                 "approved_network": True,
                 "channel": 20,
                 "extpan": PAN,
@@ -148,7 +161,12 @@ class Wire:
             if op == "player_prepare":
                 assert data["restore"] and data["verify"] and data["setup"]
                 self.captured = copy.deepcopy(self.snapshot)
-                self.player.update(state="armed", armed=True, playing=False)
+                self.player.update(
+                    state="armed",
+                    armed=True,
+                    playing=False,
+                    hue_takeover=data.get("hue_takeover", False),
+                )
                 self.snapshot["on"] = True
             elif op == "player_load":
                 assert data["transport"] == "palette" and 1 <= len(data["samples"]) <= 64
@@ -158,6 +176,16 @@ class Wire:
                 self.player.update(frames=len(data["samples"]), effective_fps=data["fps"])
             elif op == "player_start":
                 self.player.update(state="playing", armed=True, playing=True)
+                self.hue_deadline = time.monotonic() + 15
+            elif op == "player_release":
+                self.player.update(
+                    state="released", armed=False, playing=False, reason="hue_takeover"
+                )
+            elif op == "player_takeover":
+                self.player["hue_takeover"] = data["enabled"]
+                self.hue_deadline = time.monotonic() + 15
+            elif op == "player_keepalive":
+                self.hue_deadline = time.monotonic() + 10
             elif op == "player_stop":
                 self.player.update(state="restored", armed=False, playing=False)
                 self.snapshot = copy.deepcopy(getattr(self, "captured", BEFORE))
@@ -173,6 +201,17 @@ class Wire:
 
 
 wire = Wire()
+
+
+async def fake_hue_events(self):
+    self.connected = True
+    self.ready.set()
+    queue = wire.hue_queues.setdefault(self.coordinator.entry.entry_id, asyncio.Queue())
+    while True:
+        message = await queue.get()
+        if message == "disconnect":
+            raise OSError("simulated stream loss")
+        yield message
 
 
 class Socket:
@@ -266,7 +305,10 @@ async def main():
         from custom_components.festavia_studio.backend.lib.net_client import save_credentials
         from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
+        from custom_components.festavia_studio.takeover import HueTakeover
+
         with (
+            patch.object(HueTakeover, "_events", fake_hue_events),
             patch("http.client.HTTPSConnection", HTTPS),
             # A just-booted CI/HA host may have uptime below the cache TTL.
             patch.object(api, "time", SimpleNamespace(monotonic=lambda: 30.0)),
@@ -299,8 +341,8 @@ async def main():
             assert entry.state.value == "loaded", entry.state
             assert "url" not in entry.data and "token" not in entry.data
             names = [s.entity_id for s in hass.states.async_all() if "_studio_" in s.entity_id]
-            assert len(names) == 15, names
-            checks.append("real_commission_and_15_entities")
+            assert len(names) == 17, names
+            checks.append("real_commission_and_17_entities")
 
             async def service(domain, name, data):
                 await hass.services.async_call(domain, name, data, blocking=True)
@@ -467,6 +509,221 @@ async def main():
             )
             checks.append("color_palettes_preserve_motion_and_full_scenes_restore_it")
             checks.append("all_eight_native_animations_load_through_real_entities")
+            # Real coordinator/transport release must not restore old lamp state.
+            c = entry.runtime_data
+            queue = wire.hue_queues[entry.entry_id]
+            desired = {"color": {"xy": {"x": 0.17, "y": 0.08}}, "dimming": {"brightness": 8}}
+
+            async def emit(identifier, patch):
+                await queue.put(
+                    [{"type": "update", "data": [{"type": "light", "id": identifier, **patch}]}]
+                )
+                for _ in range(100):
+                    await asyncio.sleep(0.02)
+                    if c.takeover.worker and c.takeover.worker.done():
+                        break
+
+            before_handoff = len(wire.calls)
+            wire.lights["fixture"].update(copy.deepcopy(desired))
+            await emit("fixture", desired)
+            assert not c.playing and wire.player["state"] == "released"
+            commands = [
+                call[3].get("op")
+                for call in wire.calls[before_handoff:]
+                if call[2] == "/api/command"
+            ]
+            assert "player_release" in commands and "player_stop" not in commands
+            assert wire.lights["fixture"]["color"] == desired["color"]
+            assert wire.lights["fixture"]["dimming"] == desired["dimming"]
+            assert json.loads(journal.read_text())["released"]
+            await action("play", {"brightness": 10})
+            before_handoff = len(wire.calls)
+            wire.lights["fixture"].update(copy.deepcopy(desired))
+            wire.lights["fixture"]["dimming"]["min_dim_level"] = 0.02
+            await emit("fixture", {"color": desired["color"]})
+            patches = [
+                call[3]
+                for call in wire.calls[before_handoff:]
+                if call[1] == "PUT" and call[2].endswith("/light/fixture")
+            ]
+            assert patches[-1]["color"] == desired["color"]
+            assert patches[-1]["dimming"] == desired["dimming"]
+            checks.append("Hue_color_handoff_preserves_brightness_omitted_from_SSE")
+            await service(
+                "switch", "turn_off", {"entity_id": "switch.festavia_studio_allow_hue_takeover"}
+            )
+            await action("play", {"brightness": 10})
+            await emit("fixture", desired)
+            assert c.playing and not c.takeover.enabled
+            await service(
+                "switch", "turn_on", {"entity_id": "switch.festavia_studio_allow_hue_takeover"}
+            )
+            # A different light and metadata-only reports do not steal ownership.
+            c.takeover.worker = None
+            await emit("second", desired)
+            await emit("fixture", {"metadata": {"name": "Renamed"}})
+            assert c.playing
+            checks.append(
+                "Hue_takeover_releases_without_restore_replays_new_intent_and_respects_option_and_target"
+            )
+            await queue.put("disconnect")
+            for _ in range(100):
+                await asyncio.sleep(0.02)
+                if not c.playing:
+                    break
+            assert not c.playing and c.takeover.last_reason == "connection_lost"
+            checks.append("Hue_stream_disconnect_yields_without_replaying_old_state")
+            await c.takeover.ensure_ready()
+            await action("play", {"brightness": 10})
+            await service(
+                "button", "press", {"entity_id": "button.festavia_studio_return_control_to_hue"}
+            )
+            assert not c.playing and wire.player["state"] == "released"
+            checks.append("native_manual_return_to_Hue_button_releases_without_restore")
+            # Recorded delayed native-output reports must not steal ownership.
+            from custom_components.festavia_studio.takeover import hue_patch
+
+            output = c.takeover.output_scene
+            c.takeover.output_scene = {
+                **c.scene,
+                "colors": [
+                    "#fb5d54",
+                    "#fb4d00",
+                    "#fb8f00",
+                    "#fbbb67",
+                    "#fb5d54",
+                    "#fb4d00",
+                    "#fb8f00",
+                    "#fb0000",
+                    "#fbb2b2",
+                ],
+                "brightness": 10,
+                "effect": "flow",
+            }
+            for echo in (
+                {"on": {"on": True}},
+                {"dimming": {"brightness": 9.49}},
+                {
+                    "color": {"xy": {"x": 0.551, "y": 0.4052}},
+                    "color_temperature": {"mirek": None, "mirek_valid": False},
+                    "gradient": {"points": [], "points_capable": 5},
+                },
+            ):
+                assert c.takeover.is_output_echo(echo), echo
+            assert not c.takeover.is_output_echo({"color": {"xy": {"x": 0.17, "y": 0.08}}})
+            c.takeover.output_scene = output
+            assert hue_patch(
+                {
+                    "color": {"xy": {"x": 0.17, "y": 0.08}},
+                    "gradient": {"points": []},
+                    "color_temperature": {"mirek": None},
+                }
+            ) == {"color": {"xy": {"x": 0.17, "y": 0.08}}}
+            checks.append(
+                "recorded_native_output_echoes_are_ignored_and_empty_gradients_not_replayed"
+            )
+            c.acquiring = True
+            c.takeover.setup_states = {
+                "fixture": {
+                    "on": {"on": True},
+                    "dimming": {"brightness": 7.91},
+                    "color": {"xy": {"x": 0.4475, "y": 0.4076}},
+                    "color_temperature": {"mirek": 350, "mirek_valid": True},
+                }
+            }
+            for echo in (
+                {"on": {"on": False}},
+                {"dimming": {"brightness": 7.91}},
+                {
+                    "color": {"xy": {"x": 0.4475, "y": 0.4076}},
+                    "color_temperature": {"mirek": 350, "mirek_valid": True},
+                },
+            ):
+                assert c.takeover.is_output_echo({"id": "fixture", **echo})
+            assert not c.takeover.is_output_echo(
+                {"id": "fixture", "color": {"xy": {"x": 0.17, "y": 0.08}}}
+            )
+            c.acquiring = False
+            assert not c.takeover.is_output_echo({"id": "fixture", "on": {"on": False}})
+            assert not c.takeover.is_output_echo(
+                {"id": "fixture", "color_temperature": {"mirek": 350, "mirek_valid": True}}
+            )
+            checks.append("native_acquisition_power_and_baseline_echoes_do_not_abort_Play")
+            # Relative commands are resolved once at the original service event.
+            from homeassistant.core import Context, Event
+            from homeassistant.helpers import entity_registry as er
+
+            registry = er.async_get(hass)
+            peer = registry.async_get_or_create(
+                "light", "hue", "fixture", suggested_object_id="test_hue_fixture"
+            )
+            hass.states.async_set(peer.entity_id, "on", {"brightness": 26})
+            await action("play", {"brightness": 10})
+            ordered = []
+
+            async def peer_call(_registry, domain, action, data, **kwargs):
+                ordered.append((domain, action, copy.deepcopy(data)))
+
+            c.takeover.schedule({"fixture": desired}, "hue_command")
+            c.takeover.ha_command(
+                Event(
+                    "call_service",
+                    data={
+                        "domain": "light",
+                        "service": "turn_on",
+                        "service_data": {"entity_id": peer.entity_id, "brightness_step_pct": 2},
+                    },
+                    context=Context(),
+                )
+            )
+            with patch.object(type(hass.services), "async_call", peer_call):
+                await c.takeover.worker
+            assert not c.playing and ordered[-1][2]["brightness"] == 31
+            assert "brightness_step_pct" not in ordered[-1][2]
+            checks.append("HA_relative_brightness_is_replayed_as_one_absolute_change")
+
+            # A later HA command can arrive after firmware release while an
+            # earlier replay is awaiting its network response. It must win.
+            await action("play", {"brightness": 10})
+            ordered.clear()
+
+            async def interleaved_call(_registry, domain, action, data, **kwargs):
+                ordered.append(copy.deepcopy(data))
+                if len(ordered) == 1:
+                    assert not c.playing and c.takeover.replaying
+                    c.takeover.ha_command(
+                        Event(
+                            "call_service",
+                            data={
+                                "domain": "light",
+                                "service": "turn_on",
+                                "service_data": {"entity_id": peer.entity_id, "brightness": 17},
+                            },
+                            context=Context(),
+                        )
+                    )
+                await asyncio.sleep(0)
+
+            c.takeover.ha_command(
+                Event(
+                    "call_service",
+                    data={
+                        "domain": "light",
+                        "service": "turn_on",
+                        "service_data": {"entity_id": peer.entity_id, "brightness": 26},
+                    },
+                    context=Context(),
+                )
+            )
+            with patch.object(type(hass.services), "async_call", interleaved_call):
+                await c.takeover.worker
+            assert [item["brightness"] for item in ordered] == [26, 17]
+            assert not c.takeover.actions
+            checks.append("HA_command_during_replay_wins_and_does_not_get_stranded")
+
+            wire.snapshot = copy.deepcopy(BEFORE)
+            await action("play", {"brightness": 10})
+
             reconfig = await hass.config_entries.flow.async_init(
                 "festavia_studio", context={"source": "reconfigure", "entry_id": entry.entry_id}
             )

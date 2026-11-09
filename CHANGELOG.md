@@ -1,3 +1,12 @@
+# 0.9.0 — Hue ownership and explicit handoff
+
+- Native Allow Hue takeover configuration switch and options flow; Return control to Hue button, action and card control.
+- Pinned Hue event stream for selected-light changes and separate HA light-command detection. Stop native sends, drain accepted transfers and retire the old capsule before replaying the new command.
+- Filter native output, startup power and captured baseline echoes. Carry current Hue brightness when an unchanged level is omitted from its event; retain HA command order during replay.
+- ESP32-C6 firmware0.3.8: durable release tombstone, first-frame playback marker, and an optional ten-second HA ownership heartbeat on a separate transport. An interrupted setup restores; a released session never restores over Hue.
+- Hue priority is enabled by default. Long HA outages/restarts yield playback; disabling it retains autonomous operation. Bridge-only static mode has no automatic watcher.
+- Hue app commands that leave every cached value unchanged may emit no event; the explicit handoff button covers this case. HA light commands are detected independently.
+
 # 0.8.0 — palettes, scenes and a clearer editor
 
 - Color palettes save only ordered colors. Loading one keeps the animation, speed, direction and brightness. Existing saved setups remain complete Scenes; their original IDs and settings are preserved.
@@ -16,7 +25,7 @@
 - Reuse the pinned native transport, poll every 10 seconds, cache inventory/firmware and avoid recorder churn from failure counters.
 - Remove legacy app/CLI/USB dependencies from HA runtime and test the actual packaged backend; add lifecycle, failure, concurrency and release privacy regressions.
 - Survive restart after offline removal, retry offline reload without Failed unload, retain legacy entity IDs while allowing former fixtures to be added again, and keep partial filesystem cleanup retryable.
-- Ordinary HA restarts preserve autonomous native/bridge playback. Only interrupted explicit unloads request restoration on reconnect. Confirmed removed-light recovery restores present lights before forgetting removed resource IDs.
+- With Hue takeover disabled, ordinary HA restarts preserve autonomous native playback; bridge static playback is preserved. Only interrupted explicit unloads request restoration on reconnect. Confirmed removed-light recovery restores present lights before forgetting removed resource IDs.
 - Initialize and invalidate inventory/status/firmware caches independently of host uptime, so firmware controls are available immediately after boot.
 - ESP32 firmware 0.3.7 removes an incorrect application send-slot gate, uses the pinned SDK's synchronous request copies, drains UART output outside the Zigbee lock, and consumes replies addressed to its client endpoint.
 - Track acknowledged power-query delivery independently of ZCL reply freshness to prevent false animation stops; retain external-off recovery. Add actual C state-machine tests and bounded firmware diagnostics.

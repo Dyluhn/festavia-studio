@@ -37,6 +37,9 @@ static uint8_t power_tsn;
 static const char *state = "idle", *reason = "none";
 static bool palette_mode, bank_acked, pending_current_bank;
 static int64_t last_power_reply, last_target_ack;
+static bool hue_takeover, releasing, playback_persisted;
+static int64_t hue_deadline, release_due, release_timeout;
+static unsigned release_lost_confirms;
 static packet_t color_probe;
 static bool color_probe_queued, pending_color_probe;
 static unsigned color_probe_count;
@@ -69,6 +72,10 @@ static cJSON *result(bool ok, const char *error)
     cJSON_AddBoolToObject(r, "playing", playing);
     cJSON_AddBoolToObject(r, "preserve_off", preserve_off);
     cJSON_AddBoolToObject(r, "native_palette_supported", true);
+    cJSON_AddBoolToObject(r, "hue_takeover_supported", true);
+    cJSON_AddBoolToObject(r, "hue_takeover", hue_takeover);
+    cJSON_AddNumberToObject(r,"release_lost_confirms",release_lost_confirms);
+    cJSON_AddNumberToObject(r, "hue_watchdog_remaining_ms", playing && hue_takeover ? hue_deadline-now() : -1);
     cJSON_AddStringToObject(r, "transport", palette_mode ? "palette" : "segments");
     cJSON_AddBoolToObject(r, "aps_acknowledged", !(palette_mode && sample_count > 1));
     cJSON_AddNumberToObject(r, "color_restore_probes", color_probe_count);
@@ -145,6 +152,40 @@ static bool parse_plan(const cJSON *obj)
     free(tmp);
     return valid;
 }
+// Release deliberately emits no fixture writes. Persist the tombstone before
+// discarding the recovery plan so reboot cannot replay an old scene over Hue.
+static bool release_begin(const char *why)
+{
+    if (playing) ended=now();
+    playing=restoring=configuring=checking=false;
+    sync_requested=pending_sync=waiting_reply=power_pending=false;
+    color_probe_queued=pending_color_probe=false;
+    release_due=now()+2000;
+    release_timeout=now()+30000;release_lost_confirms=0; // Drain the bounded in-flight native frame.
+    pending=false;releasing=true;state="releasing";reason=why;
+    esp_err_t error=nvs_set_u8(store,"yield",1);
+    if (error==ESP_OK) error=nvs_commit(store);
+    if (error!=ESP_OK) {state="recovery_required";reason="release_persist_failed";return false;}
+    return true;
+}
+static void release_tick(void)
+{
+    if (now()<release_due) return;
+    unsigned outstanding=hm_pending_transfers();
+    if (outstanding && now()<release_timeout) return;
+    release_lost_confirms=outstanding;
+    // Recommit the tombstone on retries before touching the old capsule.
+    esp_err_t error=nvs_set_u8(store,"yield",1);
+    if (error==ESP_OK) error=nvs_commit(store);
+    if (error==ESP_OK) {
+        esp_err_t erased=nvs_erase_key(store,"journal");
+        if (erased!=ESP_OK && erased!=ESP_ERR_NVS_NOT_FOUND) error=erased;
+    }
+    if (error==ESP_OK) error=nvs_commit(store);
+    if (error!=ESP_OK) {release_due=now()+1000;state="releasing";return;}
+    durable=releasing=false;free(samples);samples=NULL;sample_count=0;
+    state="released";
+}
 static void restore_begin(const char *why, bool off)
 {
     if (playing) ended=now();
@@ -164,6 +205,9 @@ static void restore_begin(const char *why, bool off)
 void hm_player_init(void)
 {
     ESP_ERROR_CHECK(nvs_open("hm_player",NVS_READWRITE,&store));
+    uint8_t yielded=0;
+    nvs_get_u8(store,"yield",&yielded);
+    if (yielded) {durable=true;release_begin("hue_takeover");release_due=now();release_tick();return;}
     size_t size=0;
     if (nvs_get_str(store,"journal",NULL,&size)==ESP_OK && size && size < 20000) {
         char *body=malloc(size);
@@ -174,7 +218,10 @@ void hm_player_init(void)
         }
         free(body);
         uint8_t off=0; nvs_get_u8(store,"off",&off); preserve_off=off;
-        if (durable) restore_begin("boot_recovery",preserve_off);
+        uint8_t takeover=0;nvs_get_u8(store,"take",&takeover);hue_takeover=takeover;
+        uint8_t played=0;nvs_get_u8(store,"played",&played);playback_persisted=played;
+        if (durable && hue_takeover && played) release_begin("restart_yield");
+        else if (durable) restore_begin("boot_recovery",preserve_off);
         else { state="recovery_required"; reason="invalid_saved_journal"; }
     }
 }
@@ -214,7 +261,10 @@ static void failure(const char *cause)
         next_due=now()+1000/fps; return;
     }
     pending=false; waiting_reply=false; failures++; retries++; next_due=now()+300;
-    if (playing && retries>=3) restore_begin("delivery_failed",false);
+    if (playing && retries>=3) {
+        if (hue_takeover && palette_mode) release_begin("delivery_failed");
+        else restore_begin("delivery_failed",false);
+    }
     else if (restoring && retries>=3 && configuring) restore_begin("setup_failed",false);
     else if (restoring && retries>=3) {
         restoring=false; state="recovery_required"; reason="restore_unconfirmed";
@@ -244,6 +294,7 @@ bool hm_player_confirm(esp_zb_apsde_data_confirm_t c)
     else if (playing && pending_sync) { pending=false; pending_sync=false; sync_requested=false; retries=0; next_due=now(); }
     else if (playing) {
         frames_acked++; if (pending_current_bank) bank_acked=true;
+        if (!playback_persisted && nvs_set_u8(store,"played",1)==ESP_OK && nvs_commit(store)==ESP_OK) playback_persisted=true;
         pending=false; retries=0;
     }
     else if (restoring && !checking) advance();
@@ -261,7 +312,8 @@ bool hm_player_receive(esp_zb_apsde_data_ind_t ind)
         if (n==5 && p[0]==0 && p[1]==0 && p[2]==0 && p[3]==0x10 && p[4]<=1)
             last_power_reply=now();
         if (n==5 && p[0]==0 && p[1]==0 && p[2]==0 && p[3]==0x10 && p[4]==0) {
-            if (playing) restore_begin("external_off",true);
+            if (playing && hue_takeover) release_begin("external_off");
+            else if (playing) restore_begin("external_off",true);
             else if (!configuring) { preserve_off=true; nvs_set_u8(store,"off",1); nvs_commit(store); }
         }
         restore_power_checked=true;
@@ -300,15 +352,22 @@ bool hm_player_receive(esp_zb_apsde_data_ind_t ind)
 void hm_player_tick(bool approved)
 {
     int64_t t=now();
+    if (releasing) {release_tick();return;}
+    if (playing && hue_takeover && t>=hue_deadline) {release_begin("hue_watchdog_expired");return;}
     if (!approved || (!playing && !restoring && !durable)) return;
     uint8_t pan[8]; esp_zb_get_extended_pan_id(pan);
     if (durable && memcmp(pan,plan_pan,8)!=0) { playing=false; restoring=false; state="recovery_required"; reason="network_changed"; return; }
     if (durable && !playing && !restoring && strcmp(state,"armed")==0 && t>=armed_until)
         restore_begin("prepare_expired",false);
-    if (playing && expires && t>=expires) restore_begin("duration_complete",false);
+    if (playing && expires && t>=expires) {
+        if (hue_takeover && palette_mode) release_begin("duration_complete");
+        else restore_begin("duration_complete",false);
+    }
+    if (releasing) {release_tick();return;}
     int64_t last_contact=last_power_reply>last_target_ack ? last_power_reply : last_target_ack;
     if (playing && palette_mode && sample_count > 1 && t-last_contact>TARGET_TIMEOUT_MS)
-        restore_begin("target_unresponsive",false);
+        {if (hue_takeover) release_begin("target_unresponsive");else restore_begin("target_unresponsive",false);}
+    if (releasing) {release_tick();return;}
     if (!playing && !restoring) return;
     if (!resolved) {
         if (resolving && t>resolve_until) { resolving=false; retries++; next_due=t+1000; }
@@ -411,8 +470,26 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
     const char *op=str(obj,"op");
     if (strcmp(op,"player_status")==0) return result(true,NULL);
     if (!approved) return result(false,"not joined to approved network");
+    if (strcmp(op,"player_release")==0) {
+        if (releasing || (!durable && !playing)) return result(true,NULL);
+        bool manual=cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(obj,"manual"));
+        if (!playing || !palette_mode || (!hue_takeover && !manual)) return result(false,"release requires active native palette playback");
+        bool released=release_begin("hue_takeover");
+        return result(released,released ? NULL : "could not persist release");
+    }
+    if (strcmp(op,"player_takeover")==0) {
+        const cJSON *enabled=cJSON_GetObjectItemCaseSensitive(obj,"enabled");
+        if (!cJSON_IsBool(enabled)) return result(false,"enabled must be boolean");
+        bool value=cJSON_IsTrue(enabled);
+        if (durable && (nvs_set_u8(store,"take",value)!=ESP_OK || nvs_commit(store)!=ESP_OK)) return result(false,"could not persist takeover option");
+        hue_takeover=value;hue_deadline=now()+15000;return result(true,NULL);
+    }
+    if (strcmp(op,"player_keepalive")==0) {
+        if (playing && hue_takeover && !releasing) hue_deadline=now()+10000;
+        return result(true,NULL);
+    }
     if (strcmp(op,"player_stop")==0) {
-        if (!durable) return result(true,NULL);
+        if (releasing || !durable) return result(true,NULL);
         restore_begin("requested_stop",cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(obj,"off")));
         return result(true,NULL);
     }
@@ -427,11 +504,15 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         char *body=cJSON_PrintUnformatted(obj);
         esp_err_t err=body ? (strlen(body)<20000 ? nvs_set_str(store,"journal",body) : ESP_ERR_INVALID_SIZE) : ESP_ERR_NO_MEM;
         if (err==ESP_OK) err=nvs_set_u8(store,"off",0);
+        bool takeover=cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(obj,"hue_takeover"));
+        if (err==ESP_OK) err=nvs_set_u8(store,"yield",0);
+        if (err==ESP_OK) err=nvs_set_u8(store,"take",takeover);
+        if (err==ESP_OK) err=nvs_set_u8(store,"played",0);
         if (err==ESP_OK) err=nvs_commit(store);
         free(body);
         if (err!=ESP_OK) return result(false,"could not persist recovery plan");
         free(samples); samples=NULL; sample_count=0;
-        durable=true; preserve_off=false; state="configuring"; reason="prepared"; armed_until=now()+120000;
+        durable=true;hue_takeover=takeover;releasing=playback_persisted=false; preserve_off=false; state="configuring"; reason="prepared"; armed_until=now()+120000;
         configuring=true; restoring=true; checking=false; step=0; pending=false; next_due=now();
         // The host just resolved this IEEE and verified identity, appearance
         // and geometry at this address before preparing ownership. The hint is
@@ -472,6 +553,7 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         if (!durable || restoring || (strcmp(state,"armed") && strcmp(state,"playing")) || !samples || !number(obj,"duration_ms",0,86400000,&ms))
             return result(false,"prepare and load first; duration_ms 0 (until stopped) or <=86400000");
         bool was_playing=playing;
+        hue_deadline=now()+15000;
         duration_ms=ms; started=now(); expires=ms ? started+ms : 0; playing=true;
         state="playing"; reason="requested_start"; next_due=started; retries=0; first_frame=ended=0; last_slot=-1; last_status=0;
         // Do not abandon an in-flight fragmented frame when a host changes scene.

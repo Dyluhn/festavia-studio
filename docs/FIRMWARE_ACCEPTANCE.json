@@ -1,10 +1,10 @@
 {
-  "checked_at": "2026-11-09T03:49:17.237579+00:00",
+  "checked_at": "2026-11-09T05:56:19.077720+00:00",
   "result": "passed within the stated hardware and optical scope",
   "firmware": {
-    "version": "0.3.7",
-    "elf_sha256": "2c5df4d7bd77b9dc60074972f7fa20549aaae0bea04bd2e8c8af81fe777b381e",
-    "sha256": "01dccd94bb09b0ce83f343e39256146e6a9addd289fb59b14e31e2056f45e2db"
+    "version": "0.3.8",
+    "elf_sha256": "052b5c0c29c12d8523634f6518f239630b01d2083f81c88139b94ae7e46d05c8",
+    "sha256": "3ca56210bee319b35e5140f741393d7cc695754af17aa8884776097aeab0663d"
   },
   "fixture": {
     "model": "LCX030",
@@ -24,7 +24,13 @@
     "acknowledged power queries sustain playback despite missing ZCL status replies",
     "failed acknowledged power queries stop playback after15sec despite successful animation confirmations",
     "external off after prolonged ACK-only playback persists intent and begins restoration",
-    "wrong address/endpoint/sequence/length and late confirmations cannot extend liveness"
+    "wrong address/endpoint/sequence/length and late confirmations cannot extend liveness",
+    "Hue ownership watchdog yields without fixture writes",
+    "explicit release drains outstanding transfers without restoration",
+    "NVS failure retains capsule and retries the tombstone",
+    "pending confirmations delay capsule retirement",
+    "lost confirmations retire within thirty seconds",
+    "external off under Hue priority yields without restoration"
   ],
   "sustained_hardware": {
     "edit_play_restore_cycles": 5,
@@ -67,7 +73,9 @@
     "max_sampled_target_ack_age_ms": 3877,
     "full_snapshots_after_soak": 30,
     "all_restorations_exact": true,
-    "destination_applied_fps_measured": false
+    "destination_applied_fps_measured": false,
+    "firmware_version": "0.3.7",
+    "checked_before": "2026-11-09T03:49:17.237579+00:00"
   },
   "previous_optical_evidence": {
     "checked_at": "2026-11-08T06:47:06.674935+00:00",
@@ -395,7 +403,7 @@
     "backend": "Claude account 2",
     "model": "claude-opus-5-5",
     "mode": "read-only",
-    "verdict": "No remaining functional blocker after fixes; real-device and frontend evidence gathered separately."
+    "verdict": "Two read-only Opus 5.5 passes identified handoff/transport issues; fixes have targeted regression tests and separate hardware acceptance. Review is not a replacement for physical proof."
   },
   "remaining_limits": [
     "Verified native hardware is LCX030/1.163.5/27 logical positions on Hue Bridge Pro. Other models/firmware/counts remain gated.",
@@ -403,7 +411,8 @@
     "Animation confirmations are not destination APS acknowledgements or an optical frame-rate measurement. RF loss and skipped samples remain possible.",
     "Previous optical evidence covers six visible pucks; no full-string optical survey.",
     "Fresh empty-board USB provisioning and initial config-flow Zigbee joining were not repeated; first-install manifest/hash/dry-run checks and a clean documented source build passed.",
-    "No Home Assistant Core, HACS catalog acceptance or Integration Quality Scale tier is claimed."
+    "No Home Assistant Core, HACS catalog acceptance or Integration Quality Scale tier is claimed.",
+    "Hue state events cannot identify every identical or output-matching Hue app command; explicit handoff is available and HA light-service commands are detected separately."
   ],
   "previous_070_brightness": {
     "physical_tests_requested_percent": 10,
@@ -455,18 +464,7 @@
       "card_errors": []
     }
   },
-  "brightness": {
-    "scope": "0.8.0 acceptance only",
-    "requested_percent_range": [
-      4,
-      10
-    ],
-    "max_sampled_raw_level": 25,
-    "raw_full_scale": 254,
-    "strictly_below_20_percent_in_080_acceptance": true,
-    "preceding_071_investigation_incident": "One UI replay recalled23% before immediate correction to10%; not counted as a compliant test."
-  },
-  "home_assistant": {
+  "previous_080_home_assistant": {
     "integration": "0.8.0",
     "core": "2026.10.1",
     "os": "18.3",
@@ -502,7 +500,18 @@
     "temporary_test_library_items_removed": true,
     "original_full_scenes_preserved": true
   },
-  "native_effect_checks": [
+  "previous_080_brightness": {
+    "scope": "0.8.0 acceptance only",
+    "requested_percent_range": [
+      4,
+      10
+    ],
+    "max_sampled_raw_level": 25,
+    "raw_full_scale": 254,
+    "strictly_below_20_percent_in_080_acceptance": true,
+    "preceding_071_investigation_incident": "One UI replay recalled23% before immediate correction to10%; not counted as a compliant test."
+  },
+  "previous_080_native_effect_checks": [
     {
       "effect": "static",
       "frames": 1,
@@ -592,7 +601,7 @@
       ]
     }
   ],
-  "new_optical_evidence": {
+  "previous_080_new_optical_evidence": {
     "camera_visible_positions": [
       16,
       15,
@@ -684,5 +693,326 @@
     "integration": "0.8.0",
     "firmware": "0.3.7",
     "scope": "Six existing camera-visible pucks. Visible variation is diagnostic; full-string color/order/smoothness is not certified."
-  }
+  },
+  "previous_080_firmware": {
+    "version": "0.3.7",
+    "elf_sha256": "2c5df4d7bd77b9dc60074972f7fa20549aaae0bea04bd2e8c8af81fe777b381e",
+    "sha256": "01dccd94bb09b0ce83f343e39256146e6a9addd289fb59b14e31e2056f45e2db"
+  },
+  "home_assistant": {
+    "integration": "0.9.0",
+    "core": "2026.10.1",
+    "os": "18.3",
+    "bridge": "Hue Bridge Pro",
+    "entities": 17,
+    "old_entity_ids_preserved": 15,
+    "runtime_checks": 30,
+    "restart_checks": 9,
+    "unit_card_release_tests": 95,
+    "live_checks": [
+      {
+        "name": "native_flow_ignores_own_Hue_reports",
+        "effect": "flow",
+        "seconds": 76,
+        "sent_delta": 716,
+        "acked_delta": 700,
+        "raw_levels": [
+          25,
+          25,
+          25,
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "name": "real_Hue_API_color_yields_no_old_restore",
+        "sent_after_release": 729
+      },
+      {
+        "name": "HA_identical_brightness_command_yields"
+      },
+      {
+        "name": "HA_relative_brightness_applied_once",
+        "before_raw": 0,
+        "expected_percent": 2,
+        "actual_percent": 1.98
+      },
+      {
+        "name": "rapid_Hue_then_HA_command_keeps_latest_intent"
+      },
+      {
+        "name": "HA_toggle_applied_once"
+      },
+      {
+        "name": "native_breathe_ignores_own_Hue_reports",
+        "effect": "breathe",
+        "seconds": 42,
+        "sent_delta": 392,
+        "acked_delta": 384,
+        "raw_levels": [
+          2,
+          12,
+          25,
+          12
+        ]
+      },
+      {
+        "name": "real_Hue_OFF_yields_and_stays_off"
+      },
+      {
+        "name": "option_OFF_retains_native_ownership"
+      },
+      {
+        "name": "manual_return_button_works_with_option_OFF"
+      },
+      {
+        "name": "real_Hue_gradient_takes_over"
+      },
+      {
+        "name": "native_static_ignores_own_Hue_reports",
+        "effect": "static",
+        "seconds": 36,
+        "sent_delta": 0,
+        "acked_delta": 0,
+        "raw_levels": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "name": "native_chase_ignores_own_Hue_reports",
+        "effect": "chase",
+        "seconds": 36,
+        "sent_delta": 397,
+        "acked_delta": 281,
+        "raw_levels": [
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "name": "native_bounce_ignores_own_Hue_reports",
+        "effect": "bounce",
+        "seconds": 36,
+        "sent_delta": 347,
+        "acked_delta": 330,
+        "raw_levels": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "name": "native_color_fade_ignores_own_Hue_reports",
+        "effect": "color_fade",
+        "seconds": 36,
+        "sent_delta": 387,
+        "acked_delta": 380,
+        "raw_levels": [
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "name": "native_wave_ignores_own_Hue_reports",
+        "effect": "wave",
+        "seconds": 36,
+        "sent_delta": 379,
+        "acked_delta": 371,
+        "raw_levels": [
+          25,
+          25,
+          25
+        ]
+      },
+      {
+        "name": "native_heartbeat_ignores_own_Hue_reports",
+        "effect": "heartbeat",
+        "seconds": 36,
+        "sent_delta": 379,
+        "acked_delta": 376,
+        "raw_levels": [
+          2,
+          19,
+          8,
+          2
+        ]
+      }
+    ],
+    "restart_and_ota": [
+      {
+        "name": "actual_HA_restart_yields_without_restore_or_autoresume",
+        "raw_level": 25,
+        "reason": "hue_watchdog_expired"
+      },
+      {
+        "name": "Play_after_restart_and_from_Hue_ON_ignores_setup_reports"
+      },
+      {
+        "name": "actual_HA_restart_retains_autonomous_playback_with_option_OFF",
+        "raw_level": 25,
+        "reason": "requested_start"
+      },
+      {
+        "name": "new_Hue_color_verified_by_direct_fixture_ZCL_reads",
+        "handoff_seconds": 4.09,
+        "raw_level": 21
+      },
+      {
+        "name": "idle_socket_slots_reclaimed_and_HA_reconnects_without_USB",
+        "native_update_succeeds_immediately_after_eviction": true
+      },
+      {
+        "name": "HA_update_entity_wireless_reinstall_confirmed_retains_Hue_state_and_pairing",
+        "raw_level": 16,
+        "running_partition": "ota_1"
+      }
+    ],
+    "mobile": {
+      "passed": true,
+      "viewport": [
+        393,
+        852
+      ],
+      "native_return_button_present_and_effective": true,
+      "allow_Hue_takeover_native_switch": true,
+      "no_horizontal_overflow": true,
+      "Festavia_JavaScript_errors": [],
+      "unrelated_page_errors": 2
+    },
+    "scope": "Actual hardware and HA; no new optical survey"
+  },
+  "brightness": {
+    "maximum_requested_percent": 10,
+    "temporary_effect_cap_percent": 19,
+    "strictly_below_20_percent_in_090_acceptance": false,
+    "controlled_requests_below_20_percent": true,
+    "startup_automation_incident": {
+      "Hue_reported_percent": 20.16,
+      "raw_level": 52,
+      "raw_full_scale": 254,
+      "cause": "existing warm-white automation triggered by HA start",
+      "isolated_for_final_acceptance": true,
+      "original_enabled_state_restored": true
+    },
+    "original_staged_percent_restored_without_playback": 21.0,
+    "user_cap_restored": 60.0
+  },
+  "ownership_radio_check": {
+    "uptime_ms": 1760217,
+    "sdk_buffers_free": 33,
+    "sdk_buffer_probe_limit": 128,
+    "sdk_no_mem": 0,
+    "tx_accepted": 8320,
+    "tx_confirmations": 8320,
+    "outbound_in_use": 0,
+    "firmware": "0.3.8"
+  },
+  "native_effect_checks": [
+    {
+      "effect": "flow",
+      "seconds": 76,
+      "sent_delta": 716,
+      "acked_delta": 700,
+      "raw_levels": [
+        25,
+        25,
+        25,
+        25,
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "breathe",
+      "seconds": 42,
+      "sent_delta": 392,
+      "acked_delta": 384,
+      "raw_levels": [
+        2,
+        12,
+        25,
+        12
+      ]
+    },
+    {
+      "effect": "static",
+      "seconds": 36,
+      "sent_delta": 0,
+      "acked_delta": 0,
+      "raw_levels": [
+        25,
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "chase",
+      "seconds": 36,
+      "sent_delta": 397,
+      "acked_delta": 281,
+      "raw_levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "bounce",
+      "seconds": 36,
+      "sent_delta": 347,
+      "acked_delta": 330,
+      "raw_levels": [
+        25,
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "color_fade",
+      "seconds": 36,
+      "sent_delta": 387,
+      "acked_delta": 380,
+      "raw_levels": [
+        25,
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "wave",
+      "seconds": 36,
+      "sent_delta": 379,
+      "acked_delta": 371,
+      "raw_levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "heartbeat",
+      "seconds": 36,
+      "sent_delta": 379,
+      "acked_delta": 376,
+      "raw_levels": [
+        2,
+        19,
+        8,
+        2
+      ]
+    }
+  ]
 }

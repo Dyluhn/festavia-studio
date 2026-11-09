@@ -125,7 +125,8 @@
         "menu_options": {
           "palettes": "Delete scenes",
           "network": "Zigbee connection status",
-          "color_palettes": "Delete color palettes"
+          "color_palettes": "Delete color palettes",
+          "control": "Playback ownership"
         }
       },
       "palettes": {
@@ -144,6 +145,13 @@
         "title": "Delete a color palette",
         "data": {
           "palette": "Color palette"
+        }
+      },
+      "control": {
+        "title": "Playback ownership",
+        "description": "Yield Studio playback when Hue changes the selected light. If Home Assistant or its Hue event connection is lost, playback stops so Hue can control it. Start Studio again explicitly when you want it back.",
+        "data": {
+          "allow_hue_takeover": "Allow Hue takeover"
         }
       }
     },
@@ -217,6 +225,9 @@
     "switch": {
       "reverse": {
         "name": "Reverse direction"
+      },
+      "allow_hue_takeover": {
+        "name": "Allow Hue takeover"
       }
     },
     "button": {
@@ -228,6 +239,9 @@
       },
       "off": {
         "name": "Lights off"
+      },
+      "release": {
+        "name": "Return control to Hue"
       }
     },
     "sensor": {
@@ -447,6 +461,16 @@
           "name": "Scene name"
         }
       }
+    },
+    "release": {
+      "name": "Return control to Hue",
+      "description": "Stop Studio playback without restoring the previous scene.",
+      "fields": {
+        "entry_id": {
+          "name": "Integration entry",
+          "description": "Needed only when multiple installations exist."
+        }
+      }
     }
   },
   "exceptions": {
@@ -503,6 +527,12 @@
     },
     "fixture_changed": {
       "message": "Another controller changed this light during startup. Stop the competing automation and press Play again."
+    },
+    "takeover_update_required": {
+      "message": "Update the ESP32 firmware to enable Hue takeover, or turn off Allow Hue takeover in the device configuration."
+    },
+    "takeover_unavailable": {
+      "message": "The Hue event connection is unavailable. Reconnect the bridge, or turn off Allow Hue takeover to run without it."
     }
   },
   "issues": {

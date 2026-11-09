@@ -34,4 +34,7 @@ class Playback(StudioEntity, SensorEntity):
             "playing": c.playing,
             "lights": c.data["lights"],
             "reason": c.data["player"].get("reason"),
+            "allow_hue_takeover": c.entry.options.get("allow_hue_takeover", True),
+            "hue_events_connected": bool(c.takeover and c.takeover.connected),
+            "last_hue_takeover": c.takeover.last_reason if c.takeover else None,
         }

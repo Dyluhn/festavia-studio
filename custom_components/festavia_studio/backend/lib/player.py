@@ -486,6 +486,7 @@ def recovery_plan(profile, device, before, layout, aliases, *, startup_level=1, 
         "extpan": profile["extpan"],
         **({"address": device.address} if getattr(device, "address", None) is not None else {}),
         "endpoint": device.endpoint,
+        "hue_takeover": bool(native and profile.get("hue_takeover", False)),
         "restore": restore,
         "verify": verify,
         "setup": [
@@ -621,10 +622,10 @@ class Player:
             result = self.command("player_status")
         if (
             not result.get("armed")
-            and result.get("state") in ("restored", "idle")
+            and result.get("state") in ("restored", "idle", "released")
             and self.journal.exists()
         ):
-            self.retire_journal()
+            self.retire_journal(released=result.get("state") == "released")
         return result
 
     def wait(self, states, timeout=45):
@@ -643,12 +644,20 @@ class Player:
         raise TimeoutError("device did not reach " + str(states))
 
     def stop(self, off=False):
+        self.status()  # Reconnect an idle/evicted socket before issuing a write.
         self.command("player_stop", off=off)
-        result = self.wait({"restored", "idle"}, 60)
+        result = self.wait({"restored", "idle", "released"}, 60)
         self.retire_journal()
         return result
 
-    def retire_journal(self):
+    def release(self, manual=False):
+        self.status()
+        self.command("player_release", manual=manual)
+        result = self.wait({"released", "idle", "restored"}, 40)
+        self.retire_journal(released=result.get("state") == "released")
+        return result
+
+    def retire_journal(self, released=False):
         if not self.journal.exists():
             return
         try:
@@ -656,7 +665,11 @@ class Player:
         except ValueError:
             saved = {}
         if not saved.get("restored"):
-            saved["restored"] = True
+            saved["restored"] = (
+                True  # Closed lease; released marks intentionally skipped restoration.
+            )
+            if released:
+                saved["released"] = True
             save_credentials(self.journal, saved)
 
     def play(self, scene, *, seconds=0, layout=None, aliases=None):
@@ -675,6 +688,8 @@ class Player:
             frame_count = len(frames[0]) if frames and isinstance(frames[0], list) else 10
         compile_scene(scene, list(range(1, (frame_count or 10) + 1)))
         state = self.status()
+        if native and self.profile.get("hue_takeover") and not state.get("hue_takeover_supported"):
+            raise PlaybackBlocked("takeover_update_required")
         if native and not state.get("native_palette_supported"):
             raise RuntimeError("Update the ESP32 firmware before using per-puck repeat")
         if state["armed"]:

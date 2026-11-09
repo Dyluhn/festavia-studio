@@ -10,15 +10,18 @@
 
 static int64_t clock_ms;
 static bool power_ack;
-static unsigned power_queries, persisted_off;
+static unsigned power_queries, persisted_off, persisted_yield, erased_journals;
+static bool fail_commit;
+static unsigned pending_transfers;
+unsigned hm_pending_transfers(void) {return pending_transfers;}
 static uint8_t sequence;
 int64_t esp_timer_get_time(void) { return clock_ms*1000; }
 void esp_zb_get_extended_pan_id(uint8_t *out) { memcpy(out,plan_pan,8); }
 esp_err_t nvs_set_u8(nvs_handle_t handle, const char *key, uint8_t value)
-{ (void)handle; if (!strcmp(key,"off") && value) persisted_off++; return ESP_OK; }
-esp_err_t nvs_commit(nvs_handle_t handle) { (void)handle; return ESP_OK; }
+{ (void)handle; if (!strcmp(key,"off") && value) persisted_off++; if (!strcmp(key,"yield") && value) persisted_yield++; return ESP_OK; }
+esp_err_t nvs_commit(nvs_handle_t handle) { (void)handle; return fail_commit ? 1 : ESP_OK; }
 esp_err_t nvs_erase_key(nvs_handle_t handle, const char *key)
-{ (void)handle; (void)key; return ESP_OK; }
+{ (void)handle; if (!strcmp(key,"journal")) erased_journals++; return ESP_OK; }
 void esp_zb_zdo_nwk_addr_req(esp_zb_zdo_nwk_addr_req_param_t *req,
     void (*cb)(esp_zb_zdp_status_t, esp_zb_zdo_nwk_addr_rsp_t *, void *), void *ctx)
 { (void)req; (void)cb; (void)ctx; assert(!"unexpected address resolution"); }
@@ -59,6 +62,7 @@ static void reset(void)
     state="playing";reason="requested_start"; fps=10; cycle_ms=4000;
     cleanup_count=1; check_count=1; step=0; retries=0;
     address=0x1234;endpoint=11;power_queries=persisted_off=0;
+    hue_takeover=releasing=fail_commit=playback_persisted=false;pending_transfers=0;persisted_yield=erased_journals=0;
     power_ack=true;frames_sent=frames_acked=failures=skipped=0;
 }
 int main(void)
@@ -108,6 +112,42 @@ int main(void)
     power_pending=false;clock_ms=4000;accepted=hm_player_confirm(c);
     assert(!accepted && last_target_ack==3000);
     puts("PASS incorrect or late power confirmations cannot extend liveness");
+    reset();hue_takeover=true;hue_deadline=2000;clock_ms=2000;
+    unsigned sent_before=frames_sent, queries_before=power_queries;
+    hm_player_tick(true);assert(!playing && releasing && persisted_yield==1);
+    assert(!strcmp(reason,"hue_watchdog_expired"));
+    clock_ms=4100;hm_player_tick(false);assert(!durable && !releasing && !samples);
+    assert(!strcmp(state,"released") && frames_sent==sent_before && power_queries==queries_before && erased_journals==1);
+    puts("PASS takeover watchdog releases without any restoration writes even offline");
+
+    reset();pending=true;pending_until=5000;clock_ms=2000;
+    assert(release_begin("hue_takeover"));assert(!playing && durable && releasing);
+    clock_ms=3999;hm_player_tick(true);assert(durable && !playing);
+    clock_ms=4000;hm_player_tick(true);assert(!durable && !strcmp(state,"released"));
+    assert(power_queries==0 && frames_sent==0);
+    puts("PASS explicit handoff drains and never sends old colors or power");
+
+    reset();fail_commit=true;assert(!release_begin("hue_takeover"));
+    clock_ms=5000;hm_player_tick(true);assert(durable && !playing && releasing && erased_journals==0);
+    fail_commit=false;clock_ms=7000;hm_player_tick(true);assert(!durable && !releasing);
+    puts("PASS failed NVS release remains stopped and retries durable retirement");
+    reset();hue_takeover=true;pending_transfers=1;
+    assert(release_begin("hue_takeover"));clock_ms=20000;hm_player_tick(true);
+    assert(releasing && durable && !playing && !erased_journals);
+    pending_transfers=0;hm_player_tick(true);assert(!durable && !releasing);
+    puts("PASS release cannot finish while an accepted SDK frame is unconfirmed");
+
+    reset();hue_takeover=true;pending_transfers=1;
+    assert(release_begin("hue_takeover"));clock_ms=40000;hm_player_tick(true);
+    assert(!durable && !releasing && release_lost_confirms==1);
+    pending_transfers=0;
+    puts("PASS missing confirms cannot permanently strand a released player");
+
+    reset();hue_takeover=true;hue_deadline=30000;
+    clock_ms=2000;hm_player_tick(true);assert(power_pending);
+    off[1]=power_tsn;ind.src_short_addr=address;ind.src_endpoint=endpoint;
+    accepted=hm_player_receive(ind);assert(accepted && releasing && !playing && !restoring && persisted_yield);
+    puts("PASS Hue-priority external off releases without replaying the old scene");
     free(samples);samples=NULL;
     return 0;
 }

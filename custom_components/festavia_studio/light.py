@@ -40,7 +40,18 @@ class StudioLight(StudioEntity, LightEntity):
     def effect_list(self):
         return self.coordinator.data["effects"]
 
+    def _hue_group_has_priority(self):
+        watcher = self.coordinator.takeover
+        return bool(
+            watcher
+            and watcher.enabled
+            and self._context
+            and self._context.id in watcher.hue_contexts
+        )
+
     async def async_turn_on(self, **kwargs):
+        if self._hue_group_has_priority():
+            return
         changes = {}
         if ATTR_BRIGHTNESS in kwargs:
             value = kwargs[ATTR_BRIGHTNESS]
@@ -55,5 +66,7 @@ class StudioLight(StudioEntity, LightEntity):
         await self.coordinator.play(changes=changes)
 
     async def async_turn_off(self, **kwargs):
+        if self._hue_group_has_priority():
+            return
         async with self.coordinator.action_lock:
             await self.coordinator.command("off")

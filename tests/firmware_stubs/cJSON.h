@@ -7,6 +7,7 @@ cJSON *cJSON_GetObjectItemCaseSensitive(const cJSON *, const char *);
 int cJSON_IsNumber(const cJSON *);
 int cJSON_IsString(const cJSON *);
 int cJSON_IsArray(const cJSON *);
+int cJSON_IsBool(const cJSON *);
 int cJSON_IsTrue(const cJSON *);
 int cJSON_HasObjectItem(const cJSON *, const char *);
 int cJSON_GetArraySize(const cJSON *);

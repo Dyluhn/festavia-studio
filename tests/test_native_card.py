@@ -10,6 +10,17 @@ CARD = (
 
 
 class NativeCardTests(unittest.TestCase):
+    def test_return_control_to_hue_uses_release_and_preserves_staged_palette(self):
+        page = self.page
+        page.locator("#power").click()
+        page.wait_for_function("()=>state.attributes.playing")
+        colors = page.evaluate("state.attributes.scene.colors")
+        page.locator("#release").click()
+        page.wait_for_function("()=>!state.attributes.playing")
+        self.assertEqual(page.evaluate("calls.at(-1).action"), "release")
+        self.assertEqual(page.evaluate("state.attributes.scene.colors"), colors)
+        self.assertEqual(page.locator("#status").inner_text(), "Hue control")
+
     def test_current_scene_settings_flush_pending_edits(self):
         page = self.page
         page.locator("#scenes").evaluate("e=>e.open=true")
@@ -115,7 +126,8 @@ class NativeCardTests(unittest.TestCase):
                     a.preset='Custom';if('colors' in data && JSON.stringify(data.colors)!==JSON.stringify(state.attributes.scene.colors))a.palette='Custom';
                 }
                 if(action==='play')a.playing=true;
-                if(action==='off'||action==='stop')a.playing=false;
+                if(action==='off'||action==='stop'||action==='release')a.playing=false;
+                if(action==='release')a.reason='hue_takeover';
                 if(action==='save_palette'){a.palettes=[...a.palettes,data.name];a.palette=data.name;}
                 if(action==='load_palette'){if(data.palette!=='Custom')a.scene.colors=['#80dfff','#e4f4ff','#4040ff'];a.palette=data.palette;a.preset='Custom';}
                 if(action==='save_scene'){a.presets=[...a.presets,data.name];a.preset=data.name;}

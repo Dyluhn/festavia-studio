@@ -21,6 +21,7 @@ from ha_runtime import (
     frame,
     loader,
     wire,
+    fake_hue_events,
     HomeAssistant,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -58,7 +59,10 @@ async def main():
     folder = tempfile.mkdtemp(prefix="festavia-ha-restart-")
     hass = None
     checks = []
+    from custom_components.festavia_studio.takeover import HueTakeover
+
     with (
+        patch.object(HueTakeover, "_events", fake_hue_events),
         patch("http.client.HTTPSConnection", HTTPS),
         patch.object(service, "Device", ZigbeeDevice),
         patch.object(control, "Device", ZigbeeDevice),
@@ -265,7 +269,19 @@ async def main():
             assert stops == sum(
                 isinstance(c[3], dict) and c[3].get("op") == "player_stop" for c in wire.calls
             )
-            checks.append("ordinary_ha_restart_preserves_native_playback_and_adopts_scene")
+            checks.append(
+                "short_HA_restart_within_takeover_lease_preserves_native_playback_and_adopts_scene"
+            )
+            await hass.async_stop(force=True)
+            wire.hue_deadline = 1  # Hardware clock has passed the HA keepalive lease.
+            hass = await boot(folder)
+            await hass.async_block_till_done()
+            e = hass.config_entries.async_get_entry(native_id)
+            assert e.state.value == "loaded" and not e.runtime_data.playing
+            assert wire.player["reason"] == "hue_watchdog_expired" and not wire.player["armed"]
+            checks.append(
+                "long_HA_restart_yields_and_does_not_autoresume_when_Hue_priority_is_enabled"
+            )
             await hass.config_entries.async_remove(e.entry_id)
             bridge_data = copy.deepcopy(data)
             bridge_data["installation"].update(

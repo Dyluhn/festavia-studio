@@ -388,5 +388,20 @@
         }
       }
     }
+  },
+  "release": {
+    "name": "Return control to Hue",
+    "description": "Stop Studio playback without restoring the previous scene.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      }
+    }
   }
 }

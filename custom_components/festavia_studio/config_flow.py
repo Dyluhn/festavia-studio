@@ -613,7 +613,24 @@ class FestaviaOptions(OptionsFlow):
         if self.config_entry.state.value != "loaded":
             return self.async_abort(reason="not_loaded")
         return self.async_show_menu(
-            step_id="init", menu_options=["palettes", "color_palettes", "network"]
+            step_id="init", menu_options=["control", "palettes", "color_palettes", "network"]
+        )
+
+    async def async_step_control(self, user_input=None):
+        c = self.config_entry.runtime_data
+        if user_input is not None:
+            await c.set_hue_takeover(user_input["allow_hue_takeover"])
+            return self.async_create_entry(data=dict(self.config_entry.options))
+        return self.async_show_form(
+            step_id="control",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "allow_hue_takeover",
+                        default=self.config_entry.options.get("allow_hue_takeover", True),
+                    ): bool
+                }
+            ),
         )
 
     async def async_step_color_palettes(self, user_input=None):

@@ -4,7 +4,7 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.8.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
+Version **0.9.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
 
@@ -43,6 +43,8 @@ without any custom card:
 | Scene | Save/load the complete setup: colors, animation, speed, direction and brightness |
 | Stop and restore | Restore the appearance captured before Studio playback |
 | Brightness limit | Installation cap, under Configuration; persists across reloads |
+| Allow Hue takeover | Native configuration switch: let Hue changes end Studio playback |
+| Return control to Hue | Stop sending without restoring an old scene |
 | Firmware | Standard HA update entity; installs the bundled verified ESP32 image over Wi-Fi |
 
 Starting works when Hue already has the lights on, including above Studio’s
@@ -51,12 +53,35 @@ then turns on; bridge mode sends the requested brightness with its power-on upda
 The limit applies to Studio effects; **Stop and restore** returns the
 captured Hue appearance, including its previous brightness.
 
-Ordinary Home Assistant restarts preserve an already running ESP effect or bridge
-scene; HA adopts its saved scene when it reconnects. Explicit integration reloads
-stop and restore playback.
+With **Allow Hue takeover** enabled, the ESP effect yields to Hue changes reported
+by the bridge and to Home Assistant light commands. It stops sending without
+restoring an older scene. Use **Return control to Hue** for an explicit handoff;
+Studio starts again only when you press its playback switch.
+
+The option is under the native device’s Configuration controls and under
+Configure → Playback ownership. It defaults to on. A missed HA ownership heartbeat
+for about ten seconds stops the effect on its current frame, allowing Hue to take
+control. This includes HA restarts that exceed the lease. Disabling the option
+keeps autonomous playback through HA restarts. Explicit Stop and restore remains
+available; integration reloads also restore a still-owned session.
+
+Hue reports state changes, not a complete command log. Repeating an identical
+command in the Hue app may produce no event. A value that matches Studio’s
+current colors or pulsing brightness can also be ambiguous because Hue reports
+ESP output too. Use Return control to Hue in those cases, or change a light
+setting outside the active output. HA light commands are detected separately,
+including repeats. Expected setup power and captured baseline reports are filtered
+while Play is starting; matching Hue app commands can be ambiguous there too.
+The automatic option applies to ESP native playback; bridge
+mode sends static settings once and does not continually overwrite Hue.
+
+After using a Hue gradient or special effect, choose a solid color or white in
+Hue before starting native Studio playback. Arbitrary Hue effect snapshots cannot
+be recovered by the native firmware; the integration reports this requirement
+before changing the fixture.
 
 Edits while off save your controls without turning on the lights. Edits while
-playing update the running effect. Power starts your saved controls. Save colors with **Festavia Studio: Save color palette**, or save a complete setup
+playing update the running effect. Studio playback starts your saved controls. Save colors with **Festavia Studio: Save color palette**, or save a complete setup
 with **Save scene**. Both actions are available in the optional card. Existing saved
 items remain full scenes, with their colors and animations preserved. Configure offers
 scene/palette removal and Zigbee status.
@@ -76,7 +101,7 @@ title: Festavia
 
 The integration registers the resource. Tap a numbered swatch to edit its color,
 use the touch color wheel or quick colors, add/remove/reorder colors, choose an
-animation and use Power. Save colors and full scenes separately. Edits save automatically.
+animation and enable Studio playback. Save colors and full scenes separately. Edits save automatically.
 There is no additional app to open or synchronize. Native controls and the card
 share the same saved state. After upgrading, refresh the HA page or reopen the
 Companion app once to load the updated card.
@@ -101,6 +126,11 @@ In YAML-managed dashboards, add the module resource
 |---|---|---|
 | Hue bridge gradient | Reported API gradient color points across selected strings | Static ordered palettes; points may blend across multiple physical lights |
 | ESP32 individual pucks | Live logical count checked against a verified model/firmware profile | LCX030 Permanent / firmware 1.163.5 / 27 logical positions physically tested |
+
+The native FC03 palette contains at most nine slots; ten or more are rejected
+by the device. This is a frame-format limit, not an ESP32 memory limit. Blending
+can display additional shades over time. See the independent
+[Bifrost protocol reference](https://github.com/chrivers/bifrost/blob/master/doc/hue-zigbee-format.md#property-gradient_colors-color-encoding).
 
 Native mode supports **1–9 ordered colors**, static repeat, smooth flow, step chase,
 bounce, color fade, color wave, breathing and heartbeat,

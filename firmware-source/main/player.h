@@ -11,6 +11,7 @@ void hm_player_tick(bool approved);
 bool hm_player_confirm(esp_zb_apsde_data_confirm_t confirm);
 bool hm_player_receive(esp_zb_apsde_data_ind_t ind);
 bool hm_player_busy(void);
+unsigned hm_pending_transfers(void);
 // Shared sender supplies one sequence namespace for console, HTTP and playback.
 esp_err_t hm_send(uint16_t address, uint8_t endpoint, uint16_t cluster,
                   bool specific, int manufacturer, uint8_t command,

@@ -86,6 +86,8 @@ class StudioCoordinator(DataUpdateCoordinator):
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.scene")
         self._remote_scene = None
         self.reconfiguring = False
+        self.acquiring = False
+        self.takeover = None
 
     async def load(self):
         saved = await self.store.async_load()
@@ -151,6 +153,19 @@ class StudioCoordinator(DataUpdateCoordinator):
                     if await self.hass.async_add_executor_job(has_recovery, folder):
                         raise StudioError("recovery_pending")
             self.reconfiguring = True
+
+    async def set_hue_takeover(self, enabled):
+        async with self.action_lock:
+            self.check_ready()
+            if enabled:
+                await self.takeover.ensure_ready(force=True)
+            if self.playing and self.data["mode"] == "native":
+                await self.api.takeover_keepalive(enabled=enabled)
+            self.hass.config_entries.async_update_entry(
+                self.entry, options={**self.entry.options, "allow_hue_takeover": enabled}
+            )
+            self.takeover.new_acquisition()
+            self.async_update_listeners()
 
     async def save_preset(self, name):
         name = name.strip()
@@ -226,7 +241,27 @@ class StudioCoordinator(DataUpdateCoordinator):
     async def command(self, operation, data=None):
         self.check_ready()
         try:
-            result = await self.api.request(operation, data)
+            if (
+                operation == "release"
+                and self.data["mode"] == "native"
+                and not self.data["player"].get("hue_takeover_supported")
+            ):
+                raise StudioError("takeover_update_required")
+            if operation == "play" and self.takeover:
+                await self.takeover.ensure_ready()
+                baseline = (
+                    await self.api.hue_control_baseline()
+                    if self.data["mode"] == "native" and self.takeover.enabled
+                    else {}
+                )
+                self.takeover.new_acquisition()
+                self.takeover.setup_states = baseline
+                self.takeover.output_scene = copy.deepcopy((data or {}).get("scene", self.scene))
+                self.acquiring = True
+            try:
+                result = await self.api.request(operation, data)
+            finally:
+                self.acquiring = False
         except StudioError as exc:
             if isinstance(exc, StudioAuthError):
                 self.entry.async_start_reauth(self.hass)

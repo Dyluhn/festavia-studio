@@ -149,6 +149,8 @@ class Studio:
                     saved["scene"] = scene
                     save_credentials(player.journal, saved)
                     return result
+                if op == "release":
+                    return player.release(manual=data.get("manual", False))
                 if op == "stop":
                     return player.stop(bool(data.get("off", False)))
                 if op == "uniform":

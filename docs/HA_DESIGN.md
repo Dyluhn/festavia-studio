@@ -19,9 +19,9 @@ and renewed credentials (reauthentication). Runtime light controls are entities
 and actions, not a configuration website.
 
 - **Device Controls:** effect light power/brightness/effect, ordered palette,
-  speed, reverse direction, color palette, full scene, stop-and-restore.
-- **Device Configuration:** brightness limit and ESP32 firmware update.
-- **Configure:** saved-palette removal and Zigbee connection status.
+  speed, reverse direction, color palette, full scene, stop-and-restore and Return control to Hue.
+- **Device Configuration:** brightness limit, Allow Hue takeover and ESP32 firmware update.
+- **Configure:** saved-palette removal, playback ownership and Zigbee connection status.
 - **Reconfigure:** Hue/ESP32 connection, fixture selection, control mode, Zigbee joining and recovery.
 - **Diagnostics:** standard HA download; excludes keys, URLs, names, IEEE/PAN
   identifiers and palette contents.
@@ -56,3 +56,20 @@ Festavia follows that distinction: a palette contains only ordered colors; a Sce
 contains colors and motion settings. The original full-preset storage and entity IDs
 remain; their visible label is now Scene. A separate native Color palette select and
 save/load/delete actions share state with the optional card. No external editor is used.
+
+## Hue ownership (0.9.0)
+
+Native ownership is an integration option, also exposed as a configuration switch.
+A pinned Hue event stream and HA light-service events identify selected-light
+changes. Release stops native output without restoring a prior scene; ordered
+replay preserves new intent after in-flight radio traffic drains. A separate
+ESP ownership heartbeat yields during a long HA outage. Explicit Return control
+to Hue works with the automatic option on or off. Bridge static mode requires
+no watcher because it sends settings once.
+
+Hue reports state rather than every command. Output-matching/identical Hue app
+commands can be ambiguous; the explicit button resolves that case. HA light
+commands are detected separately. Commands targeting both the Studio effect
+light and its original Hue light give the original Hue light priority. Other
+lighting integrations that regularly command that Hue light will also yield
+Studio playback when the option is enabled.

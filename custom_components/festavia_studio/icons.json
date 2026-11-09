@@ -40,6 +40,9 @@
     "switch": {
       "reverse": {
         "default": "mdi:swap-horizontal"
+      },
+      "allow_hue_takeover": {
+        "default": "mdi:bridge"
       }
     },
     "button": {
@@ -51,6 +54,9 @@
       },
       "off": {
         "default": "mdi:lightbulb-off"
+      },
+      "release": {
+        "default": "mdi:bridge"
       }
     },
     "sensor": {

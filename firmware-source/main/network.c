@@ -378,6 +378,11 @@ static esp_err_t start_server(void)
     httpd_ssl_config_t config = HTTPD_SSL_CONFIG_DEFAULT();
     config.httpd.stack_size = 12288;
     config.httpd.max_open_sockets = 3;
+    config.httpd.lru_purge_enable = true;
+    config.httpd.keep_alive_enable = true;
+    config.httpd.keep_alive_idle = 10;
+    config.httpd.keep_alive_interval = 5;
+    config.httpd.keep_alive_count = 3;
     config.httpd.max_uri_handlers = 5;
     config.httpd.recv_wait_timeout = 15;
     config.httpd.send_wait_timeout = 15;

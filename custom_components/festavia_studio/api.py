@@ -166,6 +166,8 @@ class NativeClient:
         self.closed = False
         self.targets = []
         self.last_error = None
+        self.keepalive_lock = asyncio.Lock()
+        self.keepalive_http = None
 
     async def initialize(self):
         def create():
@@ -257,7 +259,12 @@ class NativeClient:
 
     async def _execute(self, function):
         try:
-            return await self.hass.async_add_executor_job(function)
+            job = self.hass.async_add_executor_job(function)
+            try:
+                return await asyncio.shield(job)
+            except asyncio.CancelledError:
+                await asyncio.gather(job, return_exceptions=True)
+                raise
         except AuthenticationError as exc:
             raise StudioAuthError(exc.source) from None
         except CertificateError:
@@ -352,6 +359,9 @@ class NativeClient:
                     "acked",
                     "failures",
                     "effective_fps",
+                    "hue_takeover_supported",
+                    "hue_takeover",
+                    "hue_watchdog_remaining_ms",
                 )
             },
         }
@@ -366,6 +376,7 @@ class NativeClient:
                 if operation == "off":
                     self.app.control("uniform", {"state": {"on": False}})
                 elif operation in (
+                    "release",
                     "play",
                     "stop",
                     "save",
@@ -373,6 +384,10 @@ class NativeClient:
                     "save_palette",
                     "delete_palette",
                 ):
+                    if operation == "play" and self.app.data.get("mode") == "native":
+                        self.app.native_studio().profile["hue_takeover"] = self.entry.options.get(
+                            "allow_hue_takeover", True
+                        )
                     self.app.control(operation, data or {})
                 elif operation is not None:
                     raise ValueError("Unsupported action")
@@ -381,6 +396,50 @@ class NativeClient:
                 return self._status()
 
             return await self._execute(run)
+
+    async def takeover_keepalive(self, *, enabled=None):
+        async with self.keepalive_lock:
+            if self.closed or self.app.data.get("mode") != "native":
+                return
+
+            def send():
+                if self.keepalive_http is None:
+                    self.keepalive_http = PinnedHTTPS(self.entry.data["device"])
+                operation = (
+                    {"op": "player_keepalive"}
+                    if enabled is None
+                    else {"op": "player_takeover", "enabled": enabled}
+                )
+                try:
+                    result = self.keepalive_http.call(
+                        "POST", "/api/command", obj=operation, timeout=3
+                    )
+                except (OSError, http.client.HTTPException):
+                    self.keepalive_http.close()
+                    self.keepalive_http = None
+                    raise
+                if not result.get("ok"):
+                    raise RuntimeError("Takeover keepalive rejected")
+
+            await self._execute(send)
+
+    async def replay_hue(self, identifier, patch):
+        async with self.lock:
+            await self._sync_hue()
+            await self._execute(lambda: self.app.bridge().set_light(identifier, patch))
+
+    async def hue_control_baseline(self):
+        """Capture expected setup echoes before native playback changes the lamp."""
+        async with self.lock:
+            await self._sync_hue()
+            selected = set(self.app.data["selected"])
+            return await self._execute(
+                lambda: {
+                    light["id"]: light
+                    for light in self.app.bridge().resources("light")
+                    if light["id"] in selected
+                }
+            )
 
     async def setup(self, operation, data=None):
         async with self.lock:
@@ -408,6 +467,10 @@ class NativeClient:
         return result
 
     async def close(self, *, restore=True):
+        async with self.keepalive_lock:
+            if self.keepalive_http:
+                await self.hass.async_add_executor_job(self.keepalive_http.close)
+                self.keepalive_http = None
         async with self.lock:
             if self.closed:
                 return

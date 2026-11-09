@@ -337,6 +337,10 @@ class Installation:
                 presets.pop(name, None)
             save_credentials(self.bridge_library, presets)
             return {"saved": name}
+        if op == "release":
+            self.bridge_journal.unlink(missing_ok=True)
+            self.bridge_scene = None
+            return {"released": True}
         if op == "stop":
             return self.bridge_restore(off=bool(data.get("off")))
         if op == "uniform":

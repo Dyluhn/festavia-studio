@@ -78,7 +78,8 @@ async def async_setup(hass, config):
         else:
             async with coordinator.action_lock:
                 await coordinator.command(
-                    "off" if call.service == "off" else "stop", {"off": call.data.get("off", False)}
+                    call.service,
+                    {"off": call.data.get("off", False), "manual": call.service == "release"},
                 )
 
     base = {vol.Optional("entry_id"): str}
@@ -88,6 +89,7 @@ async def async_setup(hass, config):
         "set_palette",
         "stop",
         "off",
+        "release",
         "save_preset",
         "load_preset",
         "save_scene",
@@ -144,6 +146,15 @@ async def async_setup_entry(hass, entry):
         raise
     ir.async_delete_issue(hass, DOMAIN, "recovery_" + entry.entry_id)
     entry.runtime_data = coordinator
+    from .takeover import HueTakeover
+
+    coordinator.takeover = HueTakeover(coordinator)
+    coordinator.takeover.start()
+
+    async def stop_takeover(event):
+        await coordinator.takeover.close()
+
+    entry.async_on_unload(hass.bus.async_listen_once("homeassistant_stop", stop_takeover))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -210,6 +221,8 @@ async def async_remove_resource(hass):
 
 async def async_unload_entry(hass, entry):
     c = entry.runtime_data
+    if c.takeover:
+        await c.takeover.close()
     # Drain actions before closing; a replacement coordinator cannot acquire the
     # same fixture while an executor operation from this one is still running.
     async with c.action_lock:

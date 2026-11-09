@@ -1,3 +1,56 @@
+# Acceptance — 0.9.0
+
+Checked 2026-11-09 UTC. Community custom integration; no HA Core acceptance or quality tier is claimed.
+
+## Automated
+
+- 95 protocol, unit, mobile-card and release tests; ten production-C player state cases; 30 checks in actual HA Core 2026.10.1 and nine restart/lifecycle checks pass. Network peers and Zigbee primitives are simulated in those HA/C suites; physical acceptance is separate below.
+- Handoff covers selected-light filtering, output echoes, relative brightness resolved once, commands arriving during replay, stream loss, option changes, explicit release, bounded confirmation drain and durable recovery. All pinned hassfest validators, Ruff and release hash/privacy checks pass.
+
+## Live Home Assistant and hardware
+
+HAOS 18.3 / Core 2026.10.1, Hue Bridge Pro, ESP32-C6 firmware 0.3.8,
+Festavia Permanent LCX030 / 1.163.5 / 27 logical positions. Controlled test requests are
+at most 10%, with a temporary 19% Studio cap; all eight mode-hold samples are
+below 20%. Early HA restart attempts also triggered an existing warm-white startup
+automation, which briefly commanded Hue brightness 20.16% (raw level 52/254).
+That second automation had not initially been isolated. It was identified from
+its exact script timestamp and Hue event trace, paused for final acceptance,
+and restored afterward. The entire maintenance session cannot be claimed to
+have stayed below 20%.
+
+- All eight native modes remain active past delayed Hue status reports. Flow runs for 76 seconds; breathing for 42 seconds; the other modes for 36 seconds each. Native sends/confirmations and direct fixture attribute reads are recorded. These are not new optical frame-rate measurements.
+- Real Hue API color/brightness, off and a three-point gradient take ownership. Studio stops sending, discards the old restoration lease and leaves the Hue request applied. Direct fixture ZCL reads also verify the requested blue xy coordinates and low brightness after handoff.
+- A Hue color change with unchanged cached brightness is replayed with that current Hue brightness, so the final native frame cannot leave Studio’s level behind. Direct fixture reads verify both fields.
+- Commands to the actual HA Hue light, including identical brightness, relative brightness, toggle and rapid Hue-then-HA changes, yield correctly. Relative changes apply once; the latest requested intent wins.
+- With the option off, a Hue color change does not stop autonomous native playback. The native Return control to Hue button still releases. The option is restored to on.
+- Actual HA shutdown/restart: option on yields via the ESP watchdog, with no stale baseline restoration or automatic restart; option off keeps native playback running. The choice persists across restart.
+- Both initial pinned Wi-Fi OTA and the normal HA update entity install and confirm 0.3.8. The selected Hue PAN, certificate and existing pairing survive; a released session remains quiet and retains the Hue appearance across the update.
+- Four successive authenticated peers fill and exceed the three socket slots; the server reclaims idle slots and the native HA transport reconnects without USB. A pre-update sample records 33 free SDK buffers, no out-of-memory error and all 8,320 accepted transfers confirmed.
+- Actual HA frontend at 393×852 exposes the Return control to Hue control, which releases running playback. No horizontal overflow or Festavia card JavaScript exception. Existing unrelated page errors are recorded separately.
+- Original 15 entity IDs and unique IDs and scene/color libraries remain unchanged; two native ownership entities bring the total to 17. Installed component files match the release archive. Original staged controls and cap are restored, the seasonal automation is re-enabled, and the fixture is left off under Hue control. No new app, panel or dashboard is created.
+
+## Observable-command limit
+
+Hue's event stream reports state changes, including delayed reports of ESP output.
+The current native palette and pulsing brightness are filtered to prevent false
+handoff. Identical Hue app commands may produce no event, and values matching
+native output or expected startup changes can be ambiguous. Expected setup
+power and captured baseline reports are filtered during acquisition. Explicit Return control to Hue always works;
+HA light-service commands are observed separately, including identical repeats.
+No passive capture of all Zigbee commands or bridge firmware modification is claimed.
+
+## Earlier animation and mapping evidence
+
+The 640 optical frames below were captured with 0.8.0 / firmware 0.3.7; the
+three-minute soak was on 0.3.7 and mapping checks on 0.3.4. Their dates and image
+identities remain separate in FIRMWARE_ACCEPTANCE.json. Firmware 0.3.8 changes
+ownership, recovery and network connection handling; it keeps the native renderer.
+Other models/firmware, bridge models, simultaneous fixtures and a fresh-board
+installation still need their own physical acceptance.
+
+---
+
 # Acceptance — 0.8.0
 
 Checked 2026-11-09 UTC. No Home Assistant Core/HACS acceptance or quality tier is claimed.

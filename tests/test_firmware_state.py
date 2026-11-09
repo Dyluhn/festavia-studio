@@ -40,4 +40,4 @@ class FirmwareStateTests(unittest.TestCase):
             self.assertEqual(build.returncode, 0, build.stderr)
             run = subprocess.run([binary], text=True, capture_output=True, timeout=10)
             self.assertEqual(run.returncode, 0, run.stderr)
-            self.assertEqual(run.stdout.count("PASS "), 4, run.stdout)
+            self.assertEqual(run.stdout.count("PASS "), 10, run.stdout)
