@@ -1,0 +1,19 @@
+{
+  "domain": "festavia_studio",
+  "name": "Festavia Studio",
+  "codeowners": [
+    "@Dyluhn"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "frontend",
+    "http",
+    "lovelace"
+  ],
+  "documentation": "https://github.com/Dyluhn/festavia-studio#readme",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Dyluhn/festavia-studio/issues",
+  "requirements": [],
+  "version": "0.7.0"
+}

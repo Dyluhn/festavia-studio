@@ -1,0 +1,50 @@
+{
+  "name": "hue-mesh-lab",
+  "version": "0.3.4",
+  "package_revision": 1,
+  "protocol": 1,
+  "built_at": "2026-11-08T06:35:25.514329+00:00",
+  "esp_idf": "5.3.2",
+  "esp_zigbee_lib": "1.6.8",
+  "esp_zboss_lib": "1.6.4",
+  "targets": {
+    "esp32c6": {
+      "factory": "esp32c6/hue-mesh-lab.factory.bin",
+      "app": "esp32c6/hue-mesh-lab.app.bin",
+      "app_size": 1410000,
+      "app_offset": 131072,
+      "flash_size": "4MB",
+      "ota": true,
+      "storage_offset": 4063232,
+      "slot_size": 1966080,
+      "flash_mode": "dio",
+      "flash_freq": "80m",
+      "hardware_verified": true
+    }
+  },
+  "sha256": {
+    "esp32c6/hue-mesh-lab.factory.bin": "e52ac1b769f75a2875343ce3897db4e44d6496b1848633cff1a0f405a7bff4d5",
+    "esp32c6/hue-mesh-lab.app.bin": "c000134a9e66c786e2a761c645c154d81e665adf40a9c33f599809734d9ed297"
+  },
+  "hardware_verified": true,
+  "hue_join_verified": true,
+  "physical_led_control_verified": true,
+  "firmware_source_sha256": {
+    "firmware/CMakeLists.txt": "3a62b6f03043ebf98a8c707884fc754f65bc2ef1591fb1d07058d5da8bc3c30f",
+    "firmware/main/CMakeLists.txt": "ce5418071c69a0ca3f2e33451001b0017dbe372f41b8140ee9ea029ff19e1aea",
+    "firmware/main/idf_component.yml": "f76d5ed50b643808e5e669513fa14a32eadc568d54aa504c52fc64e24646b7d2",
+    "firmware/main/main.c": "d28e324659f2a0e2a1fe528c1ed99b9cd059f329bd2b0b0361fe8e3e70a138e5",
+    "firmware/main/network.c": "14325efbd2afd1f18674ef13a3daa68c86f48defd684bb85f0962988819414d0",
+    "firmware/main/network.h": "ea1156e22e9860c51bf2c1c3c144b8bc8b1a092322fc5fdce2073383baeb0241",
+    "firmware/main/player.c": "5063228c38c6d36e647f0417cc4949367d169f1785f810c40625105712121fa5",
+    "firmware/main/player.h": "a00962998f9a382550b36beb18332c4a80b0f4028e3d3987c886d5414de85234",
+    "firmware/main/wire.c": "725aa7979f14e9bcd195c913cece2cdb30010762fa2685b8320a52aacb7b22b0",
+    "firmware/main/wire.h": "7590d2f4e947c71f3f65a2e1a6c1382938302837996e7ecdcd060ad7df31e1c2",
+    "firmware/partitions.csv": "d5a5a86d5f93052002dbd10c369a15a339d687edf5e4132642d1e0dba702983a",
+    "firmware/partitions.usb.csv": "3b47927cd6cf753c6a262d0bcaba1faa6933e559256e9767f2012eabb7e0569e",
+    "firmware/sdkconfig.defaults": "7ed0b0436ee3f981be582ed24ee4765709d266bbe8b433e03458be1e0d79f595",
+    "firmware/sdkconfig.defaults.esp32c6": "f4a705c064665329335f7cae07d2560960468d17d076385f098a452ad6d5c362",
+    "firmware/sdkconfig.defaults.esp32h2": "09d1f7578890bd2eb34a29031c40acccf542154d5b72f1f025661779a2ba798f"
+  },
+  "acceptance": "docs/PUCK_REPEAT_ACCEPTANCE.json"
+}

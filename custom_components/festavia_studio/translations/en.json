@@ -1,0 +1,414 @@
+{
+  "title": "Festavia Studio",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose a Hue bridge",
+        "description": "Use a bridge already configured in Home Assistant, or pair another bridge. Only Festavia lights will be offered.",
+        "data": {
+          "bridge": "Hue bridge"
+        }
+      },
+      "manual": {
+        "title": "Connect a Hue bridge",
+        "data": {
+          "host": "Bridge LAN address or hostname"
+        }
+      },
+      "link": {
+        "title": "Authorize Festavia Studio",
+        "description": "Verify {name} ({bridge_id}), then press its physical link button and select Submit. Certificate fingerprint: {fingerprint}",
+        "data": {}
+      },
+      "fixtures": {
+        "title": "Choose your Festavia lights",
+        "description": "Bridge mode uses Hue gradient points. Individual puck effects require an ESP32-C6 and a verified fixture model. Stop playback before changing fixtures or mode.",
+        "data": {
+          "lights": "Festavia lights",
+          "mode": "Control mode"
+        }
+      },
+      "device": {
+        "title": "Connect your ESP32-C6",
+        "description": "Enter the HTTPS address and credentials from its first USB installation. Updates after that use Wi-Fi. Leave an existing token or fingerprint empty to keep it.",
+        "data": {
+          "url": "ESP32 HTTPS address",
+          "token": "Device token",
+          "tls_sha256": "TLS certificate SHA-256 fingerprint"
+        }
+      },
+      "network": {
+        "title": "Join the Hue Zigbee network",
+        "description": "In the Hue app, open Settings \u2192 Lights \u2192 Add lights \u2192 Search. Choose its network here. The bridge remains the Zigbee coordinator.",
+        "data": {
+          "network": "Zigbee network",
+          "legacy": "Use legacy ZLL joining"
+        }
+      },
+      "joined": {
+        "title": "Wait for the ESP32 to join",
+        "description": "Allow about 30 seconds, then Submit to verify the connection and read the fixture size.",
+        "data": {}
+      },
+      "reconfigure": {
+        "title": "Reconfigure Festavia Studio",
+        "menu_options": {
+          "connection": "Bridge and ESP32 connection",
+          "fixtures": "Lights and control mode",
+          "recover": "Recover playback"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Renew Festavia authorization",
+        "description": "Leave a key/token empty to keep it. A linked Hue integration supplies its current key automatically. This updates credentials for the same bridge and ESP32; it does not change lights or mode.",
+        "data": {
+          "bridge_key": "Hue application key",
+          "device_token": "ESP32 token"
+        }
+      },
+      "device_recover": {
+        "title": "Restore previous playback",
+        "description": "Restore the appearance captured before playback, then release the previous controller. Keep the bridge, ESP32 and lights powered and reachable.",
+        "data": {}
+      },
+      "orphan_recover": {
+        "title": "Restore previous playback",
+        "description": "Restore the appearance captured before playback, then release the previous controller. Keep the bridge, ESP32 and lights powered and reachable.",
+        "data": {}
+      },
+      "recover": {
+        "title": "Restore previous playback",
+        "description": "Restore the appearance captured before playback, then release the previous controller. Keep the bridge, ESP32 and lights powered and reachable.",
+        "data": {}
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach this Hue bridge. Check its address, authorization and network access.",
+      "link_required": "Press the Hue bridge link button and try again.",
+      "device_connection": "Cannot verify this ESP32-C6. Check its address, token, fingerprint and that playback is stopped.",
+      "invalid_selection": "This selection is not supported. Native mode needs one verified LCX030 fixture. Bridge mode supports other Festavia models.",
+      "network_failed": "Could not join or verify the network. Open Add lights \u2192 Search in Hue, then try again.",
+      "stop_first": "Stop and restore the current effect before changing the installation.",
+      "invalid_auth": "Authorization was rejected. Check the key or token.",
+      "certificate_changed": "The certificate changed. Verify the device identity in Reconfigure.",
+      "recovery_failed": "Restoration could not be confirmed. Check connections and authorization, then retry; recovery data has been retained."
+    },
+    "abort": {
+      "already_configured": "These Festavia lights are already configured.",
+      "no_festavia": "No Festavia lights were found on this bridge. Add them in Hue first.",
+      "stop_first": "Stop and restore the current effect before changing the installation.",
+      "reconfigure_successful": "Connection updated.",
+      "reauth_successful": "Authorization updated.",
+      "no_esp": "No ESP32 is configured. Use Reconfigure to add one.",
+      "cannot_connect": "Cannot reach the device. Use Reconfigure to check its connection.",
+      "unique_id_mismatch": "This connection identifies a different bridge. Add it as a new integration after restoring the current lights.",
+      "recovery_successful": "Playback restored.",
+      "recovery_required": "Unfinished recovery exists for these lights. Complete the Festavia repair before taking control."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Festavia Studio options",
+        "description": "Adjust everyday controls, brightness limit and firmware on the device. Use Reconfigure to change connections, lights or control mode.",
+        "menu_options": {
+          "palettes": "Delete a saved palette",
+          "network": "Zigbee connection status"
+        }
+      },
+      "palettes": {
+        "title": "Delete a saved palette",
+        "description": "The current colors stay unchanged. Use the palette card or Save palette action to save a palette.",
+        "data": {
+          "preset": "Palette to delete"
+        }
+      },
+      "network": {
+        "title": "ESP32 Zigbee connection",
+        "description": "{state} \u00b7 channel {channel}. Pairing is preserved during wireless updates.",
+        "data": {}
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach this Hue bridge. Check its address, authorization and network access.",
+      "link_required": "Press the Hue bridge link button and try again.",
+      "device_connection": "Cannot verify this ESP32-C6. Check its address, token, fingerprint and that playback is stopped.",
+      "invalid_selection": "This selection is not supported. Native mode needs one verified LCX030 fixture. Bridge mode supports other Festavia models.",
+      "network_failed": "Could not join or verify the network. Open Add lights \u2192 Search in Hue, then try again.",
+      "stop_first": "Stop and restore the current effect before changing the installation."
+    },
+    "abort": {
+      "already_configured": "These Festavia lights are already configured.",
+      "no_festavia": "No Festavia lights were found on this bridge. Add them in Hue first.",
+      "stop_first": "Stop and restore the current effect before changing the installation.",
+      "reconfigure_successful": "Connection updated.",
+      "reauth_successful": "Authorization updated.",
+      "no_esp": "No ESP32 is configured. Use Reconfigure to add one.",
+      "cannot_connect": "Cannot reach the device. Use Reconfigure to check its connection."
+    }
+  },
+  "entity": {
+    "light": {
+      "effect_light": {
+        "name": "Effect light"
+      }
+    },
+    "text": {
+      "palette": {
+        "name": "Palette"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    },
+    "number": {
+      "brightness": {
+        "name": "Brightness"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "brightness_limit": {
+        "name": "Brightness limit"
+      }
+    },
+    "select": {
+      "effect": {
+        "name": "Effect"
+      },
+      "preset": {
+        "name": "Saved palette"
+      }
+    },
+    "switch": {
+      "reverse": {
+        "name": "Reverse direction"
+      }
+    },
+    "button": {
+      "play": {
+        "name": "Play"
+      },
+      "stop": {
+        "name": "Stop and restore"
+      },
+      "off": {
+        "name": "Lights off"
+      }
+    },
+    "sensor": {
+      "playback": {
+        "name": "Playback"
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "Connection"
+      }
+    }
+  },
+  "services": {
+    "play": {
+      "name": "Play or update",
+      "description": "Start the staged scene or a saved palette. Runs until stopped.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "preset": {
+          "name": "Saved palette"
+        },
+        "colors": {
+          "name": "Colors",
+          "description": "Ordered hex colors, one per puck, repeated. Example: [\"#ff0000\", \"#00ff00\", \"#9900ff\"]."
+        },
+        "effect": {
+          "name": "Pattern"
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Percent, within the integration brightness limit."
+        },
+        "speed": {
+          "name": "Speed"
+        },
+        "reverse": {
+          "name": "Reverse direction"
+        }
+      }
+    },
+    "configure": {
+      "name": "Configure scene",
+      "description": "Stage changes while idle; update a playing effect unless apply is false.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "colors": {
+          "name": "Colors",
+          "description": "Ordered hex colors, one per puck, repeated. Example: [\"#ff0000\", \"#00ff00\", \"#9900ff\"]."
+        },
+        "effect": {
+          "name": "Pattern"
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Percent, within the integration brightness limit."
+        },
+        "speed": {
+          "name": "Speed"
+        },
+        "reverse": {
+          "name": "Reverse direction"
+        },
+        "apply": {
+          "name": "Apply while playing",
+          "description": "Update a running effect immediately; an idle effect stays staged."
+        }
+      }
+    },
+    "set_palette": {
+      "name": "Set palette",
+      "description": "Set an ordered palette. Native puck mode repeats one color per puck.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "colors": {
+          "name": "Colors",
+          "description": "Ordered hex colors, one per puck, repeated. Example: [\"#ff0000\", \"#00ff00\", \"#9900ff\"]."
+        },
+        "apply": {
+          "name": "Apply while playing",
+          "description": "Update a running effect immediately; an idle effect stays staged."
+        }
+      }
+    },
+    "load_preset": {
+      "name": "Load saved palette",
+      "description": "Load a saved palette; update the effect if it is playing.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "preset": {
+          "name": "Saved palette"
+        }
+      }
+    },
+    "stop": {
+      "name": "Stop and restore",
+      "description": "Restore the appearance captured before Studio playback, preserving external power-off.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "off": {
+          "name": "Keep lights off"
+        }
+      }
+    },
+    "off": {
+      "name": "Lights off",
+      "description": "Stop Studio and switch its selected Festavia lights off.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        }
+      }
+    },
+    "save_preset": {
+      "name": "Save palette",
+      "description": "Save the currently staged scene.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "name": {
+          "name": "Palette name"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "operation_failed": {
+      "message": "Could not complete the Festavia operation. Check the connection and download diagnostics if it persists."
+    },
+    "auth_bridge": {
+      "message": "The Hue bridge rejected authorization. Reauthenticate Festavia Studio or its linked Hue integration."
+    },
+    "auth_device": {
+      "message": "The ESP32 rejected its token. Reauthenticate Festavia Studio using the device connection file."
+    },
+    "certificate_changed": {
+      "message": "The device certificate changed. Verify its identity and fingerprint in Reconfigure."
+    },
+    "recovery_pending": {
+      "message": "Restore the captured installation before changing fixtures. Use Reconfigure \u2192 Recover playback."
+    },
+    "unloading": {
+      "message": "Festavia Studio is reloading. Try again when the integration is available."
+    },
+    "palette_black": {
+      "message": "Native puck mode cannot represent black as a palette color. Choose non-black colors with the same tone."
+    },
+    "palette_tone": {
+      "message": "Native puck colors share one tone. Use matching RGB maximum values, or adjust Tone in the palette card."
+    },
+    "palette_count": {
+      "message": "Choose 1\u2013{limit} colors in #RRGGBB format."
+    },
+    "invalid_effect": {
+      "message": "This effect is unavailable for the selected control mode."
+    },
+    "invalid_scene": {
+      "message": "These scene settings cannot be represented by the selected fixture."
+    },
+    "value_range": {
+      "message": "{field} must be between {low} and {high}."
+    },
+    "preset_missing": {
+      "message": "The saved palette was not found."
+    },
+    "preset_name": {
+      "message": "Choose a palette name from 1 to 60 characters. Custom is reserved for unsaved colors."
+    },
+    "entry_missing": {
+      "message": "Select a configured Festavia Studio integration."
+    },
+    "firmware_version": {
+      "message": "Only the firmware bundled with this integration is supported."
+    }
+  },
+  "issues": {
+    "removal_recovery": {
+      "title": "Festavia restoration is unfinished",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Recover removed Festavia controller",
+            "description": "Restoration was not confirmed during removal. Reconnect the original bridge and ESP32, then select Submit to restore the captured appearance and remove its retained private credentials and recovery files. Empty connection fields keep the saved values.",
+            "data": {
+              "bridge_host": "Bridge address",
+              "bridge_key": "Hue application key",
+              "device_url": "ESP32 HTTPS address",
+              "device_token": "ESP32 token"
+            }
+          }
+        },
+        "error": {
+          "recovery_failed": "Recovery could not be confirmed. Check the connections and credentials and retry. The recovery data remains saved."
+        }
+      }
+    }
+  }
+}

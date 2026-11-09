@@ -1,0 +1,64 @@
+{
+  "entity": {
+    "light": {
+      "effect_light": {
+        "default": "mdi:string-lights"
+      }
+    },
+    "text": {
+      "palette": {
+        "default": "mdi:palette"
+      }
+    },
+    "update": {
+      "firmware": {
+        "default": "mdi:chip"
+      }
+    },
+    "number": {
+      "brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "speed": {
+        "default": "mdi:speedometer"
+      },
+      "brightness_limit": {
+        "default": "mdi:brightness-7"
+      }
+    },
+    "select": {
+      "effect": {
+        "default": "mdi:animation"
+      },
+      "preset": {
+        "default": "mdi:palette"
+      }
+    },
+    "switch": {
+      "reverse": {
+        "default": "mdi:swap-horizontal"
+      }
+    },
+    "button": {
+      "play": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      },
+      "off": {
+        "default": "mdi:lightbulb-off"
+      }
+    },
+    "sensor": {
+      "playback": {
+        "default": "mdi:animation-play"
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "default": "mdi:lan-connect"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.setup-data/
+.storage/
+uniform-commits/
+test-results/
+*-credentials.json
+credentials.json
+installation.json
+bridge-session.json
+player-session.json
+*.zip
+*.tar.gz
+build*/

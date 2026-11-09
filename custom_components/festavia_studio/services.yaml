@@ -1,0 +1,250 @@
+{
+  "play": {
+    "name": "Play or update",
+    "description": "Start the staged scene or a saved palette. Runs until stopped.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "preset": {
+        "name": "Saved palette",
+        "selector": {
+          "text": {}
+        }
+      },
+      "colors": {
+        "name": "Colors",
+        "description": "Ordered hex colors, one per puck, repeated. Example: [\"#ff0000\", \"#00ff00\", \"#9900ff\"].",
+        "selector": {
+          "object": {}
+        }
+      },
+      "effect": {
+        "name": "Pattern",
+        "selector": {
+          "select": {
+            "options": [
+              "static",
+              "flow",
+              "breathe"
+            ]
+          }
+        }
+      },
+      "brightness": {
+        "name": "Brightness",
+        "description": "Percent, within the integration brightness limit.",
+        "selector": {
+          "number": {
+            "min": 1,
+            "max": 100,
+            "unit_of_measurement": "%"
+          }
+        }
+      },
+      "speed": {
+        "name": "Speed",
+        "selector": {
+          "number": {
+            "min": 0.1,
+            "max": 20,
+            "step": 0.1
+          }
+        }
+      },
+      "reverse": {
+        "name": "Reverse direction",
+        "selector": {
+          "boolean": {}
+        }
+      }
+    }
+  },
+  "configure": {
+    "name": "Configure scene",
+    "description": "Stage changes while idle; update a playing effect unless apply is false.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "colors": {
+        "name": "Colors",
+        "description": "Ordered hex colors, one per puck, repeated. Example: [\"#ff0000\", \"#00ff00\", \"#9900ff\"].",
+        "selector": {
+          "object": {}
+        }
+      },
+      "effect": {
+        "name": "Pattern",
+        "selector": {
+          "select": {
+            "options": [
+              "static",
+              "flow",
+              "breathe"
+            ]
+          }
+        }
+      },
+      "brightness": {
+        "name": "Brightness",
+        "description": "Percent, within the integration brightness limit.",
+        "selector": {
+          "number": {
+            "min": 1,
+            "max": 100,
+            "unit_of_measurement": "%"
+          }
+        }
+      },
+      "speed": {
+        "name": "Speed",
+        "selector": {
+          "number": {
+            "min": 0.1,
+            "max": 20,
+            "step": 0.1
+          }
+        }
+      },
+      "reverse": {
+        "name": "Reverse direction",
+        "selector": {
+          "boolean": {}
+        }
+      },
+      "apply": {
+        "name": "Apply while playing",
+        "description": "Update a running effect immediately; an idle effect stays staged.",
+        "default": true,
+        "selector": {
+          "boolean": {}
+        }
+      }
+    }
+  },
+  "set_palette": {
+    "name": "Set palette",
+    "description": "Set an ordered palette. Native puck mode repeats one color per puck.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "colors": {
+        "name": "Colors",
+        "description": "Ordered hex colors, one per puck, repeated. Example: [\"#ff0000\", \"#00ff00\", \"#9900ff\"].",
+        "required": true,
+        "selector": {
+          "object": {}
+        }
+      },
+      "apply": {
+        "name": "Apply while playing",
+        "description": "Update a running effect immediately; an idle effect stays staged.",
+        "default": true,
+        "selector": {
+          "boolean": {}
+        }
+      }
+    }
+  },
+  "load_preset": {
+    "name": "Load saved palette",
+    "description": "Load a saved palette; update the effect if it is playing.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "preset": {
+        "name": "Saved palette",
+        "selector": {
+          "text": {}
+        },
+        "required": true
+      }
+    }
+  },
+  "stop": {
+    "name": "Stop and restore",
+    "description": "Restore the appearance captured before Studio playback, preserving external power-off.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "off": {
+        "name": "Keep lights off",
+        "default": false,
+        "selector": {
+          "boolean": {}
+        }
+      }
+    }
+  },
+  "off": {
+    "name": "Lights off",
+    "description": "Stop Studio and switch its selected Festavia lights off.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      }
+    }
+  },
+  "save_preset": {
+    "name": "Save palette",
+    "description": "Save the currently staged scene.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "name": {
+        "name": "Palette name",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      }
+    }
+  }
+}
