@@ -15,7 +15,7 @@ from hue_mesh import pack_xy
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def fixture(positions=27, count=27, reverse=False):
+def fixture(positions=27, count=27, reverse=False, capacity=10):
     colors = [
         "#" + "".join(f"{round(v * 255):02x}" for v in colorsys.hsv_to_rgb(i / count, 1, 1))
         for i in range(count)
@@ -29,7 +29,7 @@ def fixture(positions=27, count=27, reverse=False):
         "reverse": reverse,
     }
     before = {"logical_count": positions, "segments": [[0, positions]], "aliases": [77]}
-    return scene, before, program(scene, list(range(101, 111)), before)
+    return scene, before, program(scene, list(range(101, 101 + capacity)), before)
 
 
 class RetainedTests(unittest.TestCase):
@@ -55,7 +55,7 @@ class RetainedTests(unittest.TestCase):
             }
             p.status = lambda: events.append("read") or state
             p.retained_options = lambda *args, **kwargs: (
-                events.append("survey") or {"transport": "retained"}
+                events.append("survey") or {"transport": "retained", "paint": [None] * 16}
             )
             p.command = lambda op, **kw: events.append(op) or state
             p.start_scene = lambda *args: events.append("start") or state
@@ -63,14 +63,14 @@ class RetainedTests(unittest.TestCase):
             self.assertEqual(events, ["read", "survey", "read", "player_load", "start"])
 
     def test_every_count_and_direction_preserves_exact_order_and_original_geometry(self):
-        for positions in (11, 21, 24, 27, 31):
-            for count in range(10, positions + 1):
+        for positions in (11, 16, 21, 24, 27, 31, 32, 48, 80, 255):
+            for count in sorted({10, min(16, positions), positions}):
                 for reverse in (False, True):
                     scene, before, packets = fixture(positions, count, reverse)
                     framebuffer = [None] * positions
                     aliases = []
                     regions = []
-                    self.assertLessEqual(len(packets), 16)
+                    self.assertLessEqual(len(packets), 106)
                     for p in packets:
                         data = bytes.fromhex(p["payload"])
                         self.assertLessEqual(len(data) + 5, 82)
@@ -153,7 +153,26 @@ class RetainedTests(unittest.TestCase):
                 p.retained_options(scene, before, identity=identity)
 
     def test_real_c_player_paint_reply_failure_idle_and_handoff_boundaries(self):
-        _, before, packets = fixture()
+        for positions in (11, 16, 27, 32, 48, 80, 255):
+            self.run_c_fixture(positions)
+            if positions in (48, 255):
+                self.run_c_fixture(positions, capacity=7)
+
+    def run_c_fixture(self, positions, capacity=10):
+        _, before, packets = fixture(positions, positions, capacity=capacity)
+        import json
+
+        request = {
+            "op": "player_load",
+            "samples": ["000000000004"],
+            "fps": 1,
+            "transport": "retained",
+            "positions": positions,
+            "paint": packets,
+        }
+        self.assertLessEqual(len(json.dumps(request).encode()), 40000)
+        if positions == 255 and capacity == 7:
+            self.assertEqual(len(packets), 106)
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
 
@@ -181,7 +200,7 @@ class RetainedTests(unittest.TestCase):
 
             checks = geometry_checks(before["segments"], before["aliases"])
             (folder / "retained_fixture.h").write_text(
-                "static const packet_t fixture_paint[]={"
+                f"#define FIXTURE_POSITIONS {positions}\nstatic const packet_t fixture_paint[]={{"
                 + ",".join(map(cpacket, packets))
                 + "};\nstatic const packet_t fixture_checks[]={"
                 + ",".join(map(cpacket, checks))

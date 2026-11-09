@@ -101,7 +101,7 @@ bool hm_palette_frame(const uint8_t *data, size_t size)
     return count >= 2 && count <= 9 && !(data[6] & 15) &&
         size == 12 + 3 * count && data[5] == 4 + 3 * count &&
         data[7] == 2 && data[8] == 0 && data[9] == 0 &&
-        data[size-2] == 216 && data[size-1] == 0;
+        (data[size-2] == 0 || data[size-2] == 216) && data[size-1] == 0;
 }
 
 bool hm_xy_restore_probe(uint16_t x, uint16_t y, unsigned trial,

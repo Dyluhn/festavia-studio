@@ -371,6 +371,10 @@ class NativeClient:
                     "retained_pucks_supported",
                     "applying",
                     "paint_step",
+                    "paint_steps",
+                    "failure_cause",
+                    "failure_stage",
+                    "failure_step",
                     "hue_takeover",
                     "hue_watchdog_remaining_ms",
                 )

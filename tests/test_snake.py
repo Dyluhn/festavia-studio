@@ -64,7 +64,7 @@ class SnakeTests(unittest.TestCase):
             self.assertEqual(raw[:3], bytes([0x52, 1, 23]))
             self.assertEqual(raw[3:5], b"\x01\x00")
             self.assertEqual(raw[6] >> 4, 9)
-            self.assertEqual(raw[-2:], bytes([216, 0]))
+            self.assertEqual(raw[-2:], bytes([0, 0]))
             actual = snake_sample(scene, f / len(samples))
             for puck in range(27):
                 slot = scattered_index(puck % 9, 9)

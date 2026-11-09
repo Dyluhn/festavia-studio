@@ -11,6 +11,8 @@
 #include "zdo/esp_zigbee_zdo_command.h"
 
 #define MAX_STEPS 16
+#define MAX_POSITIONS 255
+#define MAX_PAINT_STEPS (4 + 2 * ((MAX_POSITIONS + 4) / 5))
 #define MAX_FRAMES 64
 #define MAX_VERIFY 8
 #define TARGET_TIMEOUT_MS 15000
@@ -48,7 +50,7 @@ static size_t failure_step;
 static unsigned animation_timeouts;
 // A retained scene is a finite, acknowledged paint burst. The lamp holds its
 // colors after its original geometry has been verified; there is no map loop.
-static packet_t paint[MAX_STEPS];
+static packet_t *paint;
 static size_t paint_count, paint_step, paint_check_step;
 static bool retained_mode, pending_paint, pending_paint_check, geometry_dirty, geometry_release;
 
@@ -77,6 +79,9 @@ static cJSON *result(bool ok, const char *error)
     cJSON_AddBoolToObject(r, "playing", playing);
     cJSON_AddBoolToObject(r, "preserve_off", preserve_off);
     cJSON_AddBoolToObject(r, "native_palette_supported", true);
+    cJSON_AddBoolToObject(r, "native_fit_supported", true);
+    cJSON_AddNumberToObject(r, "native_positions_max", MAX_POSITIONS);
+    cJSON_AddNumberToObject(r, "retained_paint_steps_max", MAX_PAINT_STEPS);
     cJSON_AddBoolToObject(r, "hue_takeover_supported", true);
     cJSON_AddBoolToObject(r, "hue_takeover", hue_takeover);
     cJSON_AddNumberToObject(r,"release_lost_confirms",release_lost_confirms);
@@ -85,6 +90,7 @@ static cJSON *result(bool ok, const char *error)
     cJSON_AddBoolToObject(r,"retained_pucks_supported",true);
     cJSON_AddBoolToObject(r,"applying",playing && retained_mode && !bank_acked);
     cJSON_AddNumberToObject(r,"paint_step",paint_step);
+    cJSON_AddNumberToObject(r,"paint_steps",paint_count);
     cJSON_AddBoolToObject(r, "aps_acknowledged", !(palette_mode && sample_count > 1));
     cJSON_AddNumberToObject(r, "color_restore_probes", color_probe_count);
     cJSON_AddStringToObject(r, "failure_cause", failure_cause);
@@ -164,8 +170,8 @@ static bool retained_program(packet_t *p, size_t n, unsigned positions)
 {
     // Every temporary map must cover the entire fixture. Only singleton
     // regions receive colors, and the final packets restore captured geometry.
-    if (n<5 || n>MAX_STEPS || positions<1 || positions>31 || p[0].command!=3) return false;
-    bool covered[31]={0}; uint16_t aliases[10]={0}; uint8_t starts[10],lengths[10];
+    if (n<5 || n>MAX_PAINT_STEPS || positions<1 || positions>MAX_POSITIONS || p[0].command!=3) return false;
+    bool covered[MAX_POSITIONS]={0}; uint16_t aliases[10]={0}; uint8_t starts[10],lengths[10];
     unsigned alias_count=0,map_count=0; uint32_t previous=0;
     for (size_t j=0;j<n;j++) {
         packet_t *v=&p[j]; const uint8_t *b=v->payload; unsigned z=v->length;
@@ -650,6 +656,7 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         free(body);
         if (err!=ESP_OK) return result(false,"could not persist recovery plan");
         free(samples); samples=NULL; sample_count=0;
+        free(paint); paint=NULL; paint_count=0;
         durable=true;hue_takeover=takeover;releasing=playback_persisted=false;
         retained_mode=geometry_dirty=geometry_release=pending_paint=pending_paint_check=false;
         preserve_off=false; state="configuring"; reason="prepared"; armed_until=now()+120000;
@@ -692,13 +699,16 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         packet_t *program=NULL;size_t np=0;
         if (retained) {
             int positions;
-            program=calloc(MAX_STEPS,sizeof(packet_t));
-            valid=program && n==1 && number(obj,"positions",1,31,&positions) &&
-                packets(cJSON_GetObjectItemCaseSensitive(obj,"paint"),program,MAX_STEPS,&np) &&
+            const cJSON *paint_array=cJSON_GetObjectItemCaseSensitive(obj,"paint");
+            int steps=cJSON_GetArraySize(paint_array);
+            if (steps>=5 && steps<=MAX_PAINT_STEPS) program=calloc(steps,sizeof(packet_t));
+            valid=program && n==1 && number(obj,"positions",1,MAX_POSITIONS,&positions) &&
+                packets(paint_array,program,steps,&np) &&
                 retained_program(program,np,positions);
             if (!valid) {free(program);free(temp);return result(false,"invalid retained puck program");}
-            memcpy(paint,program,np*sizeof(packet_t));paint_count=np;free(program);
+            free(paint);paint=program;paint_count=np;
         }
+        if (!retained) {free(paint);paint=NULL;paint_count=0;}
         free(samples); samples=temp; sample_count=n; fps=rate; cycle_ms=period;
         palette_mode=native;retained_mode=retained;return result(true,NULL);
     }

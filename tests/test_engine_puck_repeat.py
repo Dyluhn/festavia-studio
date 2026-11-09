@@ -91,7 +91,7 @@ class PuckRepeatTests(unittest.TestCase):
                     self.assertEqual(len(data), 12 + 3 * max(2, n))
                     self.assertEqual(data[:3], b"\x52\x01\x19")
                     self.assertEqual(data[3:5], b"\x04\x00")  # Measured 400 ms native default.
-                    self.assertEqual(data[-2:], b"\xd8\x00")
+                    self.assertEqual(data[-2:], b"\x00\x00")
                     for puck in range(27):
                         slot = scattered_index(puck % n, n)
                         selected = (26 - puck) % n if reverse else puck % n

@@ -20,6 +20,7 @@ from pathlib import Path
 from .control import connected
 from .control_core import frame_encode, integer, segments_encode, snapshot_effect
 from .errors import PlaybackBlocked
+from .sizing import MAX_POSITIONS
 from .hue_mesh import combined_state, pack_xy
 from .net_client import PinnedHTTPS, credentials, save_credentials
 
@@ -31,8 +32,8 @@ def auto_layout(scene, positions=27):
     """Cover the entire string with balanced regions and complete color repeats."""
     effect = scene.get("effect", "static")
     colors = scene.get("colors", ["#00d5ff", "#b000ff"])
-    if not isinstance(colors, list) or not 1 <= len(colors) <= 27:
-        raise ValueError("one to twenty-seven colors required")
+    if not isinstance(colors, list) or not 1 <= len(colors) <= MAX_POSITIONS:
+        raise ValueError("one to 255 colors required")
     capacity = min(10, positions)
     regions = capacity
     if effect == "custom":
@@ -175,7 +176,7 @@ def retained_scene(scene):
 
 
 def compile_puck_scene(scene):
-    positions = integer(scene.get("positions", 27), 1, 31, "native positions")
+    positions = integer(scene.get("positions", 27), 1, MAX_POSITIONS, "native positions")
     allowed = {
         "positions",
         "name",
@@ -296,7 +297,7 @@ def compile_puck_scene(scene):
                 fade=0 if effect == "chase" else min(fade, 1) if effect == "heartbeat" else fade,
                 colors=ordered,
                 style=2,
-                scale=positions,
+                scale=0,
                 offset=0,
             ).hex()
         )
@@ -363,7 +364,7 @@ def compile_scene(scene, aliases):
     palette = [color(c) for c in colors]
     strengths = [color_strength(c) for c in colors]
     if not 1 <= len(palette) <= 27:
-        raise ValueError("one to twenty-seven colors required")
+        raise ValueError("one to twenty-seven wire records required")
     if type(scene.get("reverse", False)) is not bool:
         raise ValueError("reverse must be boolean")
     n = len(aliases)
@@ -738,7 +739,8 @@ class Player:
         state = self.command("player_start", duration_ms=seconds * 1000)
         if not retained:
             return state
-        deadline = time.monotonic() + 45
+        # Longer strings have more finite, paced packets; never loop maps.
+        deadline = time.monotonic() + max(45, min(180, state.get("paint_steps", 16) * 1.5 + 15))
         keepalive = 0
         while state.get("playing") and state.get("applying"):
             if time.monotonic() >= deadline:
@@ -753,6 +755,11 @@ class Player:
             state = self.status()
             if state.get("state") == "recovery_required":
                 raise RuntimeError("Puck scene recovery requires attention")
+        if not state.get("playing") and (
+            state.get("reason") == "delivery_failed"
+            or state.get("failure_cause") not in (None, "none")
+        ):
+            raise PlaybackBlocked("paint_failed")
         if not state.get("playing") and state.get("state") not in (
             "released",
             "releasing",
@@ -825,7 +832,11 @@ class Player:
                     "Extended static colors are currently verified only for LCX030 firmware 1.163.5"
                 )
             aliases = virtual_aliases(
-                self.profile, device, before, identity, min(10, before["logical_count"])
+                self.profile,
+                device,
+                before,
+                identity,
+                min(10, before["logical_count"], self.profile.get("max_regions", 10)),
             )
             return {
                 "transport": "retained",
@@ -842,6 +853,15 @@ class Player:
             scene = fit_scene(scene)
         native = isinstance(scene, dict) and scene.get("layout_mode") == "pucks"
         retained = native and retained_scene(scene)
+
+        def bank(samples, status):
+            if native and not retained and not status.get("native_fit_supported"):
+                # Older paired firmware accepts this harmless scattered-style
+                # parameter only. Style2 ignores scale; this is wire backwards
+                # compatibility, never the detected string length.
+                return [sample[:-4] + "d800" for sample in samples]
+            return samples
+
         load_options = {"transport": "palette"} if native else {}
         frame_count = len(scene.get("layout", [])) if isinstance(scene, dict) else 0
         if not frame_count and isinstance(scene, dict) and scene.get("effect") == "custom":
@@ -849,6 +869,8 @@ class Player:
             frame_count = len(frames[0]) if frames and isinstance(frames[0], list) else 10
         compile_scene(scene, list(range(1, (frame_count or 10) + 1)))
         state = self.status()
+        if native and scene["positions"] > state.get("native_positions_max", 27):
+            raise PlaybackBlocked("sizing_update_required")
         if native and self.profile.get("hue_takeover") and not state.get("hue_takeover_supported"):
             raise PlaybackBlocked("takeover_update_required")
         if native and not state.get("native_palette_supported"):
@@ -871,6 +893,8 @@ class Player:
                 load_options = self.retained_options(
                     scene, saved["before"], identity=saved.get("identity")
                 )
+                if len(load_options["paint"]) > state.get("retained_paint_steps_max", 16):
+                    raise PlaybackBlocked("sizing_update_required")
                 # Surveying several peers can evict the C6's idle HTTPS socket.
                 # Reconnect with a read before the next write; never retry a
                 # POST whose outcome might already have taken effect.
@@ -879,7 +903,7 @@ class Player:
                     raise PlaybackBlocked("fixture_changed")
             self.command(
                 "player_load",
-                samples=samples,
+                samples=bank(samples, state),
                 fps=fps,
                 cycle_ms=cycle_duration(scene, len(samples), fps),
                 **load_options,
@@ -904,7 +928,7 @@ class Player:
                 raise PlaybackBlocked("hue_effect_active")
             if native:
                 if before["logical_count"] != scene.get("positions", 27):
-                    raise RuntimeError("per-puck repeat count differs from the discovered fixture")
+                    raise PlaybackBlocked("length_changed")
                 # Use the existing live entertainment/collision survey before
                 # ownership. Native repeat itself creates no temporary aliases.
                 gradient_inventory(self.profile, d.ieee)
@@ -934,6 +958,8 @@ class Player:
                 load_options = self.retained_options(
                     scene, before, d, identity, inventory_checked=True
                 )
+                if len(load_options["paint"]) > state.get("retained_paint_steps_max", 16):
+                    raise PlaybackBlocked("sizing_update_required")
                 peak = round(
                     scene.get("brightness", 10) * color_strength(scene["colors"][0]) * 254 / 100
                 )
@@ -965,7 +991,7 @@ class Player:
             self.wait({"armed"}, 60)
             self.command(
                 "player_load",
-                samples=samples,
+                samples=bank(samples, state),
                 fps=fps,
                 cycle_ms=cycle_duration(scene, len(samples), fps),
                 **load_options,

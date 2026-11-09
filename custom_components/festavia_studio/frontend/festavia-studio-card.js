@@ -1,4 +1,4 @@
-/* Festavia Studio 0.11.0 — dependency-free native Lovelace card. */
+/* Festavia Studio 0.12.0 — dependency-free native Lovelace card. */
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clone = value => JSON.parse(JSON.stringify(value));
 function hsv(hex) {

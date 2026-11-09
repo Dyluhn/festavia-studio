@@ -4,7 +4,7 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.11.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
+Version **0.12.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
 
@@ -150,11 +150,30 @@ In YAML-managed dashboards, add the module resource
 | Mode | Sizing | Support |
 |---|---|---|
 | Hue bridge gradient | Reported API gradient color points across selected strings | Static ordered palettes; points may blend across multiple physical lights |
-| ESP32 individual pucks | Live logical count checked against a verified model/firmware profile | LCX030 Permanent / firmware 1.163.5 / 27 logical positions physically tested |
+| ESP32 individual pucks | Automatically reads the actual count and checks Hue metadata and full map coverage | LCX030 Permanent / firmware 1.163.5; 16/32/48 supported by the same image. Physical regression on 27 positions |
 
-Native mode supports **1–27 ordered static colors** on the verified 27-puck
-LCX030. A finite series of full-coverage layouts applies colors to individual
-pucks, then restores and verifies Hue's original layout and addresses. The lamp
+Native mode supports **one ordered static color per detected point**, including
+16, 32 and 48 points. No manual kit-size setting or size-specific image is needed.
+Setup reads the fixture count, original geometry and region capacity; it checks
+Hue’s reported pixel count when available. Cut strings use their detected length.
+After physically cutting or extending a configured string, use the integration’s
+**Reconfigure** flow to discover its new length. Firmware **0.4.0** is required
+for the expanded renderer; paired devices update wirelessly through the Firmware
+entity. Other Festavia models or fixture firmware versions remain capability-gated.
+
+The production firmware and HA lifecycle are tested with simulated 16/32/48-point
+fixtures; the available physical installation reports 27. Those other kit sizes
+have not been physically tested here. Please include model, firmware and detected
+count when contributing hardware results.
+
+The renderer supports up to 255 logical positions, the map field’s wire bound;
+this is not a claim that every physical product or extension topology supports it.
+The custom card and HA actions edit the full detected palette. HA text states have
+a 255-character limit, so the native Palette text entity shows an instruction to
+use the card when a palette exceeds that length.
+
+A finite series of full-coverage layouts applies colors to individual pucks,
+then restores and verifies Hue's original layout and addresses. The lamp
 holds the pattern without repeated map writes. Applying a large static palette
 takes several seconds; initial discovery/setup takes longer. It updates in
 sections rather than appearing everywhere at precisely the same instant.

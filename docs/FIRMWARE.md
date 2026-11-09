@@ -1,6 +1,6 @@
 # Firmware
 
-Bundled hardware-tested image: Hue Mesh Lab 0.3.9, ESP32-C6, UART0 115200,
+Bundled hardware-tested image: Hue Mesh Lab 0.4.0, ESP32-C6, UART0 115200,
 4 MB flash, two 1.875 MiB application slots, HTTPS certificate pinning and
 authenticated OTA. A USB-to-UART bridge is required for this console build.
 
@@ -15,8 +15,8 @@ It joins an existing selected Hue PAN as an additional Zigbee router; it does no
 replace or modify bridge firmware. No network-key export, light reset, touchlink
 takeover or Zigbee-network merging is used.
 
-App SHA-256: `57163683b0721e008baebbb7a2f6a15a27cd90447bc24ea093f02864ab256212`.
-Factory SHA-256: `d07000168a260544017aab983a168c29649c0a83037dc5f023f20eb578e8a54b`.
+App SHA-256: `8d7521613aab61fa6761a12a5b890c85ecf24e2a7cd85606fce2ee883fecff9f`.
+Factory SHA-256: `56811ba5c689e2b80005b27b074cd8598e31ded9b7d8de6ad87b1894dea8608c`.
 The factory image covers the entire 4 MB flash, including blank Zigbee/NVS storage
 for a new installation. Use the app image for updates that preserve pairing.
 The USB installation tool verifies the manifest before first flashing. The Wi-Fi
@@ -73,14 +73,33 @@ playback during HA outages. Manual Return control to Hue works in either mode.
 The HTTPS server reclaims idle sockets and enables TCP keepalive for reconnection.
 
 The raw protocol remains available for development. General-purpose control is
-capability-gated by the integration. Firmware 0.3.9 itself is an advanced lab transport;
+capability-gated by the integration. Firmware 0.4.0 itself is an advanced lab transport;
 do not expose its private connection file or raw API to untrusted users.
 
 ## Retained static colors
 
-Firmware 0.3.9 also accepts a finite, full-coverage per-puck paint program.
+Firmware 0.4.0 also accepts a finite, full-coverage per-puck paint program.
 Each command requires its matching application reply. Completion requires
 readback of the original Hue map and aliases. The lamp retains the colors;
 the ESP sends no repeating map or color packets for a static retained scene.
 A durable marker protects interrupted painting, and a Hue handoff repairs
 geometry without restoring old colors or power. This transport is static only.
+
+
+## Automatic size support (0.4.0)
+
+Native scattered palettes use the size-independent fit parameter. Legacy 216
+remains accepted for older integration versions during a wireless upgrade. The
+fixture's real count comes from FC03/0038 and is checked against Hue pixel metadata,
+original map coverage, alias count and FC01 region capacity during configuration.
+
+Static paint programs allocate only the actual packet count, with a maximum of
+106 packets for 255 positions using seven captured aliases. Setup and recovery
+capsules retain their existing 16-packet bound. Every packet stays within the
+single-frame transport, and maps are never rewritten in a repeating animation.
+The host waits according to program length and rejects older firmware before
+writing a program beyond that firmware’s advertised capacity.
+
+The same binary handles 16/32/48-point descriptors in production C and HA runtime
+tests. The physically available LCX030/1.163.5 reports 27 points; other physical
+kit sizes are supported by discovery but have not been physically certified here.

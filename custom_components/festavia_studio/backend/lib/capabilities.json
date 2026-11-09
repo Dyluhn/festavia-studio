@@ -1,15 +1,20 @@
 {
-  "schema": 1,
+  "schema": 2,
   "native_profiles": [
     {
       "model": "LCX030",
       "software": "1.163.5",
-      "logical_counts": [27],
       "endpoint": 11,
       "palette_max": 9,
       "fps_max": 10,
       "mapping": "scattered_inverse_odd_rotation",
-      "acceptance": "FIRMWARE_ACCEPTANCE.json"
+      "acceptance": "FIRMWARE_ACCEPTANCE.json",
+      "min_positions": 1,
+      "max_positions": 255,
+      "hardware_tested_counts": [
+        27
+      ],
+      "size_source": "device FC03/0038, checked against Hue gradient.pixel_count"
     }
   ]
 }

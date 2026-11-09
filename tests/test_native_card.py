@@ -80,6 +80,27 @@ class NativeCardTests(unittest.TestCase):
         page.locator("#effect").select_option("flow")
         self.assertTrue(page.locator("#add").is_disabled())
 
+    def test_spectrum_and_last_puck_edit_scale_to_each_supported_kit(self):
+        page = self.page
+        for size in (16, 32, 48):
+            page.evaluate(
+                """size=>{
+                state={...state,attributes:{...state.attributes,positions:size,palette_limit:size,animated_palette_limit:9,scene:{...state.attributes.scene,effect:'static'}}};
+                hass={...hass,states:{'sensor.test':state}};
+                document.querySelector('festavia-studio-card').hass=hass;
+            }""",
+                size,
+            )
+            page.locator("#spectrum").click()
+            self.wait_saved()
+            self.assertEqual(page.locator("[data-color]").count(), size)
+            self.assertEqual(len(set(page.evaluate("state.attributes.scene.colors"))), size)
+            page.get_by_role("button", name=f"Color {size}", exact=True).click()
+            page.get_by_role("button", name="Choose White", exact=True).click()
+            self.wait_saved()
+            self.assertEqual(page.evaluate("state.attributes.scene.colors.at(-1)"), "#ffffff")
+            self.assertFalse(page.evaluate("document.documentElement.scrollWidth>innerWidth"))
+
     def test_return_control_to_hue_uses_release_and_preserves_staged_palette(self):
         page = self.page
         page.locator("#power").click()

@@ -9,10 +9,11 @@ import struct
 
 from .control_core import integer, segments_encode
 from .hue_mesh import pack_xy
+from .sizing import MAX_POSITIONS, MAX_PAINT_STEPS
 
 
 def windows(positions, capacity=10):
-    integer(positions, 1, 31, "puck positions")
+    integer(positions, 1, MAX_POSITIONS, "puck positions")
     integer(capacity, 3, 10, "painting capacity")
     if positions <= capacity:
         yield [[i, 1] for i in range(positions)], list(range(positions))
@@ -43,7 +44,7 @@ def program(scene, aliases, before):
     """Return a finite paint burst followed by the exact original geometry."""
     from .player import color, color_strength, packet
 
-    positions = integer(scene.get("positions", 27), 1, 31, "puck positions")
+    positions = integer(scene.get("positions", 27), 1, MAX_POSITIONS, "puck positions")
     if scene.get("effect", "static") != "static":
         raise ValueError("More than nine colors currently supports Static repeat only")
     colors = scene["colors"]
@@ -96,6 +97,6 @@ def program(scene, aliases, before):
             0x100B,
         ),
     ]
-    if len(output) > 16:
-        raise ValueError("This layout needs more than sixteen painting steps")
+    if len(output) > MAX_PAINT_STEPS:
+        raise ValueError("This layout exceeds the finite painting program capacity")
     return output

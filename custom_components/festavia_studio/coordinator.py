@@ -73,6 +73,8 @@ def validate_scene(scene, status):
     scene["positions"] = status["positions"]
     scene["colors"] = [c.lower() for c in colors]
     if status.get("mode") == "native":
+        scene["layout_mode"] = "pucks"
+        scene["layout"] = [[i, 1] for i in range(status["positions"])]
         all_colors = list(scene["colors"])
         if scene.get("effect") == "snake":
             foreground = snake_colors(scene)

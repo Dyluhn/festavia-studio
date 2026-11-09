@@ -1,3 +1,28 @@
+# Acceptance — 0.12.0
+
+Checked 2026-11-09 UTC. Automatic logical sizing, ESP32-C6 firmware 0.4.0,
+LCX030 firmware 1.163.5. Physical output tests request 9% brightness.
+
+- 116 unit/protocol/mobile/release tests pass. Production C playback and recovery run against 11/16/27/32/48/80/255-position programs, including the 106-packet maximum using seven aliases. The serialized request stays inside the 40,000-byte firmware limit.
+- Actual HA Core 2026.10.1 passes 36 runtime checks and 9 lifecycle/restart checks with only HTTPS/Zigbee boundaries simulated. The size matrix exercises native setup, stale-layout replacement, three-color playback, a complete unique static palette, valid native text state and saved palettes for 16/32/48 positions.
+- Mobile browser checks fill a unique spectrum, edit the last point and retain a viewport without horizontal overflow at 16/32/48 colors. Official hassfest reports zero invalid integrations.
+- The physical fixture reports 27 through both raw FC03/0038 and Hue pixel_count, with FC01 region capacity 10. New size-independent fit palettes and the legacy parameter produce the same three-color repeat at the six visible emitters. Reverse four-color playback, a 27-color finite static paint, a single-puck edit, a 25-second snake and manual Hue handoff pass on the updated board.
+- Wireless OTA confirms the exact new image, selected Hue PAN and existing pinned connection. Pairing survives. The original OFF snapshot, including stored brightness, color, map and aliases, is restored exactly after physical tests; both seasonal automations are restored. A private harness preflight was corrected to allow a high stored level only while captured power is OFF. Illuminated states remain bounded below 10%.
+
+An initial live run after the HA restart aborted on a recorded delivery failure.
+The integration previously treated the automatic handoff after such a failed
+paint as success. It now raises an actionable error and retains the firmware’s
+recovery/handoff behavior. Injected failures are checked through actual HA; a
+subsequent complete live run passes. The final build also completes two repeated
+small-palette/27-color transport switches with every paint acknowledged and no
+recorded delivery errors.
+
+Other physical kit sizes have not been hardware-tested here. Discovery and
+production software support 16/32/48 on the recognized LCX030/1.163.5 profile;
+the protocol limit of 255 positions is not product-wide hardware certification.
+Native animations still use at most nine repeating color slots; this change
+expands fixture sizing and static palettes, not arbitrary high-count animation.
+
 # Acceptance — 0.11.0
 
 Checked 2026-11-09 UTC. The integration adds a moving snake palette over a fixed

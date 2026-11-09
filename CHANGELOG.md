@@ -1,3 +1,12 @@
+# 0.12.0 — automatic Festavia sizing
+
+- Report an aborted static paint as an actionable failure even after automatic Hue handoff; include delivery stage details in diagnostics.
+
+- Discover the actual logical count and full-coverage mapping; cross-check Hue pixel metadata and region capacity. The same native setup and image handle 16, 32 and 48 points without a manual size setting.
+- ESP32-C6 firmware 0.4.0 accepts size-independent native palettes and allocates finite static paint programs by their actual packet count. Preserve the existing recovery capsule, Hue takeover and wireless pairing.
+- Scale the card, saved palettes and static renderer to the detected count; rebuild stale scene layouts after reconfiguration. Larger HA text states use a card-editing summary instead of exceeding HA’s state length.
+- Test production C playback/recovery for 11/16/27/32/48/80/255 positions, actual HA setup and playback for 16/32/48, and the mobile palette editor at each kit size. Physical acceptance uses the installed 27-point LCX030; other hardware variants still need community evidence.
+
 # 0.11.0 — snake over a fixed background
 
 - Separate background and snake palettes in the existing native Home Assistant card and actions. A moving ordered block covers the background temporarily; each position returns to its original background color behind it.

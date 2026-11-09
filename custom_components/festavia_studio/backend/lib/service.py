@@ -16,6 +16,7 @@ from .hue_mesh import NetworkLink
 from .net_client import PinnedHTTPS, credentials, save_credentials
 from .player import color, compile_scene
 from .studio import Studio
+from .sizing import MAX_POSITIONS, discovered_size
 from .festavia import is_festavia
 from .errors import RecoveryPending
 
@@ -107,7 +108,7 @@ class Installation:
             and 1 <= len(name.strip()) <= 60
             and name.casefold() != "custom"
             and isinstance(colors, list)
-            and 1 <= len(colors) <= 27
+            and 1 <= len(colors) <= MAX_POSITIONS
             and all(isinstance(c, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", c) for c in colors)
         }
 
@@ -190,8 +191,8 @@ class Installation:
         scene = copy.deepcopy(scene)
         bounded(scene.get("brightness", 10), 0, self.limit)
         colors = scene.get("colors", ["#ff2020", "#00ff00", "#9900ff"])
-        if not isinstance(colors, list) or not 1 <= len(colors) <= 27:
-            raise ValueError("Choose 1–27 colors")
+        if not isinstance(colors, list) or not 1 <= len(colors) <= MAX_POSITIONS:
+            raise ValueError("Choose 1–255 colors")
         for item in colors:
             color(item)
         return scene
@@ -577,6 +578,7 @@ class Installation:
                     try:
                         identity = device.connect()
                         before = device.snapshot()
+                        max_regions = device.read(0xFC01, [2], 0x100B)[2]["value"]
                     finally:
                         device.close()
                     accepted = next(
@@ -585,7 +587,9 @@ class Installation:
                             for p in profiles
                             if p["model"] == identity["identity"].get("5")
                             and p["software"] == identity["identity"].get("16384")
-                            and before["logical_count"] in p["logical_counts"]
+                            and p.get("min_positions", 1)
+                            <= before["logical_count"]
+                            <= p.get("max_positions", MAX_POSITIONS)
                         ),
                         None,
                     )
@@ -593,12 +597,14 @@ class Installation:
                         raise ValueError(
                             "This model/firmware/count combination needs calibration; bridge mode remains available"
                         )
+                    count = discovered_size(light, before, accepted, max_regions)
                     native = {
                         "ieee": light["ieee"],
                         "endpoint": accepted["endpoint"],
                         "extpan": identity["esp32"]["extpan"],
                         "model": light["model"],
-                        "positions": before["logical_count"],
+                        "positions": count,
+                        "max_regions": max_regions,
                     }
                 self.data.update(selected=ids, mode=mode, native=native)
                 self.close()

@@ -1,9 +1,9 @@
 {
   "name": "hue-mesh-lab",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "package_revision": 1,
   "protocol": 1,
-  "built_at": "2026-11-09T09:07:47.617037+00:00",
+  "built_at": "2026-11-09T22:31:05.268700+00:00",
   "esp_idf": "5.3.2",
   "esp_zigbee_lib": "1.6.8",
   "esp_zboss_lib": "1.6.4",
@@ -11,7 +11,7 @@
     "esp32c6": {
       "factory": "esp32c6/hue-mesh-lab.factory.bin",
       "app": "esp32c6/hue-mesh-lab.app.bin",
-      "app_size": 1417360,
+      "app_size": 1417664,
       "app_offset": 131072,
       "flash_size": "4MB",
       "ota": true,
@@ -23,29 +23,45 @@
     }
   },
   "sha256": {
-    "esp32c6/hue-mesh-lab.factory.bin": "d07000168a260544017aab983a168c29649c0a83037dc5f023f20eb578e8a54b",
-    "esp32c6/hue-mesh-lab.app.bin": "57163683b0721e008baebbb7a2f6a15a27cd90447bc24ea093f02864ab256212"
+    "esp32c6/hue-mesh-lab.factory.bin": "56811ba5c689e2b80005b27b074cd8598e31ded9b7d8de6ad87b1894dea8608c",
+    "esp32c6/hue-mesh-lab.app.bin": "8d7521613aab61fa6761a12a5b890c85ecf24e2a7cd85606fce2ee883fecff9f"
   },
   "hardware_verified": true,
   "hue_join_verified": true,
   "physical_led_control_verified": true,
   "firmware_source_sha256": {
-    "firmware/CMakeLists.txt": "eb4c9c68b82f1821a2bab26d1f14fcf2adbcca34f337eccb73d29623008d58c4",
+    "firmware/CMakeLists.txt": "ac17518b78384de722c50424ae24ce481ec4449606adce38228ab292f5890de3",
+    "firmware/dependencies.lock": "89fc96d0c70c94e914f4c96f92531533b9326d34f8f35ab784d0f44725041404",
     "firmware/main/CMakeLists.txt": "ce5418071c69a0ca3f2e33451001b0017dbe372f41b8140ee9ea029ff19e1aea",
     "firmware/main/idf_component.yml": "f76d5ed50b643808e5e669513fa14a32eadc568d54aa504c52fc64e24646b7d2",
     "firmware/main/main.c": "7bccc78d62d66d8b6d8d040788f6870ad5f38b91f2cf9e4e3152ce61677b3201",
     "firmware/main/network.c": "89f353f9ace36202f2fd4fbc5324821466dee0f58eec9bf027ba8c539aca81f7",
     "firmware/main/network.h": "ea1156e22e9860c51bf2c1c3c144b8bc8b1a092322fc5fdce2073383baeb0241",
-    "firmware/main/player.c": "3ed23528f8cec4ffdb87985cd3cdc8384cbba62f67d9289949ac752cf7b143ad",
+    "firmware/main/player.c": "6deaa5d627336bef2e6b012a86f78bd45403c991a437de9add2fb8662371cc2d",
     "firmware/main/player.h": "7647e1c4d7711a88fdd4f0697c82dae904e5348cf0c7b7e5e29cc5f4b028fa5d",
-    "firmware/main/wire.c": "725aa7979f14e9bcd195c913cece2cdb30010762fa2685b8320a52aacb7b22b0",
+    "firmware/main/wire.c": "9d25ca11f55f67c1f84bcfaa7b95816d3b76900875358fdd6706233dc9cd6c0f",
     "firmware/main/wire.h": "7590d2f4e947c71f3f65a2e1a6c1382938302837996e7ecdcd060ad7df31e1c2",
     "firmware/partitions.csv": "d5a5a86d5f93052002dbd10c369a15a339d687edf5e4132642d1e0dba702983a",
     "firmware/partitions.usb.csv": "3b47927cd6cf753c6a262d0bcaba1faa6933e559256e9767f2012eabb7e0569e",
     "firmware/sdkconfig.defaults": "7ed0b0436ee3f981be582ed24ee4765709d266bbe8b433e03458be1e0d79f595",
     "firmware/sdkconfig.defaults.esp32c6": "342c123686bfb803b64b34362a4bf52563a2dc6d38d432e1e3883f3fd7437f16",
-    "firmware/sdkconfig.defaults.esp32h2": "09d1f7578890bd2eb34a29031c40acccf542154d5b72f1f025661779a2ba798f",
-    "firmware/dependencies.lock": "89fc96d0c70c94e914f4c96f92531533b9326d34f8f35ab784d0f44725041404"
+    "firmware/sdkconfig.defaults.esp32h2": "09d1f7578890bd2eb34a29031c40acccf542154d5b72f1f025661779a2ba798f"
   },
-  "acceptance": "docs/FIRMWARE_ACCEPTANCE.json"
+  "acceptance": "docs/FIRMWARE_ACCEPTANCE.json",
+  "native_sizing": {
+    "positions_max": 255,
+    "paint_steps_max": 106,
+    "hardware_tested_counts": [
+      27
+    ],
+    "software_tested_counts": [
+      11,
+      16,
+      27,
+      32,
+      48,
+      80,
+      255
+    ]
+  }
 }

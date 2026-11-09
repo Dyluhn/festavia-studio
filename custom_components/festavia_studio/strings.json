@@ -558,6 +558,15 @@
     },
     "snake_count": {
       "message": "Choose 1–{limit} snake colors, leaving at least one background puck in each repeat."
+    },
+    "sizing_update_required": {
+      "message": "Update the ESP32 from the integration’s Firmware entity to use this string length. Pairing is preserved; no USB reflash is needed."
+    },
+    "length_changed": {
+      "message": "The light’s detected length has changed. Reconfigure Festavia Studio and select it again so the controls match its new length."
+    },
+    "paint_failed": {
+      "message": "The light did not confirm the complete palette. Playback stopped and recovery or Hue handoff is in progress. Wait for it to finish, then press Play again. Diagnostics include the failed delivery stage."
     }
   },
   "issues": {

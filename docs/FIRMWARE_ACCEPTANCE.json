@@ -162,5 +162,43 @@
       "Six camera-visible pucks; daylight optical samples weak, no full-string or calibrated frame-rate claim"
     ],
     "private_harness_recovery": "Corrected off-state XY replay quantization; exact original snapshot recovered; no shipped firmware change"
+  },
+  "automatic_sizing_012": {
+    "checked_at": "2026-11-09T22:35:23.857736+00:00",
+    "integration": "0.12.0",
+    "firmware": {
+      "version": "0.4.0",
+      "elf_sha256": "d1d459ef9b83108bcd5668a1363d1311cda71ee0134ee75292a0935ece134d9b",
+      "sha256": "8d7521613aab61fa6761a12a5b890c85ecf24e2a7cd85606fce2ee883fecff9f"
+    },
+    "physical_count": 27,
+    "software_counts": [
+      11,
+      16,
+      27,
+      32,
+      48,
+      80,
+      255
+    ],
+    "HA_runtime_checks": 36,
+    "HA_lifecycle_checks": 9,
+    "unit_tests": 116,
+    "hassfest_invalid_integrations": 0,
+    "physical": [
+      "paired network OTA with exact fixture state unchanged",
+      "FC03/0038 count equals Hue pixel_count, original complete map and aliases, region capacity10",
+      "scale0 and legacy216 three-color repeats agree on six visible emitters",
+      "reverse4 palette",
+      "finite27 static paint and individual edit",
+      "25-second snake",
+      "manual Hue handoff",
+      "exact original OFF snapshot restored"
+    ],
+    "requested_brightness_percent": 9,
+    "other_physical_kit_sizes_tested": false,
+    "scope": "Same model/firmware discovery support, not certification of unseen hardware or extension topology",
+    "delivery_failure_reporting": "Initial live delivery failure caused safe release; host now reports aborted paint as an error, including after release. Actual HA injected-failure regression passes. Subsequent live palette/edit/snake/Hue-off acceptance passes.",
+    "repeat_transitions": "Final build: two further palette3 to retained27 cycles;16/16 paint packets verified, no delivery errors"
   }
 }

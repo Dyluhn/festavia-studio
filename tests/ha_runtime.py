@@ -56,6 +56,7 @@ class Wire:
         self.protocol_error = None
         self.device_auth = False
         self.ota_error = False
+        self.next_paint_error = False
         self.calls = []
         self.connections = 0
         self.snapshot = copy.deepcopy(BEFORE)
@@ -65,6 +66,9 @@ class Wire:
             "armed": False,
             "playing": False,
             "native_palette_supported": True,
+            "native_fit_supported": True,
+            "native_positions_max": 255,
+            "retained_paint_steps_max": 106,
             "hue_takeover_supported": True,
             "retained_pucks_supported": True,
             "reason": "idle",
@@ -84,6 +88,7 @@ class Wire:
                 "dimming": {"brightness": 45},
                 "color": {"xy": {"x": 0.3, "y": 0.3}},
                 "gradient": {
+                    "pixel_count": 27,
                     "points_capable": 5,
                     "points": [{"color": {"xy": {"x": 0.3, "y": 0.3}}}] * 5,
                 },
@@ -175,7 +180,10 @@ class Wire:
                     data["transport"] in ("palette", "retained") and 1 <= len(data["samples"]) <= 64
                 )
                 if data["transport"] == "retained":
-                    assert data["positions"] == 27 and 1 <= len(data["paint"]) <= 16
+                    assert (
+                        data["positions"] == self.snapshot["logical_count"]
+                        and 1 <= len(data["paint"]) <= 106
+                    )
                     assert all(len(bytes.fromhex(p["payload"])) + 5 <= 82 for p in data["paint"])
                 else:
                     assert all(bytes.fromhex(s)[2] <= 38 for s in data["samples"]), (
@@ -188,7 +196,16 @@ class Wire:
                     applying=False,
                 )
             elif op == "player_start":
-                self.player.update(state="playing", armed=True, playing=True)
+                self.player.update(state="playing", armed=True, playing=True, failure_cause="none")
+                if self.next_paint_error and self.player.get("transport") == "retained":
+                    self.next_paint_error = False
+                    self.player.update(
+                        state="released",
+                        playing=False,
+                        armed=False,
+                        reason="hue_takeover",
+                        failure_cause="paint_reply_timeout",
+                    )
                 self.hue_deadline = time.monotonic() + 15
             elif op == "player_release":
                 self.player.update(
@@ -200,8 +217,9 @@ class Wire:
             elif op == "player_keepalive":
                 self.hue_deadline = time.monotonic() + 10
             elif op == "player_stop":
+                if self.player["armed"]:
+                    self.snapshot = copy.deepcopy(getattr(self, "captured", BEFORE))
                 self.player.update(state="restored", armed=False, playing=False)
-                self.snapshot = copy.deepcopy(getattr(self, "captured", BEFORE))
             elif op not in ("status", "player_status"):
                 raise AssertionError(op)
             return 200, {
@@ -288,6 +306,10 @@ class ZigbeeDevice:
     def snapshot(self):
         return copy.deepcopy(wire.snapshot)
 
+    def read(self, cluster, attrs, manufacturer):
+        assert cluster == 0xFC01 and attrs == [2] and manufacturer == 0x100B
+        return {2: {"value": 10}}
+
     def verify_baseline(self, before):
         return wire.snapshot == before
 
@@ -372,6 +394,63 @@ async def main():
             assert len(names) == 17, names
             checks.append("real_commission_and_17_entities")
 
+            original_snapshot = copy.deepcopy(wire.snapshot)
+            for size in (16, 32, 48):
+                wire.snapshot.update(
+                    logical_count=size, segments=[[0, size]], aliases=list(range(100, 107))
+                )
+                # Real mapping has matching alias/region counts and full coverage.
+                wire.snapshot["segments"] = [[i, 1] for i in range(6)] + [[6, size - 6]]
+                wire.lights["fixture"]["gradient"]["pixel_count"] = size
+                await hass.async_add_executor_job(
+                    entry.runtime_data.api.app.setup,
+                    "select",
+                    {"ids": ["fixture"], "mode": "native"},
+                )
+                await entry.runtime_data.async_request_refresh()
+                assert entry.runtime_data.data["positions"] == size
+                assert entry.runtime_data.data["palette_limit"] == size
+                await entry.runtime_data.configure(
+                    {
+                        "colors": ["#ff0000", "#00ff00", "#0000ff"],
+                        "effect": "static",
+                        "brightness": 9,
+                    }
+                )
+                assert entry.runtime_data.scene["positions"] == size
+                assert len(entry.runtime_data.scene["layout"]) == size
+                await entry.runtime_data.play()
+                assert wire.player["playing"]
+                await entry.runtime_data.command("stop")
+                palette = [
+                    "#"
+                    + "".join(f"{round(v * 255):02x}" for v in colorsys.hsv_to_rgb(i / size, 1, 1))
+                    for i in range(size)
+                ]
+                await entry.runtime_data.configure(
+                    {"colors": palette, "effect": "static", "brightness": 9}
+                )
+                await entry.runtime_data.play()
+                assert wire.player["transport"] == "retained"
+                text_state = hass.states.get("text.festavia_studio_palette")
+                assert text_state.state not in ("unavailable", "unknown")
+                assert len(text_state.state) <= 255
+                await entry.runtime_data.save_palette(f"Size{size}")
+                assert entry.runtime_data.data["palettes"][f"Size{size}"] == palette
+                await entry.runtime_data.command("stop")
+            wire.snapshot = original_snapshot
+            wire.lights["fixture"]["gradient"]["pixel_count"] = 27
+            await hass.async_add_executor_job(
+                entry.runtime_data.api.app.setup,
+                "select",
+                {"ids": ["fixture"], "mode": "native"},
+            )
+            await entry.runtime_data.async_request_refresh()
+            await entry.runtime_data.configure(
+                {"colors": ["#ff0000", "#00ff00", "#0000ff"], "effect": "static", "brightness": 9}
+            )
+            checks.append("auto_size16_32_48_reconfigure_native_entities_static_and_full_palette")
+
             async def service(domain, name, data):
                 await hass.services.async_call(domain, name, data, blocking=True)
                 await hass.async_block_till_done()
@@ -424,6 +503,16 @@ async def main():
                 for i in range(27)
             ]
             await action("configure", {"colors": spectrum, "effect": "static", "apply": False})
+            wire.next_paint_error = True
+            try:
+                await action("play")
+            except HomeAssistantError as exc:
+                assert "confirm" in str(exc).lower() or "paint_failed" in str(exc), str(exc)
+            else:
+                raise AssertionError("aborted painting was reported as successful")
+            assert entry.runtime_data.api.last_error["reason"] == "paint_failed"
+            await entry.runtime_data.async_refresh()
+            checks.append("aborted_paint_with_hue_priority_is_actionable_not_success")
             assert entry.runtime_data.data["palette_limit"] == 27
             await action("save_palette", {"name": "Test27"})
             await action("play")

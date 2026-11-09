@@ -52,6 +52,7 @@ esp_err_t hm_send_animation(uint16_t a,uint8_t e,const uint8_t *p,size_t n,uint8
 static void reset(void)
 {
  free(samples);samples=calloc(1,sizeof(sample_t));assert(samples);sample_count=1;
+ free(paint);paint=malloc(sizeof(fixture_paint));assert(paint);
  memcpy(paint,fixture_paint,sizeof(fixture_paint));paint_count=sizeof(fixture_paint)/sizeof(*fixture_paint);
  memcpy(ready_checks,fixture_checks,sizeof(fixture_checks));ready_count=2;
  cleanup_count=2;cleanup[0]=paint[paint_count-2];cleanup[1]=paint[paint_count-1];
@@ -67,15 +68,15 @@ static void reset(void)
 }
 int main(void)
 {
- reset();assert(retained_program(paint,paint_count,27));
- uint8_t saved=paint[2].payload[2];paint[2].payload[2]=1;assert(!retained_program(paint,paint_count,27));paint[2].payload[2]=saved;
- paint[3].payload[6]=0;assert(!retained_program(paint,paint_count,27));
+ reset();assert(retained_program(paint,paint_count,FIXTURE_POSITIONS));
+ uint8_t saved=paint[2].payload[2];paint[2].payload[2]=1;assert(!retained_program(paint,paint_count,FIXTURE_POSITIONS));paint[2].payload[2]=saved;
+ paint[3].payload[6]=0;assert(!retained_program(paint,paint_count,FIXTURE_POSITIONS));
  puts("PASS malformed coverage and unknown record addresses rejected before writes");
- reset();for(clock_ms=1100;clock_ms<=6000;clock_ms+=50)hm_player_tick(true);
+ reset();for(clock_ms=1100;clock_ms<=1100+300*(int64_t)(paint_count+2);clock_ms+=50)hm_player_tick(true);
  assert(bank_acked && !geometry_dirty && paint_step==paint_count && frames_acked==1 && dirty_commits==1);
- unsigned done=writes;for(clock_ms=6100;clock_ms<=66000;clock_ms+=100)hm_player_tick(true);
+ unsigned done=writes;for(clock_ms=1100+300*(int64_t)(paint_count+2);clock_ms<=1100+300*(int64_t)(paint_count+2)+60000;clock_ms+=100)hm_player_tick(true);
  assert(writes==done && power_queries>15 && playing);
- puts("PASS finite27-puck paint waits for ZCL replies then holds without repeated writes");
+ puts("PASS finite per-puck paint waits for ZCL replies then holds without repeated writes");
  reset();drop_reply=true;
  for(clock_ms=1100;clock_ms<16000 && playing;clock_ms+=100)hm_player_tick(true);
  assert(!playing && restoring && !bank_acked && !frames_acked && !strcmp(reason,"delivery_failed"));
@@ -95,5 +96,5 @@ int main(void)
  for(unsigned i=0;i<100 && durable;i++){clock_ms+=100;hm_player_tick(true);}
  assert(!durable && !strcmp(state,"released") && colors==0 && power_queries==0);
  puts("PASS interrupted-handoff geometry recovery emits no color or power commands");
- free(samples);return 0;
+ free(paint);free(samples);return 0;
 }

@@ -74,3 +74,38 @@ ingress page. The earlier add-on architecture is retired.
 [Hue local API onboarding](https://developers.meethue.com/develop/get-started-2/) requires local discovery/manual IP and physical link-button authorization. This integration pins the bridge HTTPS certificate during that explicit pairing flow and never sends a stored application key after a pin mismatch.
 
 Bridge resource discovery reports product identity, model, connectivity and gradient point capacity. Only Festavia product identities are eligible control targets. Those capabilities are used for the public bridge path. Native physical mapping is separately gated to the model/software/count combination in `FIRMWARE_ACCEPTANCE.json`; simulated count tests do not certify untested fixtures.
+
+
+## Automatic logical sizing (0.12.0 / firmware 0.4.0)
+
+The earlier 27-position qualification was the measured installation size, not a
+wire-format maximum. Hue reports `gradient.pixel_count=27` on that fixture and
+the raw FC03/0038 attribute independently returns 27. Configuration now reads
+those values, FC01 attribute 2 (reported region capacity), and the original map
+and aliases. A mismatch, duplicate aliases or incomplete coverage blocks setup.
+The same discovery path handles 16, 32 and 48 points without a kit-size setting.
+
+[Bifrost’s format research](https://github.com/chrivers/bifrost/blob/master/doc/hue-zigbee-format.md)
+documents scattered style 2 as ignoring scale. The new encoder uses scale zero
+while firmware still accepts the previous 216 parameter for rolling upgrades.
+The installed LCX030 produces the same three-color repeat under both encodings.
+Map starts and lengths are byte fields, establishing a protocol bound of 255
+positions rather than the previous host bound of 31. This does not certify a
+physical extension topology or an unseen model/firmware.
+
+Finite painting still uses at most ten full-coverage regions in a packet and
+singleton color targets. With seven captured aliases, five targets per window
+need at most `4 + 2*ceil(255/5) = 106` packets. The C player allocates the actual
+program length, validates every map and final recovery geometry before writes,
+and never repeats this program as an animation. Production C tests exercise
+16/32/48 plus boundary counts through 255, including the 106-packet case. The
+actual HA runtime and mobile editor use 16/32/48 descriptors. Physical checks
+remain limited to the installed 27-point LCX030/1.163.5 and six visible emitters.
+
+
+The current upstream [zigbee-herdsman-converters device definition](https://github.com/Koenkk/zigbee-herdsman-converters/blob/f46c6d88f0eaceaf25dca7dba0dda797d2dc281e/src/devices/philips.ts)
+also lists LCX048 as Festavia Permanent. That identifies another product model;
+it does not prove the private retained-map behavior qualified on LCX030/1.163.5.
+Native control remains gated by model and fixture firmware rather than assuming
+all retail packs or regional variants share an implementation. Physical length
+and model/firmware qualification are separate checks.
