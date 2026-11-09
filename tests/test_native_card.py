@@ -80,18 +80,25 @@ class NativeCardTests(unittest.TestCase):
         page.locator("#effect").select_option("flow")
         self.assertTrue(page.locator("#add").is_disabled())
 
-    def test_spectrum_and_last_puck_edit_scale_to_each_supported_kit(self):
+    def test_spectrum_and_last_puck_edit_scale_to_every_count1_through48(self):
         page = self.page
-        for size in (16, 32, 48):
+        for size in range(1, 49):
             page.evaluate(
                 """size=>{
-                state={...state,attributes:{...state.attributes,positions:size,palette_limit:size,animated_palette_limit:9,scene:{...state.attributes.scene,effect:'static'}}};
+                state={...state,attributes:{...state.attributes,positions:size,palette_limit:size,animated_palette_limit:9,scene:{...state.attributes.scene,effect:'static',colors:state.attributes.scene.colors.slice(0,size)}}};
                 hass={...hass,states:{'sensor.test':state}};
                 document.querySelector('festavia-studio-card').hass=hass;
             }""",
                 size,
             )
-            page.locator("#spectrum").click()
+            if size > 9:
+                page.locator("#spectrum").click()
+            else:
+                while page.locator("[data-color]").count() < size:
+                    page.locator("#add").click()
+                for index in range(size):
+                    page.get_by_role("button", name=f"Color {index + 1}", exact=True).click()
+                    page.locator(".quick").nth(index).click()
             self.wait_saved()
             self.assertEqual(page.locator("[data-color]").count(), size)
             self.assertEqual(len(set(page.evaluate("state.attributes.scene.colors"))), size)

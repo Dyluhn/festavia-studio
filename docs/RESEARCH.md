@@ -109,3 +109,15 @@ it does not prove the private retained-map behavior qualified on LCX030/1.163.5.
 Native control remains gated by model and fixture firmware rather than assuming
 all retail packs or regional variants share an implementation. Physical length
 and model/firmware qualification are separate checks.
+
+
+### Every installed quantity through 48 (0.12.1)
+
+Retail pack sizes are not an allowlist. The input is the live detected count N,
+including arbitrary shortened strings. Validation now covers every integer
+1–48, with exact ordered repeats and reversal, native effects, every retained
+static palette length 10–N, production C recovery, HA controls/palette saves and
+the mobile editor. A 48-point setup is also shortened one point at a time to one
+through the actual HA runtime. Defaults and staged layouts follow N; a complete
+saved palette remains in the library even when it no longer fits a shorter string.
+No firmware change or size-specific flashing is involved.

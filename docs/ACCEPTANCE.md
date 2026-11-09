@@ -1,3 +1,14 @@
+# Acceptance — 0.12.1
+
+Quantity is a continuous discovered value: every integer from 1 through 48,
+including cut strings. It is not a selection of supported pack sizes.
+
+- Discovery and native encoding cover every count 1–48. Exact chosen color order and reversal are decoded independently for every fitting native palette (1–9 colors). The retained framebuffer model checks every static palette length 10–N for every N from 10 through 48.
+- The production C renderer and recovery state machine run for every retained count 10–48, using both seven- and ten-alias programs. Internal wire-boundary cases remain separate from product sizing.
+- Actual HA runtime checks configure, play and save palettes at each count 1–48, then shrink a 48-point setup one point at a time back to one, preserving saved libraries. The mobile card creates a unique palette and edits the final point at every count 1–48 without horizontal overflow.
+- Every-count testing caught default palettes longer than a one- or two-point string. Defaults and staged layouts now follow the detected length. Snake is excluded for a single point because it requires a foreground and a background gap.
+- Firmware stays at 0.4.0; no ESP32 update is required. Physical coverage remains the installed 27-point LCX030/1.163.5, with the below-10% checks documented in 0.12.0.
+
 # Acceptance — 0.12.0
 
 Checked 2026-11-09 UTC. Automatic logical sizing, ESP32-C6 firmware 0.4.0,

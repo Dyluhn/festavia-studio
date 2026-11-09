@@ -1,3 +1,11 @@
+# 0.12.1 — every installed count through 48
+
+- Treat the supported quantity as every integer from 1 through 48, including shortened strings; no pack-size selection is required.
+- Resize default and staged palettes/layouts to the discovered length. Short strings no longer inherit more default colors than they have pucks. Preserve complete saved libraries.
+- Hide Snake over background when only one puck exists; its foreground requires a background gap. Other available effects and palette limits follow the detected count.
+- Exercise discovery, exact color order, native effects, HA setup/playback/palette saves and the mobile editor across the complete 1–48 range. Exercise retained static playback and recovery for every count 10–48 and every fitting palette length.
+- ESP32 firmware stays at 0.4.0; this changes integration handling and coverage, with no ESP32 reflash needed.
+
 # 0.12.0 — automatic Festavia sizing
 
 - Report an aborted static paint as an actionable failure even after automatic Hue handoff; include delivery stage details in diagnostics.

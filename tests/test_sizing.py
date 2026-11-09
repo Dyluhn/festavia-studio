@@ -12,7 +12,7 @@ from player import Player, compile_puck_scene
 
 class SizingTests(unittest.TestCase):
     def test_device_and_hue_counts_agree_for_full_and_cut_strings(self):
-        for count in (1, 16, 27, 32, 48, 80, 255):
+        for count in (*range(1, 49), 80, 255):
             before = {"logical_count": count, "segments": [[0, count]], "aliases": [77]}
             for light in ({}, {"reported_pixels": count}):
                 self.assertEqual(discovered_size(light, before, {}, 10), count)
@@ -30,16 +30,18 @@ class SizingTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 discovered_size({}, before, {}, 10)
 
-    def test_every_native_animation_compiles_for_each_kit_without_length_overflow(self):
+    def test_every_native_animation_compiles_for_every_count_through48(self):
         from player import PUCK_EFFECTS
 
-        for positions in (16, 32, 48, 80, 255):
+        for positions in (*range(1, 49), 80, 255):
             for effect in PUCK_EFFECTS:
+                if positions == 1 and effect == "snake":
+                    continue  # A moving foreground needs a second position for a gap.
                 samples, _ = compile_puck_scene(
                     {
                         "positions": positions,
                         "effect": effect,
-                        "colors": ["#ff0000", "#00ff00", "#0000ff"],
+                        "colors": ["#ff0000", "#00ff00", "#0000ff"][:positions],
                         "snake_colors": ["#ffffff"],
                         "brightness": 9,
                     }

@@ -63,8 +63,9 @@ class RetainedTests(unittest.TestCase):
             self.assertEqual(events, ["read", "survey", "read", "player_load", "start"])
 
     def test_every_count_and_direction_preserves_exact_order_and_original_geometry(self):
-        for positions in (11, 16, 21, 24, 27, 31, 32, 48, 80, 255):
-            for count in sorted({10, min(16, positions), positions}):
+        for positions in (*range(10, 49), 80, 255):
+            counts = range(10, positions + 1) if positions <= 48 else (10, 16, positions)
+            for count in counts:
                 for reverse in (False, True):
                     scene, before, packets = fixture(positions, count, reverse)
                     framebuffer = [None] * positions
@@ -153,9 +154,9 @@ class RetainedTests(unittest.TestCase):
                 p.retained_options(scene, before, identity=identity)
 
     def test_real_c_player_paint_reply_failure_idle_and_handoff_boundaries(self):
-        for positions in (11, 16, 27, 32, 48, 80, 255):
+        for positions in (*range(10, 49), 80, 255):
             self.run_c_fixture(positions)
-            if positions in (48, 255):
+            if positions <= 48 or positions == 255:
                 self.run_c_fixture(positions, capacity=7)
 
     def run_c_fixture(self, positions, capacity=10):

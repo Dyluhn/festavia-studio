@@ -81,24 +81,25 @@ class PuckRepeatTests(unittest.TestCase):
         )
 
     def test_compensation_renders_the_chosen_order_at_every_logical_puck(self):
-        for n in range(1, 10):
-            for reverse in [False, True]:
-                with self.subTest(n=n, reverse=reverse):
-                    scene = self.scene(n, reverse=reverse)
-                    samples, _ = compile_scene(scene, [])
-                    data = bytes.fromhex(samples[0])
-                    self.assertEqual(len(scene["layout"]), 27)
-                    self.assertEqual(len(data), 12 + 3 * max(2, n))
-                    self.assertEqual(data[:3], b"\x52\x01\x19")
-                    self.assertEqual(data[3:5], b"\x04\x00")  # Measured 400 ms native default.
-                    self.assertEqual(data[-2:], b"\x00\x00")
-                    for puck in range(27):
-                        slot = scattered_index(puck % n, n)
-                        selected = (26 - puck) % n if reverse else puck % n
-                        self.assertEqual(
-                            data[10 + 3 * slot : 13 + 3 * slot],
-                            pack_xy(*color(scene["colors"][selected])),
-                        )
+        for positions in range(1, 49):
+            for n in range(1, min(positions, 9) + 1):
+                for reverse in [False, True]:
+                    with self.subTest(positions=positions, n=n, reverse=reverse):
+                        scene = self.scene(n, reverse=reverse, positions=positions)
+                        samples, _ = compile_scene(scene, [])
+                        data = bytes.fromhex(samples[0])
+                        self.assertEqual(len(scene["layout"]), positions)
+                        self.assertEqual(len(data), 12 + 3 * max(2, n))
+                        self.assertEqual(data[:3], b"\x52\x01\x19")
+                        self.assertEqual(data[3:5], b"\x04\x00")  # Measured 400 ms native default.
+                        self.assertEqual(data[-2:], b"\x00\x00")
+                        for puck in range(positions):
+                            slot = scattered_index(puck % n, n)
+                            selected = (positions - 1 - puck) % n if reverse else puck % n
+                            self.assertEqual(
+                                data[10 + 3 * slot : 13 + 3 * slot],
+                                pack_xy(*color(scene["colors"][selected])),
+                            )
 
     def test_flow_moves_the_palette_by_one_puck_without_changing_native_offset(self):
         scene = self.scene(effect="flow", fps=4, speed=1)

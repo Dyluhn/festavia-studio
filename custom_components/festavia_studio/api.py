@@ -297,7 +297,7 @@ class NativeClient:
         for name, original in state.get("presets", {}).items():
             colors = original.get("colors", [])
             if name.casefold() == "custom" or original.get("effect", "static") not in (
-                PUCK_EFFECTS if native else ["static"]
+                limits.get("puck_effects", list(PUCK_EFFECTS)) if native else ["static"]
             ):
                 continue
             if native and (original.get("layout_mode") != "pucks" or original.get("fps", 10) > 10):

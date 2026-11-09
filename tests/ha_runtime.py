@@ -395,12 +395,14 @@ async def main():
             checks.append("real_commission_and_17_entities")
 
             original_snapshot = copy.deepcopy(wire.snapshot)
-            for size in (16, 32, 48):
+            for size in range(1, 49):
+                capacity = min(7, size)
                 wire.snapshot.update(
-                    logical_count=size, segments=[[0, size]], aliases=list(range(100, 107))
+                    logical_count=size,
+                    segments=[[i, 1] for i in range(capacity - 1)]
+                    + [[capacity - 1, size - capacity + 1]],
+                    aliases=list(range(100, 100 + capacity)),
                 )
-                # Real mapping has matching alias/region counts and full coverage.
-                wire.snapshot["segments"] = [[i, 1] for i in range(6)] + [[6, size - 6]]
                 wire.lights["fixture"]["gradient"]["pixel_count"] = size
                 await hass.async_add_executor_job(
                     entry.runtime_data.api.app.setup,
@@ -410,9 +412,13 @@ async def main():
                 await entry.runtime_data.async_request_refresh()
                 assert entry.runtime_data.data["positions"] == size
                 assert entry.runtime_data.data["palette_limit"] == size
+                assert 1 <= len(entry.runtime_data.scene["colors"]) <= size, (
+                    size,
+                    entry.runtime_data.scene,
+                )
                 await entry.runtime_data.configure(
                     {
-                        "colors": ["#ff0000", "#00ff00", "#0000ff"],
+                        "colors": ["#ff0000", "#00ff00", "#0000ff"][:size],
                         "effect": "static",
                         "brightness": 9,
                     }
@@ -431,13 +437,37 @@ async def main():
                     {"colors": palette, "effect": "static", "brightness": 9}
                 )
                 await entry.runtime_data.play()
-                assert wire.player["transport"] == "retained"
+                assert wire.player["transport"] == ("retained" if size > 9 else "palette")
                 text_state = hass.states.get("text.festavia_studio_palette")
                 assert text_state.state not in ("unavailable", "unknown")
                 assert len(text_state.state) <= 255
                 await entry.runtime_data.save_palette(f"Size{size}")
                 assert entry.runtime_data.data["palettes"][f"Size{size}"] == palette
                 await entry.runtime_data.command("stop")
+            # Cut an existing setup progressively; no explicit color/layout
+            # adjustment should be needed just to make the staged scene valid.
+            for size in range(47, 0, -1):
+                capacity = min(7, size)
+                wire.snapshot.update(
+                    logical_count=size,
+                    segments=[[i, 1] for i in range(capacity - 1)]
+                    + [[capacity - 1, size - capacity + 1]],
+                    aliases=list(range(100, 100 + capacity)),
+                )
+                wire.lights["fixture"]["gradient"]["pixel_count"] = size
+                await hass.async_add_executor_job(
+                    entry.runtime_data.api.app.setup,
+                    "select",
+                    {"ids": ["fixture"], "mode": "native"},
+                )
+                await entry.runtime_data.async_request_refresh()
+                assert len(entry.runtime_data.scene["colors"]) == size
+                assert entry.runtime_data.scene["layout"] == [[i, 1] for i in range(size)]
+                await entry.runtime_data.play()
+                assert wire.player["playing"]
+                await entry.runtime_data.command("stop")
+            assert len(entry.runtime_data.api.app.color_palettes()["Size48"]) == 48
+            assert "snake" not in entry.runtime_data.data["effects"]
             wire.snapshot = original_snapshot
             wire.lights["fixture"]["gradient"]["pixel_count"] = 27
             await hass.async_add_executor_job(
@@ -449,7 +479,9 @@ async def main():
             await entry.runtime_data.configure(
                 {"colors": ["#ff0000", "#00ff00", "#0000ff"], "effect": "static", "brightness": 9}
             )
-            checks.append("auto_size16_32_48_reconfigure_native_entities_static_and_full_palette")
+            checks.append(
+                "every_count1_through48_auto_setup_resize_playback_palettes_and_native_controls"
+            )
 
             async def service(domain, name, data):
                 await hass.services.async_call(domain, name, data, blocking=True)

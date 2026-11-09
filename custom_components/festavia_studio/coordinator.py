@@ -166,6 +166,23 @@ class StudioCoordinator(DataUpdateCoordinator):
             self.scene = {**copy.deepcopy(DEFAULT_SCENE), **copy.deepcopy(remote)}
             self.preset = "Custom"
             self.palette = "Custom"
+        if (
+            result["mode"] == "native"
+            and not result["player"].get("playing")
+            and self.scene.get("positions") != result["positions"]
+        ):
+            # New and cut strings use their detected count, including lengths
+            # shorter than the default palette or a previously saved layout.
+            positions = result["positions"]
+            self.scene["positions"] = positions
+            self.scene["layout"] = [[i, 1] for i in range(positions)]
+            self.scene["colors"] = self.scene["colors"][:positions]
+            if self.scene.get("effect") == "snake":
+                period = snake_period(self.scene)
+                if period < 2:
+                    self.scene["effect"] = "static"
+                else:
+                    self.scene["snake_colors"] = snake_colors(self.scene)[: period - 1]
         if result["palettes"].get(self.palette) != self.scene.get("colors"):
             self.palette = "Custom"
         foreground = result["palettes"].get(self.snake_palette)
