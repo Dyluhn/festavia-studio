@@ -480,7 +480,8 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
         self.device = copy.deepcopy(self.saved_entry.data.get("device"))
         self.hue_entry_id = self.saved_entry.data.get("hue_entry_id")
         return self.async_show_menu(
-            step_id="reconfigure", menu_options=["connection", "fixtures", "recover"]
+            step_id="reconfigure",
+            menu_options=["connection", "fixtures", "recover", "recover_missing"],
         )
 
     async def async_step_connection(self, user_input=None):
@@ -488,36 +489,59 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input)
 
     async def async_step_recover(self, user_input=None):
+        return await self.recover_step("recover", user_input)
+
+    async def async_step_recover_missing(self, user_input=None):
+        return await self.recover_step("recover_missing", user_input, allow_missing=True)
+
+    async def recover_step(self, step, user_input, *, allow_missing=False):
         errors = {}
         if user_input is not None:
-            try:
-                c = getattr(self.saved_entry, "runtime_data", None)
-                if c and not c.api.closed:
-                    async with c.action_lock:
-                        async with c.api.lock:
-                            await self.hass.async_add_executor_job(c.api.app.close)
-                            await self.hass.async_add_executor_job(
-                                recover_folder,
-                                private_folder(self.hass, self.saved_entry.entry_id),
+            if allow_missing and not user_input.get("confirm"):
+                errors["base"] = "confirm_required"
+            else:
+                try:
+                    c = getattr(self.saved_entry, "runtime_data", None)
+
+                    def restore():
+                        recover_folder(
+                            private_folder(self.hass, self.saved_entry.entry_id),
+                            allow_missing=allow_missing,
+                        )
+
+                    if c and not c.api.closed:
+                        async with c.action_lock:
+                            async with c.api.lock:
+                                await self.hass.async_add_executor_job(c.api.app.close)
+                                await self.hass.async_add_executor_job(restore)
+                                c.api.app.studio = None
+                            # Removed resource IDs can prevent status polling;
+                            # release ownership so Fixtures can select replacements.
+                            c.async_set_updated_data(
+                                {**c.data, "player": {"playing": False, "state": "ready"}}
                             )
-                            c.api.app.studio = None
-                    await c.async_request_refresh()
-                else:
-                    await self.hass.async_add_executor_job(
-                        recover_folder,
-                        private_folder(self.hass, self.saved_entry.entry_id),
+                        await c.async_request_refresh()
+                    else:
+                        await self.hass.async_add_executor_job(restore)
+                    ir.async_delete_issue(
+                        self.hass, DOMAIN, "recovery_" + self.saved_entry.entry_id
                     )
-                return self.async_abort(reason="recovery_successful")
-            except (
-                OSError,
-                http.client.HTTPException,
-                RuntimeError,
-                ValueError,
-                KeyError,
-                StudioError,
-            ):
-                errors["base"] = "recovery_failed"
-        return self.async_show_form(step_id="recover", errors=errors, data_schema=vol.Schema({}))
+                    return self.async_abort(
+                        reason="recovery_missing_successful"
+                        if allow_missing
+                        else "recovery_successful"
+                    )
+                except (
+                    OSError,
+                    http.client.HTTPException,
+                    RuntimeError,
+                    ValueError,
+                    KeyError,
+                    StudioError,
+                ):
+                    errors["base"] = "recovery_failed"
+        fields = {vol.Required("confirm", default=False): bool} if allow_missing else {}
+        return self.async_show_form(step_id=step, errors=errors, data_schema=vol.Schema(fields))
 
     async def async_step_reauth(self, entry_data):
         self.saved_entry = self._get_reauth_entry()

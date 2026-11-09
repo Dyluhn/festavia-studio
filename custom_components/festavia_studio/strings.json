@@ -55,7 +55,8 @@
         "menu_options": {
           "connection": "Bridge and ESP32 connection",
           "fixtures": "Lights and control mode",
-          "recover": "Recover playback"
+          "recover": "Recover playback",
+          "recover_missing": "Recover removed lights"
         }
       },
       "reauth_confirm": {
@@ -80,6 +81,13 @@
         "title": "Restore previous playback",
         "description": "Restore the appearance captured before playback, then release the previous controller. Keep the bridge, ESP32 and lights powered and reachable.",
         "data": {}
+      },
+      "recover_missing": {
+        "title": "Recover after removing Hue lights",
+        "description": "Only use this after a captured light has been permanently removed or replaced in Hue. Restore every captured light still present on the original bridge and discard recovery ONLY for missing Hue resource IDs. Reconnect reachable equipment first, then confirm. After recovery, choose the replacement lights in Reconfigure \u2192 Lights and control mode.",
+        "data": {
+          "confirm": "I confirm missing Hue lights were permanently removed or replaced"
+        }
       }
     },
     "error": {
@@ -91,7 +99,8 @@
       "stop_first": "Stop and restore the current effect before changing the installation.",
       "invalid_auth": "Authorization was rejected. Check the key or token.",
       "certificate_changed": "The certificate changed. Verify the device identity in Reconfigure.",
-      "recovery_failed": "Restoration could not be confirmed. Check connections and authorization, then retry; recovery data has been retained."
+      "recovery_failed": "Restoration could not be confirmed. Check connections and authorization, then retry; recovery data has been retained.",
+      "confirm_required": "Confirm that the missing lights were permanently removed or replaced."
     },
     "abort": {
       "already_configured": "These Festavia lights are already configured.",
@@ -104,7 +113,8 @@
       "unique_id_mismatch": "This connection identifies a different bridge. Add it as a new integration after restoring the current lights.",
       "recovery_successful": "Playback restored.",
       "recovery_required": "Unfinished recovery exists for these lights. Complete the Festavia repair before taking control.",
-      "restart_required": "Home Assistant could not unload the integration. Restart Home Assistant before reconfiguring it; recovery data is retained."
+      "restart_required": "Home Assistant could not unload the integration. Restart Home Assistant before reconfiguring it; recovery data is retained.",
+      "recovery_missing_successful": "Present lights restored; recovery for removed light IDs discarded. Reconfigure the light selection to choose replacements."
     }
   },
   "options": {
@@ -355,7 +365,7 @@
       "message": "The device certificate changed. Verify its identity and fingerprint in Reconfigure."
     },
     "recovery_pending": {
-      "message": "Restore the captured installation before changing fixtures. Use Reconfigure \u2192 Recover playback."
+      "message": "Restore the captured installation before changing fixtures. Use Reconfigure \u2192 Recover playback; if a Hue light was permanently removed, use Recover removed lights."
     },
     "unloading": {
       "message": "Festavia Studio is reloading. Try again when the integration is available."

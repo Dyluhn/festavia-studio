@@ -195,6 +195,13 @@ async def async_unload_entry(hass, entry):
         except StudioError:
             # A network outage must not strand HA in FAILED_UNLOAD. The durable
             # lease remains and the next setup retries restoration first.
+            from .backend.lib.net_client import save_credentials
+
+            await hass.async_add_executor_job(
+                save_credentials,
+                private_folder(hass, entry.entry_id) / "unload-pending.json",
+                {"restore": True},
+            )
             await c.api.close(restore=False)
             recovery_notice(hass, entry.entry_id)
         return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

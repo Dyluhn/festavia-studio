@@ -69,14 +69,14 @@ class Installation:
                 return True
         return False
 
-    def restore(self):
+    def restore(self, *, allow_missing=False):
         if (
             self.data.get("mode") == "native"
             and self.device_path.exists()
             and self.recovery_pending()
         ):
             self.native_studio().call("stop", {})
-        self.bridge_restore()
+        self.bridge_restore(allow_missing=allow_missing)
 
     def save(self):
         save_credentials(self.file, self.data)
@@ -210,7 +210,7 @@ class Installation:
                 return result
             return self.bridge_control(op, data)
 
-    def bridge_restore(self, *, off=False):
+    def bridge_restore(self, *, off=False, allow_missing=False):
         if not self.bridge_journal.exists():
             return {"restored": True}
         journal = json.loads(self.bridge_journal.read_text())
@@ -220,10 +220,13 @@ class Installation:
         if self.inventory(True)["active_entertainment"]:
             raise RuntimeError("Stop Hue Sync before restoring bridge control")
         now = {l["id"]: l["state"] for l in self.inventory()["lights"]}
+        missing = set(journal["before"]) - now.keys()
+        if missing and not allow_missing:
+            raise RecoveryPending("Captured lights are missing; use Recover removed lights")
         expected_power = {}
         for identifier, state in journal["before"].items():
             if identifier not in now:
-                raise RuntimeError("A captured light is missing; recovery remains saved")
+                continue
             preserve_off = off or not now[identifier]["on"]["on"]
             expected_power[identifier] = state["on"]["on"] and not preserve_off
             bridge.set_light(identifier, {"on": {"on": False}})
@@ -239,7 +242,7 @@ class Installation:
             if identifier not in actual or actual[identifier]["on"]["on"] != expected:
                 raise RuntimeError("Hue did not confirm restored power; recovery remains saved")
         self.bridge_journal.unlink()
-        return {"restored": True}
+        return {"restored": True, "missing_lights_discarded": len(missing)}
 
     def bridge_control(self, op, data):
         presets = (

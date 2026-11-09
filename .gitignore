@@ -13,3 +13,5 @@ player-session.json
 *.zip
 *.tar.gz
 build*/
+unload-pending.json
+removal-pending.json

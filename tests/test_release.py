@@ -53,6 +53,7 @@ class ReleaseTests(unittest.TestCase):
             "player-session.json",
             "studio-presets.json",
             "removal-pending.json",
+            "unload-pending.json",
         ):
             with self.subTest(name=name):
                 path = folder / name

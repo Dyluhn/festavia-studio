@@ -138,13 +138,13 @@ class StudioCoordinator(DataUpdateCoordinator):
         async with self.action_lock:
             self.check_ready()
             if not connections_only:
-                # Refresh ESP status to retire confirmed legacy journals. If the
-                # device is down, the offline journal check stays conservative.
-                await self.api.request()
-                if await self.hass.async_add_executor_job(
-                    has_recovery, private_folder(self.hass, self.entry.entry_id)
-                ):
-                    raise StudioError("recovery_pending")
+                folder = private_folder(self.hass, self.entry.entry_id)
+                if await self.hass.async_add_executor_job(has_recovery, folder):
+                    # Retire only firmware-confirmed legacy journals. If a light
+                    # was removed, keep protection until explicit recovery.
+                    await self.api.request()
+                    if await self.hass.async_add_executor_job(has_recovery, folder):
+                        raise StudioError("recovery_pending")
             self.reconfiguring = True
 
     async def save_preset(self, name):

@@ -49,7 +49,7 @@ def has_recovery(folder):
         return True
 
 
-def recover_folder(folder, updates=None):
+def recover_folder(folder, updates=None, allow_missing=False):
     app = Installation(folder)
     try:
         updates = updates or {}
@@ -82,9 +82,10 @@ def recover_folder(folder, updates=None):
                 client.close()
             save_credentials(app.device_path, device)
         if app.recovery_pending():
-            app.restore()
+            app.restore(allow_missing=allow_missing)
         if app.recovery_pending():
             raise RecoveryPending("Restoration has not been confirmed")
+        (folder / "unload-pending.json").unlink(missing_ok=True)
     finally:
         app.close()
 
@@ -187,10 +188,16 @@ class NativeClient:
 
         self.app = await self._execute(create)
         await self._sync_hue()
-        # An interrupted unload keeps its lease. Reconnect/retry restores it
-        # before exposing controls; startup never resumes a previous playback.
-        if await self._execute(self.app.recovery_pending):
-            await self._execute(self.app.restore)
+
+        # Only an explicit interrupted unload requests restoration on reconnect.
+        # Ordinary HA shutdown/crash leaves autonomous playback running.
+        def restore_interrupted_unload():
+            marker = self.app.folder / "unload-pending.json"
+            if marker.exists():
+                self.app.restore()
+                marker.unlink()
+
+        await self._execute(restore_interrupted_unload)
         self.targets = await self._execute(self.app.selected)
 
     async def _sync_hue(self):

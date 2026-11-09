@@ -387,6 +387,7 @@ async def main():
             # Unload/reload restores the captured original and never resumes.
             await action("configure", {"speed": 3, "brightness": 7, "apply": False})
             assert await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
             assert wire.snapshot == BEFORE and not wire.player["playing"]
             assert (
                 entry.runtime_data.scene["speed"] == 3

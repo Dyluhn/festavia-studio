@@ -8,6 +8,7 @@
 - Reuse the pinned native transport, poll every 10 seconds, cache inventory/firmware and avoid recorder churn from failure counters.
 - Remove legacy app/CLI/USB dependencies from HA runtime and test the actual packaged backend; add lifecycle, failure, concurrency and release privacy regressions.
 - Survive restart after offline removal, retry offline reload without Failed unload, retain legacy entity IDs while allowing former fixtures to be added again, and keep partial filesystem cleanup retryable.
+- Ordinary HA restarts preserve autonomous native/bridge playback. Only interrupted explicit unloads request restoration on reconnect. Confirmed removed-light recovery restores present lights before forgetting removed resource IDs.
 - ESP32 firmware remains the hardware-tested 0.3.4 image.
 
 # 0.6.0 — Home Assistant integration

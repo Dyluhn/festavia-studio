@@ -225,6 +225,94 @@ async def main():
             checks.append("partial_cleanup_restores_metadata_for_retry")
             await hass.config_entries.async_remove(legacy.entry_id)
             await hass.config_entries.async_remove(new.entry_id)
+            # An ordinary HA restart leaves autonomous device playback running.
+            # Only a marked, interrupted explicit unload requests stop-on-reconnect.
+            e = entry(copy.deepcopy(data), unique="restart-native")
+            await hass.config_entries.async_add(e)
+            await e.runtime_data.play(changes={"brightness": 10, "effect": "flow"})
+            native_id = e.entry_id
+            stops = sum(
+                isinstance(c[3], dict) and c[3].get("op") == "player_stop" for c in wire.calls
+            )
+            await hass.async_stop(force=True)
+            assert wire.player["playing"] and wire.player["armed"]
+            hass = await boot(folder)
+            await hass.async_block_till_done()
+            e = hass.config_entries.async_get_entry(native_id)
+            assert e.state.value == "loaded" and e.runtime_data.playing and wire.player["playing"]
+            assert e.runtime_data.scene["effect"] == "flow"
+            assert stops == sum(
+                isinstance(c[3], dict) and c[3].get("op") == "player_stop" for c in wire.calls
+            )
+            checks.append("ordinary_ha_restart_preserves_native_playback_and_adopts_scene")
+            await hass.config_entries.async_remove(e.entry_id)
+            bridge_data = copy.deepcopy(data)
+            bridge_data["installation"].update(
+                mode="bridge", native=None, selected=["fixture", "second"]
+            )
+            bridge_data["device"] = None
+            e = entry(bridge_data, unique="restart-bridge")
+            await hass.config_entries.async_add(e)
+            await e.runtime_data.play(changes={"brightness": 10, "effect": "static"})
+            bridge_id = e.entry_id
+            await hass.async_stop(force=True)
+            assert wire.lights["fixture"]["on"]["on"] and wire.lights["second"]["on"]["on"]
+            hass = await boot(folder)
+            await hass.async_block_till_done()
+            e = hass.config_entries.async_get_entry(bridge_id)
+            assert e.state.value == "loaded" and e.runtime_data.playing
+            assert wire.lights["fixture"]["on"]["on"] and wire.lights["second"]["on"]["on"]
+            checks.append("ordinary_ha_restart_preserves_bridge_static_scene")
+            # Confirmed recovery for permanently removed Hue IDs restores every
+            # remaining light first and then permits replacement selection.
+            wire.lights.pop("second")
+            flow = await hass.config_entries.flow.async_init(
+                "festavia_studio", context={"source": "reconfigure", "entry_id": e.entry_id}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], {"next_step_id": "fixtures"}
+            )
+            assert result["type"] == "abort" and result["reason"] == "stop_first", result
+            flow = await hass.config_entries.flow.async_init(
+                "festavia_studio", context={"source": "reconfigure", "entry_id": e.entry_id}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], {"next_step_id": "recover_missing"}
+            )
+            assert result["type"] == "form" and result["step_id"] == "recover_missing"
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], {"confirm": False}
+            )
+            assert (
+                result["errors"]["base"] == "confirm_required"
+                and wire.lights["fixture"]["on"]["on"]
+            ), result
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], {"confirm": True}
+            )
+            assert (
+                result["type"] == "abort" and result["reason"] == "recovery_missing_successful"
+            ), result
+            assert not wire.lights["fixture"]["on"]["on"]
+            assert not api.has_recovery(api.private_folder(hass, e.entry_id))
+            flow = await hass.config_entries.flow.async_init(
+                "festavia_studio", context={"source": "reconfigure", "entry_id": e.entry_id}
+            )
+            await hass.config_entries.flow.async_configure(
+                flow["flow_id"], {"next_step_id": "fixtures"}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], {"lights": ["fixture"], "mode": "bridge"}
+            )
+            assert result["type"] == "abort" and result["reason"] == "reconfigure_successful", (
+                result
+            )
+            await hass.async_block_till_done()
+            assert e.state.value == "loaded" and e.data["installation"]["selected"] == ["fixture"]
+            await hass.config_entries.async_remove(e.entry_id)
+            checks.append(
+                "removed_hue_lights_require_confirmation_restore_present_lights_and_allow_reselection"
+            )
             return {"passed": True, "checks": checks, "actual_ha_restart": True}
         finally:
             wire.offline = False

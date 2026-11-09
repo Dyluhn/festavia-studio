@@ -44,6 +44,10 @@ without any custom card:
 | Brightness limit | Installation cap, under Configuration; persists across reloads |
 | Firmware | Standard HA update entity; installs the bundled verified ESP32 image over Wi-Fi |
 
+Ordinary Home Assistant restarts preserve an already running ESP effect or bridge
+scene; HA adopts its saved scene when it reconnects. Explicit integration reloads
+stop and restore playback.
+
 Edits while off save your controls without turning on the lights. Edits while
 playing update the running effect. Power starts your saved controls. Save a named
 palette with **Developer tools → Actions → Festavia Studio: Save palette** or the
@@ -144,6 +148,12 @@ then Reconfigure. A certificate change requires verification and updated connect
 settings; TLS checks are not silently disabled. A light selection must still be
 present in the current bridge inventory and be a Festavia product. Native setup
 rejects unverified firmware/mapping combinations rather than guessing.
+
+If a captured light was permanently removed or replaced in Hue, use
+**Reconfigure → Recover removed lights**. Explicit confirmation restores every
+captured light still present and discards recovery only for missing Hue resource
+IDs. Then reconfigure the selection to choose replacements. An offline light
+still present in Hue is retained for recovery.
 
 Use **Stop and restore** before replacing fixtures or changing mode. The integration
 refuses selection changes while a recovery lease exists, including when the entry

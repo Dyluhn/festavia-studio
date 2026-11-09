@@ -56,6 +56,7 @@ def main():
         "bridge-presets.json",
         "migration-options.json",
         "removal-pending.json",
+        "unload-pending.json",
         "auth.json",
     }
 
