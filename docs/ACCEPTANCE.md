@@ -1,64 +1,41 @@
-# Acceptance — 0.7.0 candidate
+# Acceptance — 0.7.0
 
-Checked 2026-11-08. No Core/HACS acceptance or quality tier is claimed.
-
-## New automated acceptance
-
-- 82 protocol/unit/mobile-card/release tests exercise files shipped in the integration. The legacy backend test copy has been removed; the puck test also passes alone.
-- Actual HA Core 2026.10.1 container: 17 end-to-end checks use real Installation, commission, Bridge, pinned HTTPS, Player, encoders, config entries, coordinator and entities. Only HTTPS peer responses and physical Zigbee fixture reads/writes are simulated.
-- Coverage includes actual commissioning; 14 entities; invalid palette/brightness rejection before writes; native prepare/load/start and concurrent live edits; saved presets; no Hue inventory on native polls; active/unloaded reconfiguration journal protection; reload with restoration and retained staged controls; redacted OTA errors; actual transport auth denial and successful reauth; diagnostics; migration; online removal cleanup; offline removal plus native setup restoration; existing Hue key reuse/address/key following; early duplicates; explicit armed-device recovery; manual reauth without stale-key overwrite; bridge-lease restoration using renewed credentials during unload; recovery matching the same ESP even if a different fixture is selected.
-- Eight additional real-HA checks cover an actual restart with no configured Studio entry; persistent recovery after an HTTP protocol error; offline reload using Setup retry then restoration on reconnect; legacy fixture reconfiguration followed by re-adding its previous fixture; retryable partial private-folder cleanup; ordinary restarts preserving and adopting both native and bridge playback; and confirmed recovery of permanently removed Hue IDs followed by reselection; and removal clearing a notice from an earlier offline reload.
-- All hassfest validators from pinned HA Core 2026.10.1 pass (zero invalid integrations). Ruff undefined-name/import checks pass for component and tools.
-- Release tests build actual archives, verify firmware/source hashes, and reject private runtime files, symlinks and modified firmware. HA runtime imports no pyserial, CLI server or legacy add-on.
-- No live 0.7.0 acceptance is claimed yet; the following dated hardware evidence belongs to 0.6.0. This section will be updated after installation.
-
-# Previous live acceptance — 0.6.0
-
-Checked 2026-11-08. Public evidence excludes credentials, household names and
-network identifiers. No Home Assistant Core or HACS acceptance is claimed.
+Checked 2026-11-09 UTC. No Core/HACS acceptance or quality tier is claimed.
 
 ## Automated
 
-- 80 unit/protocol/browser tests passed, including checks of the packaged device
-  library, varying counts/palette sizes, brightness rejection, restoration,
-  collision handling, OTA safety, USB provisioning and the mobile palette card.
-- Actual Home Assistant 2026.10.1 in an isolated container: setup/link/token error
-  paths, all 14 entities, native light/text/number/switch control, firmware entity,
-  options, unavailable/recovery, diagnostics redaction, migration, reload without
-  autoplay and persisted controls passed with simulated transports.
-- Release packaging verifies both firmware image hashes and firmware source
-  hashes. The native installation ZIP contains no installable add-on or web app.
-- The new first-install CLI's factory hash/dry-run path passed. It was not used to
-  erase/reprovision the working board during this integration migration.
+- 83 protocol/unit/mobile-card/release tests pass against the shipped code, including four production-C player state scenarios with clock/NVS/radio boundaries simulated. Lost status replies, actual loss of contact, external off, and incorrect/late confirmations are covered.
+- Actual HA Core 2026.10.1 container: 17 integration checks and eight restart/lifecycle checks pass. Installation, commissioning, Bridge, pinned HTTPS, Player, encoders, config entries, stores, coordinator and entities are real; only network peer responses and physical Zigbee primitives are simulated.
+- Coverage includes all 14 entities; validation before writes; native prepare/load/start/live edits; serialized presets/actions; authentication/reauthentication; existing Hue key/address following; diagnostics redaction; OTA failures; offline removal across a real HA restart; retryable unload/recovery; partial cleanup; removed-light recovery; registry identity; and ordinary restarts preserving existing playback.
+- All hassfest validators from pinned HA Core 2026.10.1 pass. Ruff checks and formatting pass. The isolated puck test also passes alone.
+- Release checks build real archives, verify source/image hashes, reject private runtime files/symlinks/modified firmware, and run from an extracted full source archive. No HA pyserial/CLI/server/add-on runtime is shipped.
+- The documented firmware build succeeds from a clean source copy with locked dependencies and the same configuration as the installed image. First-install image/hash/dry-run checks pass; the working board was not erased for a new USB installation.
 
 ## Live Home Assistant and hardware
 
-Home Assistant OS 18.3 / Core 2026.10.1, Hue Bridge Pro, ESP32-C6 firmware 0.3.4,
-Festavia Permanent LCX030 fixture firmware 1.163.5, 27 native logical positions.
-All light-on tests used 10%; the installation cap remained 15%.
+HAOS 18.3 / Core 2026.10.1, Hue Bridge Pro, ESP32-C6 firmware 0.3.7,
+Festavia Permanent LCX030 firmware 1.163.5, 27 logical positions. All commanded
+light-on tests used 10% (HA light quantization 10.24%); the installation cap remained 15%.
+The original stored level 115 was restored only while off.
 
-- Migrated pairing, saved palettes, original integration/entity IDs, saved
-  controls and recovery journal from the old companion. No autoplay on startup.
-- Old companion stopped before the native library acquired control. Native
-  actions worked without it; it was then uninstalled and its HA source removed.
-- Native Configure dialog reported the approved Zigbee network.
-- Native text palette changed while off without turning on lights.
-- Native light started a three-color pattern. Four-color text edits updated it
-  live. Effect, speed and direction entities controlled the animation.
-- Three samples during a 15-second snake run showed 60→114→165 sends,
-  60→113→164 acknowledgements, 0→0→1 transport failure, zero animation timeouts.
-  This does not establish a perfectly lossless Zigbee link or optical frame rate.
-- Stop-and-restore matched the complete pre-test snapshot, including off state,
-  brightness, color, FC03 payload, logical count, region map and aliases.
-- Standard `update.install` wirelessly reinstalled the bundled 0.3.4 image,
-  confirmed its boot and retained pairing; final fixture snapshot still matched.
-- Actual HA mobile frontend at 393×852: native device controls present; card
-  changes synchronized with the palette entity, survived reload while off,
-  and produced no card JavaScript error or horizontal overflow.
-- One existing optional dashboard/card retained. No new dashboard or separate
-  setup panel created. Brand icon/logo served successfully by HA's brand API.
+- Five complete edit/play/restore cycles, each exercising 1–9 ordered colors, static/flow/breathe, speed 0.1/1/2/20 and both directions. Every full original snapshot matched after Stop: power, level, color/mode, FC03 payload, logical count, region map and aliases.
+- Three minutes of continuous four-color flow: 1,766 sends, 1,735 successful confirmations, 30 failures and one presentation timeout. Send/confirmation rates across the sampled interval were 9.518/9.346 per second. Playback remained active throughout, with no reboot or memory error. SDK free buffers returned from 33 to 33. Thirty subsequent complete vendor snapshots matched.
+- Native HA text accepted every palette size 1–9. Invalid black/mixed-tone palettes were rejected before staging or writes. Concurrent speed/direction edits both survived. Stop and actual entry reload restored exactly, retained controls/cap/pairing, and did not autoplay.
+- Switching off through the existing Hue light stopped native playback, preserved off, and restored the exact original appearance.
+- Standard HA `update.install` wirelessly reinstalled bundled 0.3.7, changed OTA partition, confirmed boot and retained the selected PAN/pairing. No USB connection was used.
+- Actual HA frontend at 393×852: native device controls present; optional card edits synchronized with the native palette entity, persisted after reload while off, and produced no card JavaScript error or horizontal overflow. One existing optional dashboard retained; no additional page/app/panel created.
+- Independent read-only Claude account 2 / Opus 5.5 review found no blocker in the final ownership/liveness changes. It is separate from the live evidence above.
 
-Not newly hardware-tested: a different Festavia model/firmware/count, a square
-BSB002 bridge, multiple simultaneous native fixtures, an empty-board USB install
-through the new CLI, or the initial native config-flow Zigbee join on a fresh PAN.
-Those claims require separate evidence before expanding compatibility.
+## Scope and limitations
+
+The original incorrect application send-slot gate and the false stop caused by
+ZCL-only liveness were reproduced under load before their fixes. This evidence
+supersedes short-run 0.3.4 reliability claims. Radio loss still occurs; these
+counters do not establish lossless Zigbee delivery or destination optical fps.
+
+The palette mapping and six-visible-puck optical evidence from 0.3.4 is retained
+and explicitly dated in `FIRMWARE_ACCEPTANCE.json`; it is not a new full-string
+optical survey. A different model/firmware/count, square BSB002 bridge, multiple
+simultaneous native fixtures, empty-board USB install, and first config-flow
+join on a fresh PAN still need separate physical acceptance before broadening
+compatibility. Routine Wi-Fi updating and native HA control are physically tested.

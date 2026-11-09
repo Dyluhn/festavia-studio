@@ -13,6 +13,7 @@
 #define MAX_STEPS 16
 #define MAX_FRAMES 64
 #define MAX_VERIFY 8
+#define TARGET_TIMEOUT_MS 15000
 typedef struct {
     uint16_t cluster, length, expected_length;
     int manufacturer;
@@ -35,7 +36,7 @@ static bool durable, playing, restoring, checking, pending, waiting_reply, resol
 static uint8_t power_tsn;
 static const char *state = "idle", *reason = "none";
 static bool palette_mode, bank_acked, pending_current_bank;
-static int64_t last_power_reply;
+static int64_t last_power_reply, last_target_ack;
 static packet_t color_probe;
 static bool color_probe_queued, pending_color_probe;
 static unsigned color_probe_count;
@@ -75,6 +76,8 @@ static cJSON *result(bool ok, const char *error)
     cJSON_AddStringToObject(r, "failure_stage", failure_stage);
     cJSON_AddNumberToObject(r, "failure_step", failure_step);
     cJSON_AddNumberToObject(r, "animation_timeouts", animation_timeouts);
+    cJSON_AddNumberToObject(r, "power_response_age_ms", started ? now()-last_power_reply : -1);
+    cJSON_AddNumberToObject(r, "target_ack_age_ms", started ? now()-last_target_ack : -1);
     cJSON_AddNumberToObject(r, "fps", fps);
     cJSON_AddNumberToObject(r, "frames", sample_count);
     cJSON_AddNumberToObject(r, "cycle_ms", cycle_ms);
@@ -221,7 +224,16 @@ bool hm_player_confirm(esp_zb_apsde_data_confirm_t c)
 {
     uint8_t tsn,cmd; size_t h;
     if (!hm_zcl_header(c.asdu,c.asdu_length,&tsn,&cmd,&h)) return false;
-    if (power_pending && tsn==power_tsn && c.dst_addr.addr_short==address) return true;
+    if (power_pending && tsn==power_tsn && c.dst_addr.addr_short==address &&
+        c.dst_endpoint==endpoint && c.src_endpoint==20 && cmd==0 &&
+        c.asdu_length==h+2 && c.asdu[h]==0 && c.asdu[h+1]==0) {
+        // Unlike animation frames, power queries request an end-to-end APS
+        // acknowledgement. Its success proves the target is reachable even
+        // when the independent ZCL attribute response is lost. Keep waiting
+        // for that response so a real external off still stops playback.
+        if (c.status==0) last_target_ack=now();
+        return true;
+    }
     if (!pending || tsn!=pending_tsn || c.dst_addr.addr_short!=address) return false;
     last_status=c.status;
     if (c.status) failure("aps_status");
@@ -294,7 +306,8 @@ void hm_player_tick(bool approved)
     if (durable && !playing && !restoring && strcmp(state,"armed")==0 && t>=armed_until)
         restore_begin("prepare_expired",false);
     if (playing && expires && t>=expires) restore_begin("duration_complete",false);
-    if (playing && palette_mode && sample_count > 1 && t-last_power_reply>6000)
+    int64_t last_contact=last_power_reply>last_target_ack ? last_power_reply : last_target_ack;
+    if (playing && palette_mode && sample_count > 1 && t-last_contact>TARGET_TIMEOUT_MS)
         restore_begin("target_unresponsive",false);
     if (!playing && !restoring) return;
     if (!resolved) {
@@ -355,10 +368,10 @@ void hm_player_tick(bool approved)
         counter++;
         last_length=s->length;memcpy(last_payload,p,last_length);
         // The stack may complete a request before its call returns. Publish
-        // correlation/ownership before handing it the retained output buffer.
+        // correlation/ownership before handing it the copied output buffer.
         // A delayed confirmation must not freeze motion for two seconds.
-        // Old SDK buffers remain retained until their callbacks; only this
-        // presentation wait expires. The sender bounds their pool occupancy.
+        // The SDK owns a copy until its callback; only this presentation wait
+        // expires. New frames remain paced by fps and this single pending slot.
         pending_current_bank=true; pending=true;
         pending_until=t+(palette_mode && sample_count>1 ? 500 : 2000);
         esp_err_t sent = palette_mode && sample_count > 1 ?
@@ -465,7 +478,7 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         // Resynchronize the fixture at the next free slot before the new bank.
         if (!was_playing) {pending=false; pending_sync=false; counter=0;}
         sync_requested=!palette_mode; bank_acked=false; pending_current_bank=false;
-        frames_sent=pending ? 1 : 0; frames_acked=failures=skipped=0; last_power=0; last_power_reply=started;
+        frames_sent=pending ? 1 : 0; frames_acked=failures=skipped=0; last_power=0; last_power_reply=last_target_ack=started;
         animation_timeouts=0;failure_cause=failure_stage="none";failure_step=0;
         return result(true,NULL);
     }

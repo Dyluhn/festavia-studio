@@ -1,10 +1,10 @@
 {
-  "checked_at": "2026-11-08T06:47:06.674935+00:00",
+  "checked_at": "2026-11-09T01:57:03.638059+00:00",
   "result": "passed within the stated hardware and optical scope",
   "firmware": {
-    "version": "0.3.4",
-    "elf_sha256": "a234fb6604a2d959af336b76816009c6792f0fecf6973c62300e5e136b40139a",
-    "sha256": "c000134a9e66c786e2a761c645c154d81e665adf40a9c33f599809734d9ed297"
+    "version": "0.3.7",
+    "elf_sha256": "2c5df4d7bd77b9dc60074972f7fa20549aaae0bea04bd2e8c8af81fe777b381e",
+    "sha256": "01dccd94bb09b0ce83f343e39256146e6a9addd289fb59b14e31e2056f45e2db"
   },
   "fixture": {
     "model": "LCX030",
@@ -22,17 +22,23 @@
   },
   "brightness": {
     "physical_tests_requested_percent": 10,
-    "peak_raw_level": 25,
+    "native_ha_light_rounding_percent": 10.24,
+    "installation_cap_percent": 15,
+    "observed_raw_level": 26,
     "raw_full_scale": 254,
     "strictly_below_20_percent": true,
     "original_stored_level": 115,
-    "original_high_level_restored_only_while_off": true,
-    "startup_and_recovery_order_regression": "passed"
+    "original_high_level_restored_only_while_off": true
   },
-  "mapping": {
-    "renderer": "native FC03 scattered palette; scale 27, offset 0",
-    "compensation": "even slots unchanged; odd slots rotate one step; compiler applies inverse",
-    "selected_color_counts_verified": [
+  "production_c_state_checks": [
+    "acknowledged power queries sustain playback despite missing ZCL status replies",
+    "failed acknowledged power queries stop playback after15sec despite successful animation confirmations",
+    "external off after prolonged ACK-only playback persists intent and begins restoration",
+    "wrong address/endpoint/sequence/length and late confirmations cannot extend liveness"
+  ],
+  "sustained_hardware": {
+    "edit_play_restore_cycles": 5,
+    "palette_sizes": [
       1,
       2,
       3,
@@ -43,493 +49,410 @@
       8,
       9
     ],
-    "index_cases": [
-      {
-        "count": 1,
-        "reverse": false,
-        "expected": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        "observed": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        "passed": true
-      },
-      {
-        "count": 2,
-        "reverse": false,
-        "expected": [
-          0,
-          1,
-          0,
-          1,
-          0,
-          1
-        ],
-        "observed": [
-          0,
-          1,
-          0,
-          1,
-          0,
-          1
-        ],
-        "passed": true
-      },
-      {
-        "count": 3,
-        "reverse": false,
-        "expected": [
-          1,
-          0,
-          2,
-          1,
-          0,
-          2
-        ],
-        "observed": [
-          1,
-          0,
-          2,
-          1,
-          0,
-          2
-        ],
-        "passed": true
-      },
-      {
-        "count": 4,
-        "reverse": false,
-        "expected": [
-          0,
-          3,
-          2,
-          1,
-          0,
-          3
-        ],
-        "observed": [
-          0,
-          3,
-          2,
-          1,
-          0,
-          3
-        ],
-        "passed": true
-      },
-      {
-        "count": 5,
-        "reverse": false,
-        "expected": [
-          1,
-          0,
-          4,
-          3,
-          2,
-          1
-        ],
-        "observed": [
-          1,
-          0,
-          4,
-          3,
-          2,
-          1
-        ],
-        "passed": true
-      },
-      {
-        "count": 6,
-        "reverse": false,
-        "expected": [
-          4,
-          3,
-          2,
-          1,
-          0,
-          5
-        ],
-        "observed": [
-          4,
-          3,
-          2,
-          1,
-          0,
-          5
-        ],
-        "passed": true
-      },
-      {
-        "count": 7,
-        "reverse": false,
-        "expected": [
-          2,
-          1,
-          0,
-          6,
-          5,
-          4
-        ],
-        "observed": [
-          2,
-          1,
-          0,
-          6,
-          5,
-          4
-        ],
-        "passed": true
-      },
-      {
-        "count": 8,
-        "reverse": false,
-        "expected": [
-          0,
-          7,
-          6,
-          5,
-          4,
-          3
-        ],
-        "observed": [
-          0,
-          7,
-          6,
-          5,
-          4,
-          3
-        ],
-        "passed": true
-      },
-      {
-        "count": 9,
-        "reverse": false,
-        "expected": [
-          7,
-          6,
-          5,
-          4,
-          3,
-          2
-        ],
-        "observed": [
-          7,
-          6,
-          5,
-          4,
-          3,
-          2
-        ],
-        "passed": true
-      },
-      {
-        "count": 4,
-        "reverse": true,
-        "expected": [
-          2,
-          3,
-          0,
-          1,
-          2,
-          3
-        ],
-        "observed": [
-          2,
-          3,
-          0,
-          1,
-          2,
-          3
-        ],
-        "passed": true
-      },
-      {
-        "count": 7,
-        "reverse": true,
-        "expected": [
-          3,
-          4,
-          5,
-          6,
-          0,
-          1
-        ],
-        "observed": [
-          3,
-          4,
-          5,
-          6,
-          0,
-          1
-        ],
-        "passed": true
-      }
+    "effects": [
+      "static",
+      "flow",
+      "breathe"
     ],
-    "optical_index_checks": 66,
-    "calibration_scope": "Native wire frames on this fixture; intermediate 0.3.4 candidates. Final installed image also exercised by the real phone UI.",
-    "native_palette_max": 9,
-    "native_frame_rate_max": 10,
-    "rejected_native_counts": [
-      10,
-      11,
-      15
+    "speed_values": [
+      0.1,
+      1,
+      2,
+      20
     ],
-    "minimum_wire_points": 2,
-    "one_selected_color": "two identical native points",
-    "original_map_and_aliases_retained": true,
-    "fresh_verified_address_used_for_initial_setup": true,
-    "boot_ignores_saved_address_hint": true,
-    "native_palette_and_parameters_required": true
+    "continuous_play_seconds": 180,
+    "continuous_sent": 1766,
+    "continuous_confirmed": 1735,
+    "continuous_failures": 30,
+    "continuous_timeouts": 1,
+    "continuous_skipped": 117,
+    "sample_interval_send_fps": 9.518,
+    "sample_interval_confirmation_fps": 9.346,
+    "sdk_no_mem": 0,
+    "sdk_free_buffers_before": 33,
+    "sdk_free_buffers_after": 33,
+    "same_boot": true,
+    "uptime_monotonic_across_all_samples": true,
+    "max_sampled_power_response_age_ms": 3864,
+    "max_sampled_target_ack_age_ms": 3877,
+    "full_snapshots_after_soak": 30,
+    "all_restorations_exact": true,
+    "destination_applied_fps_measured": false
   },
-  "motion": [
-    {
-      "name": "smooth-400ms",
-      "requested_fps": 10,
-      "speed": 1,
-      "requested_smoothing_ms": 400.0,
-      "send_confirmations_per_second": 9.046089827671988,
-      "failed_sends": 5,
-      "destination_applied_fps_measured": false,
-      "animation_timeouts": 0,
-      "optical": {
-        "name": "smooth-400ms",
-        "sample_count": 128,
-        "held_fraction": 0.0,
-        "motion_variation": 0.27078283818925497,
-        "mean_change": 0.030985983843405285,
-        "lag_frames": 11,
-        "direction_correlation": 0.9876836592647829,
-        "opposite_correlation": -0.4541075899848808
-      }
-    },
-    {
-      "name": "fast-10fps",
-      "requested_fps": 10,
-      "speed": 3,
-      "requested_smoothing_ms": 400.0,
-      "send_confirmations_per_second": 8.849557522123895,
-      "failed_sends": 7,
-      "destination_applied_fps_measured": false,
-      "animation_timeouts": 0,
-      "optical": {
-        "name": "fast-10fps",
-        "sample_count": 128,
-        "held_fraction": 0.0,
-        "motion_variation": 0.20263304079073444,
-        "mean_change": 0.04495794786334552,
-        "lag_frames": 4,
-        "direction_correlation": 0.8676331762177147,
-        "opposite_correlation": -0.29306047194698026
-      }
-    }
-  ],
-  "optical_method": {
-    "capture_seconds": 16,
-    "capture_fps": 8,
-    "visible_pucks": 6,
-    "held_sample": "Mean Euclidean change of six normalized RGB vectors below 0.005",
-    "direction": "Mean adjacent-puck R-minus-B correlation at the expected travel lag; positive left-following-right lag",
-    "limitations": "Uncalibrated camera, sampled at 8 Hz. Zero held samples is a diagnostic result, not a guarantee of perceptual smoothness or future RF delivery."
-  },
-  "recovery": {
-    "hue_off_from_on_white": true,
-    "hue_off_from_on_xy": true,
-    "external_off_preserved": true,
-    "exact_color_mode_level_map_alias_verification": true,
-    "immutable_xy_target": true,
-    "xy_input_correction_max_candidates": 49,
-    "xy_input_correction_radius_units": 3,
-    "exact_final_original_snapshot_restored": true,
-    "original_power": "off",
-    "active_playback_wifi_ota": {
-      "ok": true,
-      "confirmed": true,
-      "version": "0.3.4",
-      "elf_sha256": "a234fb6604a2d959af336b76816009c6792f0fecf6973c62300e5e136b40139a",
-      "running_partition": "ota_0"
-    },
-    "boot_recovery_reason": "boot_recovery",
-    "abrupt_physical_power_cut_tested": false
-  },
-  "installed_phone_ui": {
-    "https_origin_tested": true,
+  "home_assistant": {
+    "integration": "0.7.0",
+    "core": "2026.10.1",
+    "os": "18.3",
+    "bridge": "Hue Bridge Pro",
+    "checks": [
+      "Unsupported native palettes rejected before staging or hardware writes",
+      "Idle native palette edits retain fixture power and original appearance",
+      "All1\u20139 native palette sizes update through the real HA text entity at10%",
+      "30-second snake advances continuously with concurrent speed/direction edits; delivery counters reported",
+      "Stop restores the complete original off-state snapshot",
+      "Actual HA integration reload drains, restores and retains pairing/controls without autoplay",
+      "External off through the existing Hue light is detected and preserved with complete restoration",
+      "HA firmware entity wirelessly reinstalls and confirms bundled0.3.7 with pairing retained"
+    ],
+    "palette_sizes": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "ota_pairing_and_boot_confirmed": true,
+    "ota_partition_changed": true,
+    "final_exact_restore": true,
     "mobile_viewport": [
       393,
       852
     ],
-    "cases": [
+    "mobile_checks": {
+      "card_native_palette_sync": true,
+      "reload_persistence": true,
+      "all_controls_on_native_device": true,
+      "card_errors": []
+    }
+  },
+  "previous_optical_evidence": {
+    "checked_at": "2026-11-08T06:47:06.674935+00:00",
+    "firmware": {
+      "version": "0.3.4",
+      "elf_sha256": "a234fb6604a2d959af336b76816009c6792f0fecf6973c62300e5e136b40139a",
+      "sha256": "c000134a9e66c786e2a761c645c154d81e665adf40a9c33f599809734d9ed297"
+    },
+    "mapping": {
+      "renderer": "native FC03 scattered palette; scale 27, offset 0",
+      "compensation": "even slots unchanged; odd slots rotate one step; compiler applies inverse",
+      "selected_color_counts_verified": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "index_cases": [
+        {
+          "count": 1,
+          "reverse": false,
+          "expected": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "observed": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "passed": true
+        },
+        {
+          "count": 2,
+          "reverse": false,
+          "expected": [
+            0,
+            1,
+            0,
+            1,
+            0,
+            1
+          ],
+          "observed": [
+            0,
+            1,
+            0,
+            1,
+            0,
+            1
+          ],
+          "passed": true
+        },
+        {
+          "count": 3,
+          "reverse": false,
+          "expected": [
+            1,
+            0,
+            2,
+            1,
+            0,
+            2
+          ],
+          "observed": [
+            1,
+            0,
+            2,
+            1,
+            0,
+            2
+          ],
+          "passed": true
+        },
+        {
+          "count": 4,
+          "reverse": false,
+          "expected": [
+            0,
+            3,
+            2,
+            1,
+            0,
+            3
+          ],
+          "observed": [
+            0,
+            3,
+            2,
+            1,
+            0,
+            3
+          ],
+          "passed": true
+        },
+        {
+          "count": 5,
+          "reverse": false,
+          "expected": [
+            1,
+            0,
+            4,
+            3,
+            2,
+            1
+          ],
+          "observed": [
+            1,
+            0,
+            4,
+            3,
+            2,
+            1
+          ],
+          "passed": true
+        },
+        {
+          "count": 6,
+          "reverse": false,
+          "expected": [
+            4,
+            3,
+            2,
+            1,
+            0,
+            5
+          ],
+          "observed": [
+            4,
+            3,
+            2,
+            1,
+            0,
+            5
+          ],
+          "passed": true
+        },
+        {
+          "count": 7,
+          "reverse": false,
+          "expected": [
+            2,
+            1,
+            0,
+            6,
+            5,
+            4
+          ],
+          "observed": [
+            2,
+            1,
+            0,
+            6,
+            5,
+            4
+          ],
+          "passed": true
+        },
+        {
+          "count": 8,
+          "reverse": false,
+          "expected": [
+            0,
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "observed": [
+            0,
+            7,
+            6,
+            5,
+            4,
+            3
+          ],
+          "passed": true
+        },
+        {
+          "count": 9,
+          "reverse": false,
+          "expected": [
+            7,
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "observed": [
+            7,
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          "passed": true
+        },
+        {
+          "count": 4,
+          "reverse": true,
+          "expected": [
+            2,
+            3,
+            0,
+            1,
+            2,
+            3
+          ],
+          "observed": [
+            2,
+            3,
+            0,
+            1,
+            2,
+            3
+          ],
+          "passed": true
+        },
+        {
+          "count": 7,
+          "reverse": true,
+          "expected": [
+            3,
+            4,
+            5,
+            6,
+            0,
+            1
+          ],
+          "observed": [
+            3,
+            4,
+            5,
+            6,
+            0,
+            1
+          ],
+          "passed": true
+        }
+      ],
+      "optical_index_checks": 66,
+      "calibration_scope": "Native wire frames on this fixture; intermediate 0.3.4 candidates. Final installed image also exercised by the real phone UI.",
+      "native_palette_max": 9,
+      "native_frame_rate_max": 10,
+      "rejected_native_counts": [
+        10,
+        11,
+        15
+      ],
+      "minimum_wire_points": 2,
+      "one_selected_color": "two identical native points",
+      "original_map_and_aliases_retained": true,
+      "fresh_verified_address_used_for_initial_setup": true,
+      "boot_ignores_saved_address_hint": true,
+      "native_palette_and_parameters_required": true
+    },
+    "motion": [
       {
-        "name": "three-colors",
-        "colors": [
-          "#ff0000",
-          "#00ff00",
-          "#0000ff"
-        ],
-        "requested_percent": 10,
-        "readback_level": 25,
-        "transport": "palette"
+        "name": "smooth-400ms",
+        "requested_fps": 10,
+        "speed": 1,
+        "requested_smoothing_ms": 400.0,
+        "send_confirmations_per_second": 9.046089827671988,
+        "failed_sends": 5,
+        "destination_applied_fps_measured": false,
+        "animation_timeouts": 0,
+        "optical": {
+          "name": "smooth-400ms",
+          "sample_count": 128,
+          "held_fraction": 0.0,
+          "motion_variation": 0.27078283818925497,
+          "mean_change": 0.030985983843405285,
+          "lag_frames": 11,
+          "direction_correlation": 0.9876836592647829,
+          "opposite_correlation": -0.4541075899848808
+        }
       },
       {
-        "name": "four-colors-live-update",
-        "colors": [
-          "#ff0000",
-          "#00ff00",
-          "#0000ff",
-          "#ffb000"
-        ],
-        "requested_percent": 10,
-        "readback_level": 25,
-        "transport": "palette"
-      },
-      {
-        "name": "four-colors-reordered",
-        "colors": [
-          "#ff0000",
-          "#00ff00",
-          "#ffb000",
-          "#0000ff"
-        ],
-        "requested_percent": 10,
-        "readback_level": 25,
-        "transport": "palette"
-      },
-      {
-        "name": "snake-native-normal-speed",
-        "colors": [
-          "#ff0000",
-          "#00ff00",
-          "#0000ff"
-        ],
-        "requested_percent": 10,
-        "readback_level": 25,
-        "transport": "palette"
-      },
-      {
-        "name": "snake-native-fast-speed",
-        "colors": [
-          "#ff0000",
-          "#00ff00",
-          "#0000ff"
-        ],
-        "requested_percent": 10,
-        "readback_level": 25,
-        "transport": "palette"
-      },
-      {
-        "name": "snake-native-reverse",
-        "colors": [
-          "#ff0000",
-          "#00ff00",
-          "#0000ff"
-        ],
-        "requested_percent": 10,
-        "readback_level": 25,
-        "transport": "palette"
+        "name": "fast-10fps",
+        "requested_fps": 10,
+        "speed": 3,
+        "requested_smoothing_ms": 400.0,
+        "send_confirmations_per_second": 8.849557522123895,
+        "failed_sends": 7,
+        "destination_applied_fps_measured": false,
+        "animation_timeouts": 0,
+        "optical": {
+          "name": "fast-10fps",
+          "sample_count": 128,
+          "held_fraction": 0.0,
+          "motion_variation": 0.20263304079073444,
+          "mean_change": 0.04495794786334552,
+          "lag_frames": 4,
+          "direction_correlation": 0.8676331762177147,
+          "opposite_correlation": -0.29306047194698026
+        }
       }
     ],
-    "live_palette_update": true,
-    "reordering": true,
-    "static_color_optical_review": "passed: three colors, four colors and reordered four colors",
-    "exact_stop_restore": true,
-    "continuous_playback_checks": [
-      {
-        "name": "normal_speed_native",
-        "elapsed_ms": 61439,
-        "send_confirmations_per_second": 8.91941600611989,
-        "still_playing": true
-      },
-      {
-        "name": "fast_speed_native",
-        "elapsed_ms": 61361,
-        "send_confirmations_per_second": 8.914457065562818,
-        "still_playing": true
-      },
-      {
-        "name": "reverse_native",
-        "elapsed_ms": 21012,
-        "send_confirmations_per_second": 8.566533409480297,
-        "still_playing": true
-      }
-    ],
-    "optical_motion": [
-      {
-        "name": "snake-native-normal-speed",
-        "sample_count": 128,
-        "held_fraction": 0.0,
-        "motion_variation": 0.2770832086879561,
-        "expected_direction": "left",
-        "lag_frames": 11,
-        "direction_correlation": 0.9854749522919872,
-        "opposite_correlation": -0.4612915260897064
-      },
-      {
-        "name": "snake-native-fast-speed",
-        "sample_count": 128,
-        "held_fraction": 0.0,
-        "motion_variation": 0.2062538736504203,
-        "expected_direction": "left",
-        "lag_frames": 4,
-        "direction_correlation": 0.8767729366358396,
-        "opposite_correlation": -0.3045524769133389
-      },
-      {
-        "name": "snake-native-reverse",
-        "sample_count": 128,
-        "held_fraction": 0.0,
-        "motion_variation": 0.20628688947188714,
-        "expected_direction": "right",
-        "lag_frames": -4,
-        "direction_correlation": 0.8619837795484298,
-        "opposite_correlation": -0.2619544466933886
-      }
-    ],
-    "health_observation_cache_seconds": 5,
-    "owner_tls_reuse": true,
-    "lights_off_checked_live_on_server": true,
-    "javascript_errors": [],
-    "horizontal_overflow": false
+    "method": {
+      "capture_seconds": 16,
+      "capture_fps": 8,
+      "visible_pucks": 6,
+      "held_sample": "Mean Euclidean change of six normalized RGB vectors below 0.005",
+      "direction": "Mean adjacent-puck R-minus-B correlation at the expected travel lag; positive left-following-right lag",
+      "limitations": "Uncalibrated camera, sampled at 8 Hz. Zero held samples is a diagnostic result, not a guarantee of perceptual smoothness or future RF delivery."
+    },
+    "scope": "Inherited unchanged palette mapping and encoder evidence from 0.3.4. The0.3.7 run exercises commands, delivery, restoration and lifecycle; no new full-string optical survey."
   },
-  "legacy_regions": {
-    "mixed_color_dim_off": "passed optical review",
-    "all_dark": "passed optical review",
-    "original_geometry_restored": true
-  },
-  "sender_diagnostics": {
-    "version": "0.3.4",
-    "aps_confirms_during_send": 0,
-    "aps_confirms_without_header": 0,
-    "outbound_in_use": 0,
-    "free_heap": 178788
-  },
-  "historical_trials": {
-    "supersedes": "PUCK_MOTION_RESEARCH.json",
-    "failures": [
-      "Palette-only capacity probes without scale/offset were acknowledged but stayed uniform.",
-      "One intermediate scheduling candidate failed a static send and automatically restored off.",
-      "Initial phone startup failed a redundant firmware ZDO lookup after fresh host resolution/readback had succeeded. Initial setup now uses that verified binding; boot recovery still resolves the IEEE fresh.",
-      "A later complete-run startup did not confirm setup and restored off. Host reporting now terminates immediately after verified recovery; the final rerun records every setup status.",
-      "Constant one-unit XY correction failed near a gamut boundary; exact checking retained the journal. Bounded input correction subsequently recovered it.",
-      "An earlier combined-run final region snapshot assertion differed, but its values were not retained. Two follow-up region runs yielded six exact snapshots; the final complete run retains full snapshots. The original cause is not established."
-    ],
-    "synchronous_sdk_callback_cause_proven": false,
-    "unsupported_high_rate": "A 20-fps speed-3 run with the rejected 200-ms confirmation wait hit the liveness watchdog and recovered off. Final native fps above 10 is rejected by host and firmware.",
-    "discarded_short_deadline": "200-ms/four-buffer trials built up unfinished sends even at 10 fps. The final wait is 500 ms with at most two occupied slots for animation and correctly consumed APS replies."
+  "independent_review": {
+    "backend": "Claude account 2",
+    "model": "claude-opus-5-5",
+    "mode": "read-only",
+    "verdict": "No blocker in final liveness/ownership changes. Hardware acceptance performed separately."
   },
   "remaining_limits": [
-    "1\u20139 selected native colors with shared brightness/Tone; at most 10 requested updates/sec.",
-    "Independent dimming, black gaps and arbitrary per-region values use at most ten entertainment regions.",
-    "Optical evidence covers six visible pucks; 27 is the addressed logical count.",
-    "Radio delivery varies. Native animation confirmations are not destination APS acknowledgments."
+    "Verified native hardware is LCX030/1.163.5/27 logical positions on Hue Bridge Pro. Other models/firmware/counts remain gated.",
+    "1\u20139 non-black native colors with shared RGB maximum/tone; at most10 requested updates/sec.",
+    "Animation confirmations are not destination APS acknowledgements or an optical frame-rate measurement. RF loss and skipped samples remain possible.",
+    "Previous optical evidence covers six visible pucks; no full-string optical survey.",
+    "Fresh empty-board USB provisioning and initial config-flow Zigbee joining were not repeated; first-install manifest/hash/dry-run checks and a clean documented source build passed.",
+    "No Home Assistant Core, HACS catalog acceptance or Integration Quality Scale tier is claimed."
   ]
 }

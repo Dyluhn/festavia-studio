@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include <stdbool.h>
 #include "cJSON.h"
 #include "esp_err.h"
 #include "aps/esp_zigbee_aps.h"

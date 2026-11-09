@@ -10,7 +10,9 @@
 - Survive restart after offline removal, retry offline reload without Failed unload, retain legacy entity IDs while allowing former fixtures to be added again, and keep partial filesystem cleanup retryable.
 - Ordinary HA restarts preserve autonomous native/bridge playback. Only interrupted explicit unloads request restoration on reconnect. Confirmed removed-light recovery restores present lights before forgetting removed resource IDs.
 - Initialize and invalidate inventory/status/firmware caches independently of host uptime, so firmware controls are available immediately after boot.
-- ESP32 firmware remains the hardware-tested 0.3.4 image.
+- ESP32 firmware 0.3.7 removes an incorrect application send-slot gate, uses the pinned SDK's synchronous request copies, drains UART output outside the Zigbee lock, and consumes replies addressed to its client endpoint.
+- Track acknowledged power-query delivery independently of ZCL reply freshness to prevent false animation stops; retain external-off recovery. Add actual C state-machine tests and bounded firmware diagnostics.
+- Full 4 MB first-install image and source defaults match the tested UART build; ordinary updates remain wireless and preserve pairing.
 
 # 0.6.0 — Home Assistant integration
 

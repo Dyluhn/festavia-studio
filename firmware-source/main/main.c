@@ -12,9 +12,11 @@
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "esp_zigbee_core.h"
+#include "zboss_api.h"
 #include "esp_zigbee_cluster.h"
 #include "esp_zigbee_endpoint.h"
 #include "esp_zigbee_attribute.h"
@@ -41,9 +43,10 @@
 #define RX_LIMIT 256
 
 static EventGroupHandle_t ready;
-static SemaphoreHandle_t output_mutex;
+static QueueHandle_t serial_output;
+static uint32_t serial_dropped;
 static nvs_handle_t settings;
-// Except the output mutex and ready event, shared state is protected by the ZB lock.
+// Zigbee state is protected by the ZB lock; the UART queue is RTOS-owned.
 static bool network_up, have_expected, join_pending, scan_pending;
 static uint8_t expected[8], saved_channel = 11, sequence;
 static uint8_t saved_security; // 0: centralized Zigbee 3; 1: legacy ZLL distributed
@@ -51,12 +54,22 @@ static bool join_once;
 static int scan_id;
 static int64_t last_tx_us, zdo_until_us;
 static int zdo_id = -1;
-// Keep request ASDUs alive until the SDK's confirm callback, including all
-// fragments. Neither task stacks nor mutable scene banks own in-flight bytes.
-typedef struct { bool used; uint16_t address; uint8_t tsn; uint8_t frame[HM_MAX_FRAME]; } outbound_t;
-static outbound_t outbound[8];
+// SDK1.6.8 copies the ASDU synchronously into its own ZBOSS buffer. Keep the
+// frame alive through that call, rather than gating future sends on callback
+// correlation. The pinned SDK confirm callback also owns a separate ASDU copy.
+static uint32_t tx_accepted, tx_confirmations;
 static bool send_active;
 static uint32_t confirms_during_send, confirms_without_header;
+static uint32_t sdk_no_mem, rx_control_frames;
+
+static unsigned sdk_free_buffers(void)
+{
+    zb_bufid_t held[128];
+    unsigned count=0;
+    while (count<128 && (held[count]=zb_buf_get_out())!=ZB_BUF_INVALID) count++;
+    for (unsigned i=0;i<count;i++) zb_buf_free(held[i]);
+    return count;
+}
 
 static void emit(cJSON *obj)
 {
@@ -65,11 +78,14 @@ static void emit(cJSON *obj)
     if (json) {
         const cJSON *id = cJSON_GetObjectItemCaseSensitive(obj, "id");
         hm_net_emit(json, cJSON_IsNumber(id) ? id->valueint : -1, cJSON_HasObjectItem(obj, "event"));
-        xSemaphoreTake(output_mutex, portMAX_DELAY);
-        puts(json);
-        fflush(stdout);
-        xSemaphoreGive(output_mutex);
-        cJSON_free(json);
+        // UART can block for tens of milliseconds. Never hold the Zigbee lock
+        // while waiting for it; reserve queue space for command replies.
+        bool is_event=cJSON_HasObjectItem(obj, "event");
+        if ((is_event && uxQueueSpacesAvailable(serial_output)<4) ||
+            xQueueSend(serial_output,&json,0)!=pdTRUE) {
+            serial_dropped++;
+            cJSON_free(json);
+        }
     }
     cJSON_Delete(obj);
 }
@@ -267,7 +283,13 @@ static void descriptor_done(esp_zb_zdp_status_t status, esp_zb_af_simple_desc_1_
 static bool aps_received(esp_zb_apsde_data_ind_t ind)
 {
     // Capture only application ZCL, never key transport, ZDO, or security frames.
-    if (ind.profile_id != 0x0104 || !ind.asdu || ind.asdu_length > RX_LIMIT) return false;
+    if (ind.profile_id != 0x0104 || !ind.asdu) return false;
+    bool control=ind.dst_endpoint==CLIENT_EP &&
+        ind.dst_addr_mode==ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT &&
+        ind.dst_short_addr==esp_zb_get_short_address() &&
+        ind.asdu_length>0 && (ind.asdu[0]&0x08);
+    if (control) rx_control_frames++;
+    if (ind.asdu_length>RX_LIMIT) return control;
     // A player reply has been consumed. Returning false would also hand it to
     // the SDK's ZCL dispatcher as an unhandled frame on the control endpoint.
     if (hm_player_receive(ind)) return true;
@@ -293,21 +315,21 @@ static bool aps_received(esp_zb_apsde_data_ind_t ind)
         cJSON_AddStringToObject(obj, "payload", hex);
     }
     emit(obj);
-    // Preserve the stack's normal light/attribute processing.
-    return false;
+    // Own unicast replies belong to the host/player, including vendor replies
+    // without a normal SDK transaction. Leave interviews, groups and the lamp
+    // server to the stack instead of dispatching our replies a second time.
+    return control;
 }
 
 static void aps_confirmed(esp_zb_apsde_data_confirm_t confirm)
 {
     if (confirm.src_endpoint != CLIENT_EP) return;
     if (send_active) confirms_during_send++;
-    uint8_t sent_tsn,sent_cmd;size_t sent_header;
+    tx_confirmations++;
     bool handled=hm_player_confirm(confirm);
-    if (hm_zcl_header(confirm.asdu,confirm.asdu_length,&sent_tsn,&sent_cmd,&sent_header)) {
-        for (size_t i=0;i<8;i++) if (outbound[i].used && outbound[i].address==confirm.dst_addr.addr_short && outbound[i].tsn==sent_tsn) {
-            outbound[i].used=false;break;
-        }
-    } else confirms_without_header++;
+    uint8_t header_tsn,header_cmd;size_t header_size;
+    if (!hm_zcl_header(confirm.asdu,confirm.asdu_length,&header_tsn,&header_cmd,&header_size))
+        confirms_without_header++;
     if (handled) return;
     cJSON *obj = event("aps_confirm");
     cJSON_AddNumberToObject(obj, "status", confirm.status);
@@ -357,17 +379,7 @@ static esp_err_t send_frame(uint16_t address, uint8_t endpoint, uint16_t cluster
                   const uint8_t *payload, size_t size, bool quiet, bool acknowledged, uint8_t *tsn)
 {
     *tsn=sequence++;
-    outbound_t *slot=NULL;
-    size_t occupied=0;
-    for (size_t i=0;i<8;i++) {
-        if (outbound[i].used) occupied++;
-        else if (!slot) slot=&outbound[i];
-    }
-    // Delayed animation confirmations may outlive their presentation deadline.
-    // Bound that backlog and leave capacity for power checks and recovery.
-    if (!acknowledged && occupied>=2) return ESP_ERR_NO_MEM;
-    if (!slot) return ESP_ERR_NO_MEM;
-    uint8_t *frame=slot->frame;
+    uint8_t frame[HM_MAX_FRAME];
     size_t length=hm_frame(frame,specific,manufacturer,*tsn,command,payload,size);
     if (!length) return ESP_ERR_INVALID_ARG;
     if (quiet) frame[0] |= 0x10;
@@ -378,11 +390,11 @@ static esp_err_t send_frame(uint16_t address, uint8_t endpoint, uint16_t cluster
         .asdu=frame, .asdu_length=length,
         .tx_options=(acknowledged ? ESP_ZB_APSDE_TX_OPT_ACK_TX | ESP_ZB_APSDE_TX_OPT_FRAG_PERMITTED : 0) | ESP_ZB_APSDE_TX_OPT_NO_LONG_ADDR, .radius=30,
     };
-    slot->used=true;slot->address=address;slot->tsn=*tsn;
     send_active=true;
     esp_err_t result=esp_zb_aps_data_request(&req);
     send_active=false;
-    if (result!=ESP_OK) slot->used=false;
+    if (result==ESP_ERR_NO_MEM) sdk_no_mem++;
+    if (result==ESP_OK) tx_accepted++;
     return result;
 }
 
@@ -422,10 +434,18 @@ static void handle_request(cJSON *request)
         cJSON_AddStringToObject(obj, "target", CONFIG_IDF_TARGET);
         cJSON_AddNumberToObject(obj, "protocol", 1);
         cJSON_AddNumberToObject(obj, "free_heap", esp_get_free_heap_size());
+        cJSON_AddNumberToObject(obj, "uptime_ms", esp_timer_get_time()/1000);
+        cJSON_AddNumberToObject(obj, "sdk_buffers_free", sdk_free_buffers());
+        cJSON_AddNumberToObject(obj, "sdk_buffer_probe_limit", 128);
+        cJSON_AddNumberToObject(obj, "sdk_no_mem", sdk_no_mem);
+        cJSON_AddNumberToObject(obj, "serial_dropped", serial_dropped);
+        cJSON_AddNumberToObject(obj, "app_tx_pool_full", 0);
+        cJSON_AddNumberToObject(obj, "tx_accepted", tx_accepted);
+        cJSON_AddNumberToObject(obj, "tx_confirmations", tx_confirmations);
+        cJSON_AddNumberToObject(obj, "rx_control_frames", rx_control_frames);
         cJSON_AddNumberToObject(obj, "aps_confirms_during_send", confirms_during_send);
         cJSON_AddNumberToObject(obj, "aps_confirms_without_header", confirms_without_header);
-        unsigned used=0;for (unsigned i=0;i<8;i++) used+=outbound[i].used;
-        cJSON_AddNumberToObject(obj, "outbound_in_use", used);
+        cJSON_AddNumberToObject(obj, "outbound_in_use", 0);
         cJSON_AddNumberToObject(obj, "lamp_endpoint", LAMP_EP);
         cJSON_AddNumberToObject(obj, "client_endpoint", CLIENT_EP);
         add_network(obj);
@@ -606,7 +626,7 @@ static void zigbee_task(void *unused)
         esp_zb_ep_list_get_ep(endpoints, LAMP_EP), ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     static char manufacturer[] = "\x0a" "Dylan Labs";
     static char model[] = "\x0c" "Hue Mesh Lab";
-    static char build[] = "\x05" "0.3.4";
+    static char build[] = "\x05" "0.3.7";
     ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, manufacturer));
     ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, model));
     ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic, ESP_ZB_ZCL_ATTR_BASIC_SW_BUILD_ID, build));
@@ -641,6 +661,17 @@ static void zigbee_task(void *unused)
     vTaskDelete(NULL);
 }
 
+static void serial_task(void *unused)
+{
+    (void)unused;
+    char *json;
+    for (;;) if (xQueueReceive(serial_output,&json,portMAX_DELAY)==pdTRUE) {
+        puts(json);
+        fflush(stdout);
+        cJSON_free(json);
+    }
+}
+
 static void player_task(void *unused)
 {
     (void)unused;
@@ -672,8 +703,9 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_commit(settings));
     }
     ready = xEventGroupCreate();
-    output_mutex = xSemaphoreCreateMutex();
-    configASSERT(ready && output_mutex);
+    serial_output = xQueueCreate(16,sizeof(char *));
+    configASSERT(ready && serial_output);
+    configASSERT(xTaskCreate(serial_task,"serial_output",4096,NULL,3,NULL)==pdPASS);
     setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     ESP_ERROR_CHECK(hm_net_init());

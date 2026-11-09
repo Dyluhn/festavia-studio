@@ -403,7 +403,10 @@ async def main():
                 await service(
                     "update",
                     "install",
-                    {"entity_id": "update.festavia_studio_firmware", "version": "0.3.4"},
+                    {
+                        "entity_id": "update.festavia_studio_firmware",
+                        "version": entry.runtime_data.api.latest_version,
+                    },
                 )
             except HomeAssistantError as exc:
                 assert "private-wire" not in str(exc) and "must-not-leak" not in str(exc)
