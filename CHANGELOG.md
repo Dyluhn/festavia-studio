@@ -1,3 +1,10 @@
+# 0.10.0 — extended individual static colors
+
+- Up to 27 ordered static colors on the verified LCX030. Paint individual pucks through finite, full-coverage layouts, then restore and verify the original Hue map and aliases. Hold the scene without repeated map/color writes.
+- Keep native animation transport and its nine-color limit. Expose separate static/animated limits, explain them in the native card, and offer Fill with spectrum for quick per-puck editing.
+- ESP32-C6 firmware 0.3.9 validates every paint program before writing, requires application replies and final geometry readbacks, and persists interrupted-paint recovery. A Hue handoff during painting repairs geometry without replaying old colors or power.
+- Survey all four alias banks before allocating temporary identifiers. Recheck the persistent control connection after peer discovery, without retrying uncertain writes.
+
 # 0.9.0 — Hue ownership and explicit handoff
 
 - Native Allow Hue takeover configuration switch and options flow; Return control to Hue button, action and card control.

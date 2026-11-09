@@ -44,7 +44,15 @@ def main():
     app = manifest["targets"]["esp32c6"]["app"]
     assert sha((COMPONENT / "backend/release" / app).read_bytes()) == manifest["sha256"][app]
     entries = {}
-    excluded = {"__pycache__", ".git", ".venv", "node_modules", "test-results"}
+    excluded = {
+        "__pycache__",
+        ".git",
+        ".venv",
+        "node_modules",
+        "test-results",
+        "managed_components",
+        "build",
+    }
     private = {
         "installation.json",
         "credentials.json",
@@ -66,6 +74,8 @@ def main():
             if path.is_symlink():
                 raise ValueError("Symlink in release source")
             if not path.is_file() or set(path.parts) & excluded or path.suffix in (".pyc", ".zip"):
+                continue
+            if path.name in ("sdkconfig", "sdkconfig.old"):
                 continue
             if (
                 path.is_symlink()

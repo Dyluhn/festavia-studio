@@ -15,3 +15,8 @@ player-session.json
 build*/
 unload-pending.json
 removal-pending.json
+
+# ESP-IDF generated dependencies/configuration; regenerate from locked inputs.
+firmware-source/managed_components/
+firmware-source/sdkconfig
+firmware-source/sdkconfig.old

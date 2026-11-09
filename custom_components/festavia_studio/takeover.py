@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_registry as er, target as target_helper
 
 from .api import StudioError
 from .backend.lib.bridge import local_address
-from .backend.lib.player import color, color_strength
+from .backend.lib.player import color, color_strength, retained_scene
 
 _LOGGER = logging.getLogger(__name__)
 CONTROL_FIELDS = {
@@ -317,6 +317,11 @@ class HueTakeover:
             if not CONTROL_FIELDS.intersection(resource):
                 return True
         scene = self.output_scene or self.coordinator.scene
+        # A retained scene emits no color/brightness writes after acquisition.
+        # A new Hue control event is external even when its chosen color lies
+        # inside the large palette's gamut or matches one of its pucks.
+        if retained_scene(scene) and not self.coordinator.acquiring:
+            return False
         if resource.get("on", {}).get("on") is False:
             return False
         ct = resource.get("color_temperature", {})

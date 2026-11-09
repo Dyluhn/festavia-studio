@@ -1,4 +1,21 @@
-# Acceptance — 0.9.0
+# Acceptance — 0.10.0
+
+Checked 2026-11-09 UTC. ESP32-C6 firmware0.3.9 and LCX030 firmware1.163.5.
+
+- All static palette counts10–27 ran on the real controller. Each finite burst restored and read back the original complete Hue map and alias list. Default rendering reuses seven existing aliases; no extra identifiers are allocated.
+- The final27-color fixture palette has27distinct packed XY values inside the light’s reported gamut. Six camera-visible pucks show distinct colors; a single-puck white override changes that puck while the other five retain their colors. A90-second owner disconnection preserves the pattern. This is partial optical coverage; the other21pucks have no camera view.
+- A manual handoff during painting repairs geometry without overwriting a new Hue color. A same-image wireless update requested while applying restarts the C6, which recovers its saved state without a host Stop command. Pairing and pinned transport survive. Native flow then sends247frames over25.8seconds.
+- This research run commands at most25/254global level and200/2047stream level, below10%. Both known seasonal automations are isolated during physical tests; their original states are preserved.
+- The production C suites cover16boundary cases, including missing application replies, explicit fixture rejection and interrupted geometry-only release. Actual HA Core2026.10.1 passes32runtime checks and9lifecycle checks with simulated network peers. All official hassfest custom-integration validators pass.
+- Retained scenes are static. Existing native animations retain their nine-color limit; continuous map animation is disabled.
+
+103 unit/protocol/browser/release tests pass. Live HA0.10.0 plays27colors, edits a single puck through the native text entity, saves/loads a27-color palette, yields to a direct Hue color inside that palette, and yields to the ordinary HA Hue light Off command. The option-off case retains ownership until the native Return control button is pressed. Native three-color animation runs afterward.
+
+All17entity IDs/unique IDs, existing scene/color libraries, original staged controls, cap60 and the Hue-priority option are preserved. Both lighting automations are restored. Installed component files match the release, and the fixture is left OFF with an ordinary Hue baseline ready for the next Play. All1,186accepted transactions at final audit are confirmed, with zero SDK out-of-memory errors and33free SDK buffers.
+
+The test runner now waits for asynchronous guest-agent completion rather than mistaking a service call longer than30seconds for an empty response. That runner is outside the shipped integration. See `FIRMWARE_ACCEPTANCE.json` for artifact identity and measured scope.
+
+# Previous acceptance — 0.9.0
 
 Checked 2026-11-09 UTC. Community custom integration; no HA Core acceptance or quality tier is claimed.
 

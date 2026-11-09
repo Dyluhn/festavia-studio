@@ -4,7 +4,7 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.9.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
+Version **0.10.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
 
@@ -70,7 +70,9 @@ command in the Hue app may produce no event. A value that matches Studio’s
 current colors or pulsing brightness can also be ambiguous because Hue reports
 ESP output too. Use Return control to Hue in those cases, or change a light
 setting outside the active output. HA light commands are detected separately,
-including repeats. Expected setup power and captured baseline reports are filtered
+including repeats. Extended retained static scenes emit no ongoing color updates,
+so later Hue color events can yield even when they match a color in the palette.
+Expected setup power and captured baseline reports are filtered
 while Play is starting; matching Hue app commands can be ambiguous there too.
 The automatic option applies to ESP native playback; bridge
 mode sends static settings once and does not continually overwrite Hue.
@@ -102,6 +104,8 @@ title: Festavia
 The integration registers the resource. Tap a numbered swatch to edit its color,
 use the touch color wheel or quick colors, add/remove/reorder colors, choose an
 animation and enable Studio playback. Save colors and full scenes separately. Edits save automatically.
+For a large static palette, select **Static repeat**, then **Fill with spectrum**
+to populate every puck with a different color. Tap any swatch to change it.
 There is no additional app to open or synchronize. Native controls and the card
 share the same saved state. After upgrading, refresh the HA page or reopen the
 Companion app once to load the updated card.
@@ -127,14 +131,21 @@ In YAML-managed dashboards, add the module resource
 | Hue bridge gradient | Reported API gradient color points across selected strings | Static ordered palettes; points may blend across multiple physical lights |
 | ESP32 individual pucks | Live logical count checked against a verified model/firmware profile | LCX030 Permanent / firmware 1.163.5 / 27 logical positions physically tested |
 
-The native FC03 palette contains at most nine slots; ten or more are rejected
-by the device. This is a frame-format limit, not an ESP32 memory limit. Blending
-can display additional shades over time. See the independent
-[Bifrost protocol reference](https://github.com/chrivers/bifrost/blob/master/doc/hue-zigbee-format.md#property-gradient_colors-color-encoding).
+Native mode supports **1–27 ordered static colors** on the verified 27-puck
+LCX030. A finite series of full-coverage layouts applies colors to individual
+pucks, then restores and verifies Hue's original layout and addresses. The lamp
+holds the pattern without repeated map writes. Applying a large static palette
+takes several seconds; initial discovery/setup takes longer. It updates in
+sections rather than appearing everywhere at precisely the same instant.
 
-Native mode supports **1–9 ordered colors**, static repeat, smooth flow, step chase,
-bounce, color fade, color wave, breathing and heartbeat,
-and up to **10 requested updates per second**. Brightness/tone is shared across
+Animations support **1–9 ordered colors** and up to **10 requested updates per
+second**: smooth flow, step chase, bounce, color fade, color wave, breathing and
+heartbeat. They retain the native FC03 transport; its nine-slot limit is unchanged.
+The card disables animations for larger palettes. Continuous remapping for
+high-count animation is not enabled because its persistence/write behavior is
+unverified. See [research and evidence](docs/RESEARCH.md#retained-individual-colors).
+
+Brightness/tone is shared across
 native palette colors. Native colors must be non-black and have equal RGB maximum
 values; unsupported palettes are rejected immediately with an HA error. The encoder does not support independent arbitrary puck
 dimming in this mode. The card maintains a shared tone when editing colors.

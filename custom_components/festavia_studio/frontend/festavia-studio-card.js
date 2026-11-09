@@ -1,4 +1,4 @@
-/* Festavia Studio 0.9.0 — dependency-free native Lovelace card. */
+/* Festavia Studio 0.10.0 — dependency-free native Lovelace card. */
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clone = value => JSON.parse(JSON.stringify(value));
 function hsv(hex) {
@@ -41,13 +41,14 @@ class FestaviaStudioCard extends HTMLElement {
     const body=this.shadowRoot.querySelector(".studio");if(body)body.inert=this.busy;
     const power=this.shadowRoot.querySelector("#power");
     if(power){power.checked=!!this.state?.attributes.playing;power.disabled=this.busy || this.state?.state==="unavailable";}
-    if(label) label.textContent=this.state?.state === "unavailable" ? "Unavailable" : this.state ? `${this.state.attributes.playing?"Studio running":this.state.attributes.reason==="hue_takeover"||this.state.attributes.last_hue_takeover?"Hue control":"Studio stopped"}${this.dirty?(this.saveError?" · Could not save":" · Saving…"):""}` : "Unavailable";
+    if(label) label.textContent=this.busy ? "Working…" : this.saving ? (this.state?.attributes.playing?"Applying colors…":"Saving controls…") : this.state?.state === "unavailable" ? "Unavailable" : this.state ? `${this.state.attributes.playing?"Studio running":this.state.attributes.reason==="hue_takeover"||this.state.attributes.last_hue_takeover?"Hue control":"Studio stopped"}${this.dirty?(this.saveError?" · Could not save":" · Saving…"):""}` : "Unavailable";
   }
   render() {
     if(!this.config) return;
     if(!this.state || !this.scene) { this.shadowRoot.innerHTML='<ha-card><div style="padding:24px">Festavia is unavailable. Check its integration in Settings → Devices & services.</div></ha-card>'; return; }
     const openDetails=[...this.shadowRoot.querySelectorAll("details[id]")].filter(e=>e.open).map(e=>e.id);
     const a=this.state.attributes,s=this.scene,selected=s.colors[this.selected],v=hsv(selected);
+    const animatedLimit=a.animated_palette_limit??9, colorLimit=s.effect==="static"?a.palette_limit:Math.min(a.palette_limit,animatedLimit);
     this.shadowRoot.innerHTML=`
     <style>
       :host{display:block}*{box-sizing:border-box}ha-card{overflow:hidden;background:var(--ha-card-background,var(--card-background-color));color:var(--primary-text-color)}
@@ -57,13 +58,15 @@ class FestaviaStudioCard extends HTMLElement {
     <ha-card><div class="studio">
       <header><div><h2>${esc(this.config.title||"Festavia")}</h2><div id="status" class="muted"></div></div><div class="power"><span>Studio</span><ha-switch id="power" aria-label="Festavia Studio playback"></ha-switch></div></header>
       <div><label for="palette">Color palette</label><select id="palette" aria-label="Color palette"><option value="">Custom colors</option>${(a.palettes||[]).map(p=>`<option ${a.palette===p?"selected":""}>${esc(p)}</option>`).join("")}</select></div>
-      <div><div class="row"><label>Colors <span class="muted">· tap to edit</span></label><span style="text-align:right" class="muted">${s.colors.length} / ${a.palette_limit}</span></div><div class="palette">${s.colors.map((c,i)=>`<button class="swatch" style="background:${c}" aria-label="Color ${i+1}" aria-pressed="${this.editing && i===this.selected}" data-color="${i}"><span>${i+1}</span></button>`).join("")}<button id="add" class="add" aria-label="Add color" ${s.colors.length>=a.palette_limit?"disabled":""}>+</button></div></div>
+      <div><div class="row"><label>Colors <span class="muted">· tap to edit</span></label><span style="text-align:right" class="muted">${s.colors.length} / ${colorLimit}</span></div><div class="palette">${s.colors.map((c,i)=>`<button class="swatch" style="background:${c}" aria-label="Color ${i+1}" aria-pressed="${this.editing && i===this.selected}" data-color="${i}"><span>${i+1}</span></button>`).join("")}<button id="add" class="add" aria-label="Add color" ${s.colors.length>=colorLimit?"disabled":""}>+</button></div></div>
+      <button id="spectrum" ${a.mode==="native"&&s.effect==="static"&&colorLimit>9?"":"hidden"}>Fill with spectrum</button>
       <div class="editor" ${this.editing?"":"hidden"}><div class="editor-head"><label>Edit color ${this.selected+1}</label><button id="done">Done</button></div><div class="row tools"><button id="left" ${this.selected===0?"disabled":""}>← Move</button><button id="right" ${this.selected===s.colors.length-1?"disabled":""}>Move →</button><button id="remove" ${s.colors.length===1?"disabled":""}>Remove</button></div>
       <div class="picker"><label>Choose a color</label><div class="wheel" role="group" aria-label="Color wheel"><span class="cursor" style="left:${50+Math.cos(v[0]*Math.PI/180)*v[1]*50}%;top:${50+Math.sin(v[0]*Math.PI/180)*v[1]*50}%"></span></div>
       <div class="quick-colors" aria-label="Quick colors">${[["Red","#ff2020"],["Orange","#ff8000"],["Yellow","#ffff00"],["Green","#00ff00"],["Cyan","#00ffff"],["Blue","#2040ff"],["Purple","#9900ff"],["Pink","#ff20a0"],["Warm white","#ffdda0"],["White","#ffffff"]].map(([name,c])=>`<button class="quick" style="background:${c}" data-quick="${c}" aria-label="Choose ${name}"></button>`).join("")}</div>
       <label for="hue">Hue</label><input aria-label="Hue" id="hue" class="hue" type="range" min="0" max="360" value="${v[0]}"><label for="saturation">Saturation</label><input id="saturation" aria-label="Saturation" type="range" min="0" max="100" value="${Math.round(v[1]*100)}">
       <details id="advanced-color" class="advanced-color"><summary>Advanced color</summary><div class="row"><input id="hex" type="text" aria-label="Hex color" maxlength="7" value="${selected}"><span class="muted">#RRGGBB</span></div><label for="tone">${a.mode==="native"?"Shared palette tone":"Color tone"}</label><input id="tone" type="range" min="1" max="100" value="${Math.round(v[2]*100)}"><div class="notice">${a.mode==="native"?"Colors share brightness. Use the main Brightness control for the lights.":""}</div></details></div></div>
-      <div class="controls"><div><label for="effect">Animation</label><select id="effect">${a.effects.map(e=>`<option value="${esc(e)}" ${s.effect===e?"selected":""}>${({static:"Static repeat",flow:"Smooth flow",chase:"Step chase",bounce:"Bounce",color_fade:"Color fade",wave:"Color wave",breathe:"Breathing",heartbeat:"Heartbeat"})[e]||esc(e)}</option>`).join("")}</select></div><div><label for="direction">Direction</label><select id="direction"><option value="false" ${!s.reverse?"selected":""}>← Left</option><option value="true" ${s.reverse?"selected":""}>Right →</option></select></div><div><label for="brightness">Brightness <output id="brightness-value">${s.brightness}%</output></label><input id="brightness" type="range" min="1" max="${a.brightness_limit}" value="${s.brightness}"></div><div><label for="speed">Speed <output id="speed-value">${s.speed}×</output></label><input id="speed" type="range" min="0" max="100" step="1" value="${100*Math.log(s.speed/.1)/Math.log(200)}"></div></div>
+      <div class="controls"><div><label for="effect">Animation</label><select id="effect">${a.effects.map(e=>`<option value="${esc(e)}" ${e!=="static"&&s.colors.length>animatedLimit?"disabled":""} ${s.effect===e?"selected":""}>${({static:"Static repeat",flow:"Smooth flow",chase:"Step chase",bounce:"Bounce",color_fade:"Color fade",wave:"Color wave",breathe:"Breathing",heartbeat:"Heartbeat"})[e]||esc(e)}</option>`).join("")}</select></div><div><label for="direction">Direction</label><select id="direction"><option value="false" ${!s.reverse?"selected":""}>← Left</option><option value="true" ${s.reverse?"selected":""}>Right →</option></select></div><div><label for="brightness">Brightness <output id="brightness-value">${s.brightness}%</output></label><input id="brightness" type="range" min="1" max="${a.brightness_limit}" value="${s.brightness}"></div><div><label for="speed">Speed <output id="speed-value">${s.speed}×</output></label><input id="speed" type="range" min="0" max="100" step="1" value="${100*Math.log(s.speed/.1)/Math.log(200)}"></div></div>
+      <div class="notice" ${a.mode==="native"&&a.palette_limit>animatedLimit?"":"hidden"}>Static repeat supports ${a.palette_limit} colors; animations support ${animatedLimit}. Larger static palettes apply over a few seconds.</div>
       <div><div class="muted">Preview · ${a.positions} positions · repeats in your chosen order</div><div class="preview">${Array.from({length:Math.min(100,a.positions)},()=>'<span class="dot"></span>').join("")}</div></div>
       <div class="foot"><span class="muted">Changes save automatically</span><button id="stop">Restore previous scene</button></div>
       <button id="release" ${a.mode==="native"?"":"hidden"}>Return control to Hue</button>
@@ -75,6 +78,7 @@ class FestaviaStudioCard extends HTMLElement {
     const $=id=>this.shadowRoot.querySelector(id);
     this.shadowRoot.querySelectorAll("[data-color]").forEach(b=>b.onclick=()=>{this.selected=Number(b.dataset.color);this.editing=true;this.render();});
     $("#add").onclick=()=>{s.colors.push(selected);this.selected=s.colors.length-1;this.editing=true;this.change();this.render();};
+    $("#spectrum").onclick=()=>{s.colors=Array.from({length:Math.min(a.positions,colorLimit)},(_,i)=>hex([i*360/Math.min(a.positions,colorLimit),.7,v[2]]));this.selected=0;this.editing=false;this.change();this.render();};
     $("#done").onclick=()=>{this.editing=false;this.render();};
     $("#remove").onclick=()=>{s.colors.splice(this.selected,1);this.selected=Math.max(0,this.selected-1);this.change();this.render();};
     for(const [id,delta] of [["left",-1],["right",1]]) $("#"+id).onclick=()=>{[s.colors[this.selected],s.colors[this.selected+delta]]=[s.colors[this.selected+delta],s.colors[this.selected]];this.selected+=delta;this.change();this.render();};
@@ -97,7 +101,7 @@ class FestaviaStudioCard extends HTMLElement {
     $(".wheel").onpointerdown=e=>{e.currentTarget.setPointerCapture(e.pointerId);point(e);};
     $(".wheel").onpointermove=e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))point(e);};
     for(const key of ["brightness","speed"]) $("#"+key).oninput=e=>{s[key]=key==="speed"?Math.round(.1*Math.pow(200,Number(e.target.value)/100)*10)/10:Number(e.target.value);$("#"+key+"-value").textContent=s[key]+(key==="brightness"?"%":"×");this.change();};
-    $("#effect").onchange=e=>{s.effect=e.target.value;this.change();};
+    $("#effect").onchange=e=>{s.effect=e.target.value;this.change();this.render();};
     $("#direction").onchange=e=>{s.reverse=e.target.value==="true";this.change();};
     $("#power").onchange=e=>{const on=e.target.checked;return this.perform(async()=>{
       if(on)await this.service("play",this.changes());

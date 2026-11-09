@@ -356,12 +356,16 @@ class AliasAndOwnershipTests(unittest.TestCase):
 
         from player import virtual_aliases
 
+        links = []
+
         class FakeDevice:
             ieee = "target"
             endpoint = 11
 
-            def __init__(self, *args):
-                pass
+            def __init__(self, *args, **kwargs):
+                self.address = 300
+                self.link = kwargs.get("link", object())
+                links.append(self.link)
 
             def connect(self):
                 pass
@@ -369,8 +373,11 @@ class AliasAndOwnershipTests(unittest.TestCase):
             def close(self):
                 pass
 
-            def custom_read(self, _):
-                return "00000264006500"
+            def command(self, cluster, command, payload, manufacturer):
+                bank = payload[0]
+                values = {0: [100], 1: [101], 2: [], 3: []}[bank]
+                raw = bytes([0, bank, len(values)]) + struct.pack("<" + "H" * len(values), *values)
+                return {"received": {"payload": raw.hex()}}
 
         aliases = virtual_aliases(
             {
@@ -386,6 +393,7 @@ class AliasAndOwnershipTests(unittest.TestCase):
             10,
         )
         self.assertEqual(aliases, [1, 2, 3, 4, 5, 6, 7, 102, 103, 104])
+        self.assertIs(links[0], links[1], "Peer survey must reuse one TLS transport")
 
     def test_eight_region_mode_uses_only_own_address_without_provider(self):
         from player import virtual_aliases

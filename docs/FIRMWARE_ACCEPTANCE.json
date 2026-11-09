@@ -1,10 +1,10 @@
 {
-  "checked_at": "2026-11-09T05:56:19.077720+00:00",
+  "checked_at": "2026-11-09T09:50:14.043502+00:00",
   "result": "passed within the stated hardware and optical scope",
   "firmware": {
-    "version": "0.3.8",
-    "elf_sha256": "052b5c0c29c12d8523634f6518f239630b01d2083f81c88139b94ae7e46d05c8",
-    "sha256": "3ca56210bee319b35e5140f741393d7cc695754af17aa8884776097aeab0663d"
+    "version": "0.3.9",
+    "elf_sha256": "5c1b4e2ff9c864b5a37bbcb4498b9a9b552407a641c0ca271f36c91f41b9cffd",
+    "sha256": "57163683b0721e008baebbb7a2f6a15a27cd90447bc24ea093f02864ab256212"
   },
   "fixture": {
     "model": "LCX030",
@@ -20,999 +20,103 @@
     ],
     "full_string_optical_survey": false
   },
-  "production_c_state_checks": [
-    "acknowledged power queries sustain playback despite missing ZCL status replies",
-    "failed acknowledged power queries stop playback after15sec despite successful animation confirmations",
-    "external off after prolonged ACK-only playback persists intent and begins restoration",
-    "wrong address/endpoint/sequence/length and late confirmations cannot extend liveness",
-    "Hue ownership watchdog yields without fixture writes",
-    "explicit release drains outstanding transfers without restoration",
-    "NVS failure retains capsule and retries the tombstone",
-    "pending confirmations delay capsule retirement",
-    "lost confirmations retire within thirty seconds",
-    "external off under Hue priority yields without restoration"
-  ],
-  "sustained_hardware": {
-    "edit_play_restore_cycles": 5,
-    "palette_sizes": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9
-    ],
-    "effects": [
-      "static",
-      "flow",
-      "breathe"
-    ],
-    "speed_values": [
-      0.1,
-      1,
-      2,
-      20
-    ],
-    "continuous_play_seconds": 180,
-    "continuous_sent": 1766,
-    "continuous_confirmed": 1735,
-    "continuous_failures": 30,
-    "continuous_timeouts": 1,
-    "continuous_skipped": 117,
-    "sample_interval_send_fps": 9.518,
-    "sample_interval_confirmation_fps": 9.346,
-    "sdk_no_mem": 0,
-    "sdk_free_buffers_before": 33,
-    "sdk_free_buffers_after": 33,
-    "same_boot": true,
-    "uptime_monotonic_across_all_samples": true,
-    "max_sampled_power_response_age_ms": 3864,
-    "max_sampled_target_ack_age_ms": 3877,
-    "full_snapshots_after_soak": 30,
-    "all_restorations_exact": true,
-    "destination_applied_fps_measured": false,
-    "firmware_version": "0.3.7",
-    "checked_before": "2026-11-09T03:49:17.237579+00:00"
+  "brightness_bounds": {
+    "global_raw_maximum": 25,
+    "global_full_scale": 254,
+    "requested_static_percent": 9,
+    "stream_raw_maximum": 200,
+    "stream_full_scale": 2047
   },
-  "previous_optical_evidence": {
-    "checked_at": "2026-11-08T06:47:06.674935+00:00",
-    "firmware": {
-      "version": "0.3.4",
-      "elf_sha256": "a234fb6604a2d959af336b76816009c6792f0fecf6973c62300e5e136b40139a",
-      "sha256": "c000134a9e66c786e2a761c645c154d81e665adf40a9c33f599809734d9ed297"
-    },
-    "mapping": {
-      "renderer": "native FC03 scattered palette; scale 27, offset 0",
-      "compensation": "even slots unchanged; odd slots rotate one step; compiler applies inverse",
-      "selected_color_counts_verified": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ],
-      "index_cases": [
-        {
-          "count": 1,
-          "reverse": false,
-          "expected": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          "observed": [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
-          "passed": true
-        },
-        {
-          "count": 2,
-          "reverse": false,
-          "expected": [
-            0,
-            1,
-            0,
-            1,
-            0,
-            1
-          ],
-          "observed": [
-            0,
-            1,
-            0,
-            1,
-            0,
-            1
-          ],
-          "passed": true
-        },
-        {
-          "count": 3,
-          "reverse": false,
-          "expected": [
-            1,
-            0,
-            2,
-            1,
-            0,
-            2
-          ],
-          "observed": [
-            1,
-            0,
-            2,
-            1,
-            0,
-            2
-          ],
-          "passed": true
-        },
-        {
-          "count": 4,
-          "reverse": false,
-          "expected": [
-            0,
-            3,
-            2,
-            1,
-            0,
-            3
-          ],
-          "observed": [
-            0,
-            3,
-            2,
-            1,
-            0,
-            3
-          ],
-          "passed": true
-        },
-        {
-          "count": 5,
-          "reverse": false,
-          "expected": [
-            1,
-            0,
-            4,
-            3,
-            2,
-            1
-          ],
-          "observed": [
-            1,
-            0,
-            4,
-            3,
-            2,
-            1
-          ],
-          "passed": true
-        },
-        {
-          "count": 6,
-          "reverse": false,
-          "expected": [
-            4,
-            3,
-            2,
-            1,
-            0,
-            5
-          ],
-          "observed": [
-            4,
-            3,
-            2,
-            1,
-            0,
-            5
-          ],
-          "passed": true
-        },
-        {
-          "count": 7,
-          "reverse": false,
-          "expected": [
-            2,
-            1,
-            0,
-            6,
-            5,
-            4
-          ],
-          "observed": [
-            2,
-            1,
-            0,
-            6,
-            5,
-            4
-          ],
-          "passed": true
-        },
-        {
-          "count": 8,
-          "reverse": false,
-          "expected": [
-            0,
-            7,
-            6,
-            5,
-            4,
-            3
-          ],
-          "observed": [
-            0,
-            7,
-            6,
-            5,
-            4,
-            3
-          ],
-          "passed": true
-        },
-        {
-          "count": 9,
-          "reverse": false,
-          "expected": [
-            7,
-            6,
-            5,
-            4,
-            3,
-            2
-          ],
-          "observed": [
-            7,
-            6,
-            5,
-            4,
-            3,
-            2
-          ],
-          "passed": true
-        },
-        {
-          "count": 4,
-          "reverse": true,
-          "expected": [
-            2,
-            3,
-            0,
-            1,
-            2,
-            3
-          ],
-          "observed": [
-            2,
-            3,
-            0,
-            1,
-            2,
-            3
-          ],
-          "passed": true
-        },
-        {
-          "count": 7,
-          "reverse": true,
-          "expected": [
-            3,
-            4,
-            5,
-            6,
-            0,
-            1
-          ],
-          "observed": [
-            3,
-            4,
-            5,
-            6,
-            0,
-            1
-          ],
-          "passed": true
-        }
-      ],
-      "optical_index_checks": 66,
-      "calibration_scope": "Native wire frames on this fixture; intermediate 0.3.4 candidates. Final installed image also exercised by the real phone UI.",
-      "native_palette_max": 9,
-      "native_frame_rate_max": 10,
-      "rejected_native_counts": [
-        10,
-        11,
-        15
-      ],
-      "minimum_wire_points": 2,
-      "one_selected_color": "two identical native points",
-      "original_map_and_aliases_retained": true,
-      "fresh_verified_address_used_for_initial_setup": true,
-      "boot_ignores_saved_address_hint": true,
-      "native_palette_and_parameters_required": true
-    },
-    "motion": [
-      {
-        "name": "smooth-400ms",
-        "requested_fps": 10,
-        "speed": 1,
-        "requested_smoothing_ms": 400.0,
-        "send_confirmations_per_second": 9.046089827671988,
-        "failed_sends": 5,
-        "destination_applied_fps_measured": false,
-        "animation_timeouts": 0,
-        "optical": {
-          "name": "smooth-400ms",
-          "sample_count": 128,
-          "held_fraction": 0.0,
-          "motion_variation": 0.27078283818925497,
-          "mean_change": 0.030985983843405285,
-          "lag_frames": 11,
-          "direction_correlation": 0.9876836592647829,
-          "opposite_correlation": -0.4541075899848808
-        }
-      },
-      {
-        "name": "fast-10fps",
-        "requested_fps": 10,
-        "speed": 3,
-        "requested_smoothing_ms": 400.0,
-        "send_confirmations_per_second": 8.849557522123895,
-        "failed_sends": 7,
-        "destination_applied_fps_measured": false,
-        "animation_timeouts": 0,
-        "optical": {
-          "name": "fast-10fps",
-          "sample_count": 128,
-          "held_fraction": 0.0,
-          "motion_variation": 0.20263304079073444,
-          "mean_change": 0.04495794786334552,
-          "lag_frames": 4,
-          "direction_correlation": 0.8676331762177147,
-          "opposite_correlation": -0.29306047194698026
-        }
-      }
-    ],
-    "method": {
-      "capture_seconds": 16,
-      "capture_fps": 8,
-      "visible_pucks": 6,
-      "held_sample": "Mean Euclidean change of six normalized RGB vectors below 0.005",
-      "direction": "Mean adjacent-puck R-minus-B correlation at the expected travel lag; positive left-following-right lag",
-      "limitations": "Uncalibrated camera, sampled at 8 Hz. Zero held samples is a diagnostic result, not a guarantee of perceptual smoothness or future RF delivery."
-    },
-    "scope": "Inherited unchanged palette mapping and encoder evidence from 0.3.4. The0.3.7 run exercises commands, delivery, restoration and lifecycle; no new full-string optical survey."
-  },
-  "independent_review": {
-    "backend": "Claude account 2",
-    "model": "claude-opus-5-5",
-    "mode": "read-only",
-    "verdict": "Two read-only Opus 5.5 passes identified handoff/transport issues; fixes have targeted regression tests and separate hardware acceptance. Review is not a replacement for physical proof."
-  },
-  "remaining_limits": [
-    "Verified native hardware is LCX030/1.163.5/27 logical positions on Hue Bridge Pro. Other models/firmware/counts remain gated.",
-    "1\u20139 non-black native colors with shared RGB maximum/tone; at most10 requested updates/sec.",
-    "Animation confirmations are not destination APS acknowledgements or an optical frame-rate measurement. RF loss and skipped samples remain possible.",
-    "Previous optical evidence covers six visible pucks; no full-string optical survey.",
-    "Fresh empty-board USB provisioning and initial config-flow Zigbee joining were not repeated; first-install manifest/hash/dry-run checks and a clean documented source build passed.",
-    "No Home Assistant Core, HACS catalog acceptance or Integration Quality Scale tier is claimed.",
-    "Hue state events cannot identify every identical or output-matching Hue app command; explicit handoff is available and HA light-service commands are detected separately."
-  ],
-  "previous_070_brightness": {
-    "physical_tests_requested_percent": 10,
-    "native_ha_light_rounding_percent": 10.24,
-    "installation_cap_percent": 15,
-    "observed_raw_level": 26,
-    "raw_full_scale": 254,
-    "strictly_below_20_percent": true,
-    "original_stored_level": 115,
-    "original_high_level_restored_only_while_off": true
-  },
-  "previous_070_home_assistant": {
-    "integration": "0.7.0",
-    "core": "2026.10.1",
-    "os": "18.3",
-    "bridge": "Hue Bridge Pro",
-    "checks": [
-      "Unsupported native palettes rejected before staging or hardware writes",
-      "Idle native palette edits retain fixture power and original appearance",
-      "All1\u20139 native palette sizes update through the real HA text entity at10%",
-      "30-second snake advances continuously with concurrent speed/direction edits; delivery counters reported",
-      "Stop restores the complete original off-state snapshot",
-      "Actual HA integration reload drains, restores and retains pairing/controls without autoplay",
-      "External off through the existing Hue light is detected and preserved with complete restoration",
-      "HA firmware entity wirelessly reinstalls and confirms bundled0.3.7 with pairing retained"
-    ],
-    "palette_sizes": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9
-    ],
-    "ota_pairing_and_boot_confirmed": true,
-    "ota_partition_changed": true,
-    "final_exact_restore": true,
-    "mobile_viewport": [
-      393,
-      852
-    ],
-    "mobile_checks": {
-      "card_native_palette_sync": true,
-      "reload_persistence": true,
-      "all_controls_on_native_device": true,
-      "card_errors": []
-    }
-  },
-  "previous_080_home_assistant": {
-    "integration": "0.8.0",
-    "core": "2026.10.1",
-    "os": "18.3",
-    "bridge": "Hue Bridge Pro",
-    "entities": 15,
-    "old_entity_ids_preserved": 14,
-    "checks": [
-      "actual_mobile_Power_starts_from_ordinary_Hue_ON",
-      "touch_wheel_and_quick_color_edit_only_selected_color",
-      "palette_save_load_colors_only_preserves_pending_motion",
-      "saved_scene_restores_colors_motion_speed_direction_brightness",
-      "real_HA_card_393px_no_horizontal_overflow_or_JavaScript_errors",
-      "owned_temporary_scene_and_palette_deleted_without_stopping_playback",
-      "Stop_exactly_restores_preexisting_Hue_ON_snapshot",
-      "external_Hue_OFF_preserved_in_standard_and_FC03_power_fields_with_exact_appearance_restoration"
-    ],
-    "above_limit_on_startup": {
-      "passed": true,
-      "integration": "0.8.0",
-      "started_from_Hue_ON_above_limit": true,
-      "original_requested_brightness": 10,
-      "temporary_cap": 5,
-      "effect_requested_brightness": 4,
-      "active_raw_level": 10,
-      "exact_Hue_ON_restoration": true
-    },
-    "firmware_unchanged": "0.3.7",
-    "sdk_no_mem_after": 0,
-    "mobile_viewport": [
-      393,
-      852
-    ],
-    "temporary_test_library_items_removed": true,
-    "original_full_scenes_preserved": true
-  },
-  "previous_080_brightness": {
-    "scope": "0.8.0 acceptance only",
-    "requested_percent_range": [
-      4,
-      10
-    ],
-    "max_sampled_raw_level": 25,
-    "raw_full_scale": 254,
-    "strictly_below_20_percent_in_080_acceptance": true,
-    "preceding_071_investigation_incident": "One UI replay recalled23% before immediate correction to10%; not counted as a compliant test."
-  },
-  "previous_080_native_effect_checks": [
-    {
-      "effect": "static",
-      "frames": 1,
-      "sent_delta": 0,
-      "confirmed_delta": 0,
-      "levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "flow",
-      "frames": 40,
-      "sent_delta": 258,
-      "confirmed_delta": 246,
-      "levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "chase",
-      "frames": 40,
-      "sent_delta": 262,
-      "confirmed_delta": 238,
-      "levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "bounce",
-      "frames": 40,
-      "sent_delta": 180,
-      "confirmed_delta": 161,
-      "levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "color_fade",
-      "frames": 40,
-      "sent_delta": 172,
-      "confirmed_delta": 164,
-      "levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "wave",
-      "frames": 40,
-      "sent_delta": 210,
-      "confirmed_delta": 196,
-      "levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "breathe",
-      "frames": 40,
-      "sent_delta": 355,
-      "confirmed_delta": 338,
-      "levels": [
-        19,
-        5,
-        20
-      ]
-    },
-    {
-      "effect": "heartbeat",
-      "frames": 40,
-      "sent_delta": 223,
-      "confirmed_delta": 212,
-      "levels": [
-        2,
-        10,
-        2
-      ]
-    }
-  ],
-  "previous_080_new_optical_evidence": {
-    "camera_visible_positions": [
-      16,
-      15,
-      14,
-      13,
+  "retained_static": {
+    "count_sweep": [
+      10,
+      11,
       12,
-      11
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
     ],
-    "capture_fps": 8,
-    "total_frames": 640,
-    "requested_brightness_percent": 10,
-    "metrics": [
-      {
-        "effect": "static",
-        "samples": 80,
-        "color_std": 0.002017,
-        "luma_std": 0.5428,
-        "luma_peak_to_peak_mean": 2.1363,
-        "raw_level": 25
-      },
-      {
-        "effect": "flow",
-        "samples": 80,
-        "color_std": 0.112013,
-        "luma_std": 5.4971,
-        "luma_peak_to_peak_mean": 19.011,
-        "raw_level": 25,
-        "visible_variation_above_static_noise": true
-      },
-      {
-        "effect": "chase",
-        "samples": 80,
-        "color_std": 0.170942,
-        "luma_std": 4.6606,
-        "luma_peak_to_peak_mean": 13.4318,
-        "raw_level": 25,
-        "visible_variation_above_static_noise": true
-      },
-      {
-        "effect": "bounce",
-        "samples": 80,
-        "color_std": 0.081212,
-        "luma_std": 4.7967,
-        "luma_peak_to_peak_mean": 16.4816,
-        "raw_level": 25,
-        "visible_variation_above_static_noise": true
-      },
-      {
-        "effect": "color_fade",
-        "samples": 80,
-        "color_std": 0.105775,
-        "luma_std": 6.1586,
-        "luma_peak_to_peak_mean": 19.0491,
-        "raw_level": 25,
-        "visible_variation_above_static_noise": true
-      },
-      {
-        "effect": "wave",
-        "samples": 80,
-        "color_std": 0.101031,
-        "luma_std": 4.9086,
-        "luma_peak_to_peak_mean": 15.6473,
-        "raw_level": 25,
-        "visible_variation_above_static_noise": true
-      },
-      {
-        "effect": "breathe",
-        "samples": 80,
-        "color_std": 0.035494,
-        "luma_std": 10.9661,
-        "luma_peak_to_peak_mean": 30.1554,
-        "raw_level": 25,
-        "visible_variation_above_static_noise": true
-      },
-      {
-        "effect": "heartbeat",
-        "samples": 80,
-        "color_std": 0.046575,
-        "luma_std": 10.1627,
-        "luma_peak_to_peak_mean": 34.5549,
-        "raw_level": 5,
-        "visible_variation_above_static_noise": true
-      }
-    ],
-    "all_animated_modes_show_visible_variation": true,
-    "full_string_optical_survey": false,
-    "destination_optical_fps_measured": false,
-    "limitations": "Uncalibrated camera and six visible pucks; variations are sampled diagnostics, not a perceptual smoothness or color accuracy guarantee.",
-    "integration": "0.8.0",
-    "firmware": "0.3.7",
-    "scope": "Six existing camera-visible pucks. Visible variation is diagnostic; full-string color/order/smoothness is not certified."
+    "unique_in_gamut_packed_colors": 27,
+    "default_aliases_reused": 7,
+    "covering_maps_per_scene": 6,
+    "finite_packets_per_scene": 16,
+    "no_repeating_map_or_color_writes": true,
+    "disconnected_owner_hold_seconds": 90,
+    "single_visible_puck_override_preserved_other_five": true,
+    "reverse_test": true,
+    "original_map_and_alias_readbacks_after_every_scene": true,
+    "device_apply_ms_min": 4708,
+    "device_apply_ms_max": 9938,
+    "optical_minimum_six_color_separation": 0.09337,
+    "optical_maximum_hold_drift": 0.00991,
+    "single_puck_override_chroma_change": 0.08009,
+    "other_pucks_maximum_drift_during_override": 0.01056,
+    "optical_scope": "Six camera-visible positions11..16 only; uncalibrated RGB fractions, not a full27-puck optical survey or colorimetry."
   },
-  "previous_080_firmware": {
-    "version": "0.3.7",
-    "elf_sha256": "2c5df4d7bd77b9dc60074972f7fa20549aaae0bea04bd2e8c8af81fe777b381e",
-    "sha256": "01dccd94bb09b0ce83f343e39256146e6a9addd289fb59b14e31e2056f45e2db"
+  "recovery": {
+    "mid_paint_manual_release_trigger_step": 3,
+    "Hue_color_preserved_during_geometry_only_release": true,
+    "same_image_wireless_update_requested_while_applying": true,
+    "wireless_restart_reason": "boot_recovery",
+    "wireless_restart_recovered_without_host_stop": true,
+    "post_restart_native_flow_seconds": 25.782,
+    "post_restart_native_flow_frames": 247
   },
-  "home_assistant": {
-    "integration": "0.9.0",
+  "software": {
+    "production_C_boundary_cases": 16,
+    "actual_HA_runtime_checks": 32,
+    "HA_lifecycle_checks": 9,
+    "hassfest_invalid_integrations": 0,
+    "unit_browser_release_tests": 103
+  },
+  "previous_acceptance": {
+    "firmware": {
+      "version": "0.3.8",
+      "elf_sha256": "052b5c0c29c12d8523634f6518f239630b01d2083f81c88139b94ae7e46d05c8",
+      "sha256": "3ca56210bee319b35e5140f741393d7cc695754af17aa8884776097aeab0663d"
+    },
+    "scope": "Historical0.3.8/0.9.0 acceptance. Current0.3.9/0.10.0 checks are recorded above.",
+    "source_commit": "49bb36d734a96e68c2fdd8ab8ff719b5dea07d50",
+    "report": "https://github.com/Dyluhn/festavia-studio/blob/49bb36d734a96e68c2fdd8ab8ff719b5dea07d50/docs/FIRMWARE_ACCEPTANCE.json"
+  },
+  "live_HA": {
+    "integration": "0.10.0",
     "core": "2026.10.1",
-    "os": "18.3",
-    "bridge": "Hue Bridge Pro",
-    "entities": 17,
-    "old_entity_ids_preserved": 15,
-    "runtime_checks": 30,
-    "restart_checks": 9,
-    "unit_card_release_tests": 95,
-    "live_checks": [
-      {
-        "name": "native_flow_ignores_own_Hue_reports",
-        "effect": "flow",
-        "seconds": 76,
-        "sent_delta": 716,
-        "acked_delta": 700,
-        "raw_levels": [
-          25,
-          25,
-          25,
-          25,
-          25,
-          25,
-          25
-        ]
-      },
-      {
-        "name": "real_Hue_API_color_yields_no_old_restore",
-        "sent_after_release": 729
-      },
-      {
-        "name": "HA_identical_brightness_command_yields"
-      },
-      {
-        "name": "HA_relative_brightness_applied_once",
-        "before_raw": 0,
-        "expected_percent": 2,
-        "actual_percent": 1.98
-      },
-      {
-        "name": "rapid_Hue_then_HA_command_keeps_latest_intent"
-      },
-      {
-        "name": "HA_toggle_applied_once"
-      },
-      {
-        "name": "native_breathe_ignores_own_Hue_reports",
-        "effect": "breathe",
-        "seconds": 42,
-        "sent_delta": 392,
-        "acked_delta": 384,
-        "raw_levels": [
-          2,
-          12,
-          25,
-          12
-        ]
-      },
-      {
-        "name": "real_Hue_OFF_yields_and_stays_off"
-      },
-      {
-        "name": "option_OFF_retains_native_ownership"
-      },
-      {
-        "name": "manual_return_button_works_with_option_OFF"
-      },
-      {
-        "name": "real_Hue_gradient_takes_over"
-      },
-      {
-        "name": "native_static_ignores_own_Hue_reports",
-        "effect": "static",
-        "seconds": 36,
-        "sent_delta": 0,
-        "acked_delta": 0,
-        "raw_levels": [
-          25,
-          25,
-          25,
-          25
-        ]
-      },
-      {
-        "name": "native_chase_ignores_own_Hue_reports",
-        "effect": "chase",
-        "seconds": 36,
-        "sent_delta": 397,
-        "acked_delta": 281,
-        "raw_levels": [
-          25,
-          25,
-          25
-        ]
-      },
-      {
-        "name": "native_bounce_ignores_own_Hue_reports",
-        "effect": "bounce",
-        "seconds": 36,
-        "sent_delta": 347,
-        "acked_delta": 330,
-        "raw_levels": [
-          25,
-          25,
-          25,
-          25
-        ]
-      },
-      {
-        "name": "native_color_fade_ignores_own_Hue_reports",
-        "effect": "color_fade",
-        "seconds": 36,
-        "sent_delta": 387,
-        "acked_delta": 380,
-        "raw_levels": [
-          25,
-          25,
-          25,
-          25
-        ]
-      },
-      {
-        "name": "native_wave_ignores_own_Hue_reports",
-        "effect": "wave",
-        "seconds": 36,
-        "sent_delta": 379,
-        "acked_delta": 371,
-        "raw_levels": [
-          25,
-          25,
-          25
-        ]
-      },
-      {
-        "name": "native_heartbeat_ignores_own_Hue_reports",
-        "effect": "heartbeat",
-        "seconds": 36,
-        "sent_delta": 379,
-        "acked_delta": 376,
-        "raw_levels": [
-          2,
-          19,
-          8,
-          2
-        ]
-      }
-    ],
-    "restart_and_ota": [
-      {
-        "name": "actual_HA_restart_yields_without_restore_or_autoresume",
-        "raw_level": 25,
-        "reason": "hue_watchdog_expired"
-      },
-      {
-        "name": "Play_after_restart_and_from_Hue_ON_ignores_setup_reports"
-      },
-      {
-        "name": "actual_HA_restart_retains_autonomous_playback_with_option_OFF",
-        "raw_level": 25,
-        "reason": "requested_start"
-      },
-      {
-        "name": "new_Hue_color_verified_by_direct_fixture_ZCL_reads",
-        "handoff_seconds": 4.09,
-        "raw_level": 21
-      },
-      {
-        "name": "idle_socket_slots_reclaimed_and_HA_reconnects_without_USB",
-        "native_update_succeeds_immediately_after_eviction": true
-      },
-      {
-        "name": "HA_update_entity_wireless_reinstall_confirmed_retains_Hue_state_and_pairing",
-        "raw_level": 16,
-        "running_partition": "ota_1"
-      }
-    ],
-    "mobile": {
-      "passed": true,
-      "viewport": [
-        393,
-        852
-      ],
-      "native_return_button_present_and_effective": true,
-      "allow_Hue_takeover_native_switch": true,
-      "no_horizontal_overflow": true,
-      "Festavia_JavaScript_errors": [],
-      "unrelated_page_errors": 2
-    },
-    "scope": "Actual hardware and HA; no new optical survey"
-  },
-  "brightness": {
-    "maximum_requested_percent": 10,
-    "temporary_effect_cap_percent": 19,
-    "strictly_below_20_percent_in_090_acceptance": false,
-    "controlled_requests_below_20_percent": true,
-    "startup_automation_incident": {
-      "Hue_reported_percent": 20.16,
-      "raw_level": 52,
-      "raw_full_scale": 254,
-      "cause": "existing warm-white automation triggered by HA start",
-      "isolated_for_final_acceptance": true,
-      "original_enabled_state_restored": true
-    },
-    "original_staged_percent_restored_without_playback": 21.0,
-    "user_cap_restored": 60.0
-  },
-  "ownership_radio_check": {
-    "uptime_ms": 1760217,
-    "sdk_buffers_free": 33,
-    "sdk_buffer_probe_limit": 128,
-    "sdk_no_mem": 0,
-    "tx_accepted": 8320,
-    "tx_confirmations": 8320,
-    "outbound_in_use": 0,
-    "firmware": "0.3.8"
-  },
-  "native_effect_checks": [
-    {
-      "effect": "flow",
-      "seconds": 76,
-      "sent_delta": 716,
-      "acked_delta": 700,
-      "raw_levels": [
-        25,
-        25,
-        25,
-        25,
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "breathe",
-      "seconds": 42,
-      "sent_delta": 392,
-      "acked_delta": 384,
-      "raw_levels": [
-        2,
-        12,
-        25,
-        12
-      ]
-    },
-    {
-      "effect": "static",
-      "seconds": 36,
-      "sent_delta": 0,
-      "acked_delta": 0,
-      "raw_levels": [
-        25,
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "chase",
-      "seconds": 36,
-      "sent_delta": 397,
-      "acked_delta": 281,
-      "raw_levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "bounce",
-      "seconds": 36,
-      "sent_delta": 347,
-      "acked_delta": 330,
-      "raw_levels": [
-        25,
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "color_fade",
-      "seconds": 36,
-      "sent_delta": 387,
-      "acked_delta": 380,
-      "raw_levels": [
-        25,
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "wave",
-      "seconds": 36,
-      "sent_delta": 379,
-      "acked_delta": 371,
-      "raw_levels": [
-        25,
-        25,
-        25
-      ]
-    },
-    {
-      "effect": "heartbeat",
-      "seconds": 36,
-      "sent_delta": 379,
-      "acked_delta": 376,
-      "raw_levels": [
-        2,
-        19,
-        8,
-        2
-      ]
-    }
-  ]
+    "native_27_color_play": true,
+    "native_text_single_puck_edit": true,
+    "saved27_color_palette_and_native_select_load": true,
+    "Hue_SSE_matching_palette_color_yields": true,
+    "ordinary_HA_Hue_entity_off_yields": true,
+    "option_off_preserves_ownership_until_manual_return": true,
+    "native_animation_after_retained_mode": true,
+    "native_animation_frames": 196,
+    "initial_native_play_seconds": 26.76997040695278,
+    "native_palette_edit_seconds": 14.145303150988184,
+    "entity_ids_preserved": true,
+    "native_entities": 17,
+    "libraries_unchanged": true,
+    "staged_scene_unchanged": true,
+    "installed_component_files_match_release": true,
+    "component_files": 95,
+    "original_automations_restored": true,
+    "fixture_off": true,
+    "playback_unarmed": true,
+    "no_active_Hue_gradient_blocks_next_Play": true,
+    "Hue_takeover_enabled": true,
+    "original_brightness_cap": 60.0,
+    "SDK_out_of_memory_errors": 0,
+    "all_accepted_transactions_confirmed": true
+  }
 }

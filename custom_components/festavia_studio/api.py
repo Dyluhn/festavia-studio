@@ -302,7 +302,14 @@ class NativeClient:
                 continue
             if native and (original.get("layout_mode") != "pucks" or original.get("fps", 10) > 10):
                 continue
-            if not 1 <= len(colors) <= (9 if native else 27) or any(
+            count_limit = (
+                limits.get("puck_palette_max", 9)
+                if native and original.get("effect", "static") == "static"
+                else 9
+                if native
+                else 27
+            )
+            if not 1 <= len(colors) <= count_limit or any(
                 not isinstance(c, str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", c) for c in colors
             ):
                 continue
@@ -332,6 +339,7 @@ class NativeClient:
             "brightness_limit": app.limit,
             "positions": limits.get("logical_positions", 1),
             "palette_limit": limits.get("puck_palette_max", 9) if native else 27,
+            "animated_palette_limit": limits.get("puck_animated_palette_max", 9) if native else 27,
             "effects": limits.get("puck_effects", list(PUCK_EFFECTS)) if native else ["static"],
             "scene": copy.deepcopy(state.get("scene")),
             "presets": presets,
@@ -340,7 +348,7 @@ class NativeClient:
                 for name, colors in app.color_palettes().items()
                 if not native
                 or (
-                    len(colors) <= 9
+                    len(colors) <= limits.get("puck_palette_max", 9)
                     and len({max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in colors}) == 1
                     and max(int(colors[0][i : i + 2], 16) for i in (1, 3, 5)) > 0
                 )
@@ -360,6 +368,9 @@ class NativeClient:
                     "failures",
                     "effective_fps",
                     "hue_takeover_supported",
+                    "retained_pucks_supported",
+                    "applying",
+                    "paint_step",
                     "hue_takeover",
                     "hue_watchdog_remaining_ms",
                 )

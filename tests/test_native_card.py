@@ -10,6 +10,35 @@ CARD = (
 
 
 class NativeCardTests(unittest.TestCase):
+    def test_extended_static_palette_and_animation_limits_are_clear_on_mobile(self):
+        page = self.page
+        page.evaluate("""()=>{
+            state={...state,attributes:{...state.attributes,palette_limit:27,animated_palette_limit:9}};
+            hass={...hass,states:{'sensor.test':state}};
+            document.querySelector('festavia-studio-card').hass=hass;
+        }""")
+        for _ in range(24):
+            page.locator("#add").click()
+        self.assertTrue(page.locator("#add").is_disabled())
+        self.assertEqual(page.locator("[data-color]").count(), 27)
+        self.assertTrue(page.locator('#effect option[value="flow"]').is_disabled())
+        self.assertIn(
+            "Static repeat supports 27 colors",
+            page.locator(".studio").inner_text(),
+        )
+        self.assertFalse(page.evaluate("document.documentElement.scrollWidth>innerWidth"))
+        self.wait_saved()
+        self.assertEqual(len(page.evaluate("state.attributes.scene.colors")), 27)
+        page.locator("#spectrum").click()
+        self.wait_saved()
+        self.assertEqual(len(set(page.evaluate("state.attributes.scene.colors"))), 27)
+        page.get_by_role("button", name="Color 27", exact=True).click()
+        for _ in range(18):
+            page.locator("#remove").click()
+        self.assertFalse(page.locator('#effect option[value="flow"]').is_disabled())
+        page.locator("#effect").select_option("flow")
+        self.assertTrue(page.locator("#add").is_disabled())
+
     def test_return_control_to_hue_uses_release_and_preserves_staged_palette(self):
         page = self.page
         page.locator("#power").click()

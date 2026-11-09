@@ -115,7 +115,7 @@ class PuckRepeatTests(unittest.TestCase):
 
     def test_unsupported_counts_and_independent_tones_are_rejected_before_hardware(self):
         s = self.scene()
-        for colors in [s["colors"] * 3, ["#ff0000", "#001100"]]:
+        for colors in [s["colors"] * 7, ["#ff0000", "#001100"]]:
             with self.subTest(colors=colors), self.assertRaises(ValueError):
                 compile_scene({**s, "colors": colors}, [])
         with self.assertRaisesRegex(ValueError, "per-puck fps"):

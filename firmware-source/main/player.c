@@ -46,6 +46,11 @@ static unsigned color_probe_count;
 static const char *failure_cause="none", *failure_stage="none";
 static size_t failure_step;
 static unsigned animation_timeouts;
+// A retained scene is a finite, acknowledged paint burst. The lamp holds its
+// colors after its original geometry has been verified; there is no map loop.
+static packet_t paint[MAX_STEPS];
+static size_t paint_count, paint_step, paint_check_step;
+static bool retained_mode, pending_paint, pending_paint_check, geometry_dirty, geometry_release;
 
 static int64_t now(void) { return esp_timer_get_time() / 1000; }
 static bool number(const cJSON *obj, const char *key, int min, int max, int *out)
@@ -76,7 +81,10 @@ static cJSON *result(bool ok, const char *error)
     cJSON_AddBoolToObject(r, "hue_takeover", hue_takeover);
     cJSON_AddNumberToObject(r,"release_lost_confirms",release_lost_confirms);
     cJSON_AddNumberToObject(r, "hue_watchdog_remaining_ms", playing && hue_takeover ? hue_deadline-now() : -1);
-    cJSON_AddStringToObject(r, "transport", palette_mode ? "palette" : "segments");
+    cJSON_AddStringToObject(r, "transport", retained_mode ? "retained" : palette_mode ? "palette" : "segments");
+    cJSON_AddBoolToObject(r,"retained_pucks_supported",true);
+    cJSON_AddBoolToObject(r,"applying",playing && retained_mode && !bank_acked);
+    cJSON_AddNumberToObject(r,"paint_step",paint_step);
     cJSON_AddBoolToObject(r, "aps_acknowledged", !(palette_mode && sample_count > 1));
     cJSON_AddNumberToObject(r, "color_restore_probes", color_probe_count);
     cJSON_AddStringToObject(r, "failure_cause", failure_cause);
@@ -152,6 +160,81 @@ static bool parse_plan(const cJSON *obj)
     free(tmp);
     return valid;
 }
+static bool retained_program(packet_t *p, size_t n, unsigned positions)
+{
+    // Every temporary map must cover the entire fixture. Only singleton
+    // regions receive colors, and the final packets restore captured geometry.
+    if (n<5 || n>MAX_STEPS || positions<1 || positions>31 || p[0].command!=3) return false;
+    bool covered[31]={0}; uint16_t aliases[10]={0}; uint8_t starts[10],lengths[10];
+    unsigned alias_count=0,map_count=0; uint32_t previous=0;
+    for (size_t j=0;j<n;j++) {
+        packet_t *v=&p[j]; const uint8_t *b=v->payload; unsigned z=v->length;
+        if (v->cluster!=0xfc01 || v->manufacturer!=0x100b || v->type!=1 || z>76) return false;
+        if (v->command==3) {
+            if (j!=0 || z!=6 || memcmp(b,"\0\1\0\0\0\0",6)) return false;
+        } else if (v->command==7) {
+            if (z<4 || b[0]!=0 || b[1]<1 || b[1]>10 || z!=2u+2u*b[1]) return false;
+            alias_count=b[1];
+            for (unsigned a=0;a<alias_count;a++) {
+                aliases[a]=b[2+2*a]|b[3+2*a]<<8;
+                if (!hm_unicast(aliases[a],1)) return false;
+                for (unsigned k=0;k<a;k++) if (aliases[k]==aliases[a]) return false;
+            }
+        } else if (v->command==5) {
+            if (z<4 || b[0]!=0 || b[1]<1 || b[1]>10 || z!=2u+2u*b[1]) return false;
+            map_count=b[1]; unsigned end=0;
+            for (unsigned a=0;a<map_count;a++) {
+                starts[a]=b[2+2*a];lengths[a]=b[3+2*a];
+                if (starts[a]!=end || !lengths[a]) return false;
+                end+=lengths[a];
+            }
+            if (end!=positions) return false;
+        } else if (v->command==1) {
+            if (z<13 || (z-6)%7 || !map_count || map_count!=alias_count) return false;
+            uint32_t seq=b[0]|(uint32_t)b[1]<<8|(uint32_t)b[2]<<16|(uint32_t)b[3]<<24;
+            if (seq<=previous) return false;
+            previous=seq;
+            for (unsigned a=6;a<z;a+=7) {
+                uint16_t id=b[a]|b[a+1]<<8; unsigned k;
+                if (b[a+2]&31) return false;
+                for (k=0;k<alias_count && aliases[k]!=id;k++);
+                if (k==alias_count || lengths[k]!=1) return false;
+                covered[starts[k]]=true;
+            }
+        } else return false;
+    }
+    for (unsigned i=0;i<positions;i++) if (!covered[i]) return false;
+    for (unsigned k=0;k<2;k++) {
+        packet_t *last=&p[n-2+k]; bool found=false;
+        if (last->command!=(k ? 7 : 5)) return false;
+        for (size_t i=0;i<ready_count;i++) {
+            packet_t *v=&ready_checks[i];
+            if (v->cluster==0xfc01 && v->command==(k ? 6 : 4) &&
+                v->expected_length==last->length+1 && v->expected[0]==0 &&
+                !memcmp(v->expected+1,last->payload,last->length)) found=true;
+        }
+        if (!found) return false;
+    }
+    return true;
+}
+static bool geometry_only(void)
+{
+    // A handoff during painting repairs geometry without replaying power,
+    // brightness or colors. The original journal survives a reboot.
+    packet_t out[2],verify[2]; unsigned n=0,v=0;
+    for (size_t i=0;i<cleanup_count;i++)
+        if (cleanup[i].cluster==0xfc01 && (cleanup[i].command==5 || cleanup[i].command==7) && n<2) out[n++]=cleanup[i];
+    for (size_t i=0;i<check_count;i++)
+        if (checks[i].cluster==0xfc01 && (checks[i].command==4 || checks[i].command==6) && v<2) verify[v++]=checks[i];
+    if (n!=2 || v!=2) return false;
+    memcpy(cleanup,out,sizeof(out));cleanup_count=2;
+    memcpy(checks,verify,sizeof(verify));check_count=2;
+    geometry_release=true;retained_mode=false;geometry_dirty=false;
+    playing=releasing=configuring=checking=pending=pending_paint=pending_paint_check=false;
+    restoring=durable;step=0;retries=0;restore_power_checked=true;
+    next_due=now();state="releasing_geometry";reason="hue_takeover";
+    return true;
+}
 // Release deliberately emits no fixture writes. Persist the tombstone before
 // discarding the recovery plan so reboot cannot replay an old scene over Hue.
 static bool release_begin(const char *why)
@@ -174,6 +257,10 @@ static void release_tick(void)
     unsigned outstanding=hm_pending_transfers();
     if (outstanding && now()<release_timeout) return;
     release_lost_confirms=outstanding;
+    if (geometry_dirty) {
+        if (!outstanding && geometry_only()) return;
+        state="recovery_required";reason="geometry_release_unconfirmed";return;
+    }
     // Recommit the tombstone on retries before touching the old capsule.
     esp_err_t error=nvs_set_u8(store,"yield",1);
     if (error==ESP_OK) error=nvs_commit(store);
@@ -192,6 +279,7 @@ static void restore_begin(const char *why, bool off)
     playing=false; pending=false; pending_sync=false; sync_requested=false; waiting_reply=false; power_pending=false;
     restoring=durable; configuring=false; checking=false; step=0; retries=0;
     color_probe_queued=pending_color_probe=false; color_probe_count=0;
+    pending_paint=pending_paint_check=false;
     // This session already resolved the exact IEEE on the approved PAN.
     // Retain that binding for immediate restoration. Globals start unresolved
     // at boot, so durable reboot recovery still performs a fresh ZDO lookup.
@@ -207,7 +295,8 @@ void hm_player_init(void)
     ESP_ERROR_CHECK(nvs_open("hm_player",NVS_READWRITE,&store));
     uint8_t yielded=0;
     nvs_get_u8(store,"yield",&yielded);
-    if (yielded) {durable=true;release_begin("hue_takeover");release_due=now();release_tick();return;}
+    uint8_t dirty=0;nvs_get_u8(store,"paint",&dirty);geometry_dirty=dirty;
+    if (yielded && !dirty) {durable=true;release_begin("hue_takeover");release_due=now();release_tick();return;}
     size_t size=0;
     if (nvs_get_str(store,"journal",NULL,&size)==ESP_OK && size && size < 20000) {
         char *body=malloc(size);
@@ -220,7 +309,12 @@ void hm_player_init(void)
         uint8_t off=0; nvs_get_u8(store,"off",&off); preserve_off=off;
         uint8_t takeover=0;nvs_get_u8(store,"take",&takeover);hue_takeover=takeover;
         uint8_t played=0;nvs_get_u8(store,"played",&played);playback_persisted=played;
-        if (durable && hue_takeover && played) release_begin("restart_yield");
+        if (durable && (yielded || (hue_takeover && played))) {
+            if (dirty) {
+                nvs_set_u8(store,"yield",1);nvs_commit(store);
+                if (!geometry_only()) {state="recovery_required";reason="geometry_journal_invalid";}
+            } else release_begin("restart_yield");
+        }
         else if (durable) restore_begin("boot_recovery",preserve_off);
         else { state="recovery_required"; reason="invalid_saved_journal"; }
     }
@@ -262,7 +356,7 @@ static void failure(const char *cause)
     }
     pending=false; waiting_reply=false; failures++; retries++; next_due=now()+300;
     if (playing && retries>=3) {
-        if (hue_takeover && palette_mode) release_begin("delivery_failed");
+        if (hue_takeover && (palette_mode || retained_mode)) release_begin("delivery_failed");
         else restore_begin("delivery_failed",false);
     }
     else if (restoring && retries>=3 && configuring) restore_begin("setup_failed",false);
@@ -287,6 +381,10 @@ bool hm_player_confirm(esp_zb_apsde_data_confirm_t c)
     if (!pending || tsn!=pending_tsn || c.dst_addr.addr_short!=address) return false;
     last_status=c.status;
     if (c.status) failure("aps_status");
+    else if (pending_paint) {
+        // A paint/configuration packet waits for its matching ZCL reply.
+        last_target_ack=now();
+    }
     else if (pending_color_probe) {
         pending=false;pending_color_probe=false;color_probe_queued=false;
         retries=0;next_due=now()+200;
@@ -320,6 +418,23 @@ bool hm_player_receive(esp_zb_apsde_data_ind_t ind)
         return true;
     }
     if (!pending || tsn!=pending_tsn || ind.cluster_id!=pending_cluster) return false;
+    if (pending_paint) {
+        if (pending_paint_check) {
+            packet_t *v=&ready_checks[paint_check_step];
+            if (cmd!=v->response_command) return false;
+            if (n!=v->expected_length || memcmp(p,v->expected,n)) failure("paint_readback_mismatch");
+            else {pending=false;pending_paint=pending_paint_check=false;paint_check_step++;retries=0;next_due=now()+150;}
+        } else {
+            packet_t *v=&paint[paint_step];
+            bool specific=(ind.asdu[0]&3)==1;
+            bool match=(specific && cmd==v->command && n>=1) || (!specific && cmd==11 && n==2 && p[0]==v->command);
+            if (!match) return false;
+            uint8_t status=specific ? p[0] : p[1];
+            if (status) failure("paint_fixture_rejected");
+            else {pending=false;pending_paint=false;paint_step++;retries=0;next_due=now()+150;}
+        }
+        return true;
+    }
     if (restoring && checking && cmd==pending_cmd) {
         packet_t *check=configuring ? &ready_checks[step] : &checks[step];
         uint8_t expected[HM_MAX_PAYLOAD]; memcpy(expected,check->expected,check->expected_length);
@@ -360,12 +475,12 @@ void hm_player_tick(bool approved)
     if (durable && !playing && !restoring && strcmp(state,"armed")==0 && t>=armed_until)
         restore_begin("prepare_expired",false);
     if (playing && expires && t>=expires) {
-        if (hue_takeover && palette_mode) release_begin("duration_complete");
+        if (hue_takeover && (palette_mode || retained_mode)) release_begin("duration_complete");
         else restore_begin("duration_complete",false);
     }
     if (releasing) {release_tick();return;}
     int64_t last_contact=last_power_reply>last_target_ack ? last_power_reply : last_target_ack;
-    if (playing && palette_mode && sample_count > 1 && t-last_contact>TARGET_TIMEOUT_MS)
+    if (playing && ((palette_mode && sample_count > 1) || retained_mode) && t-last_contact>TARGET_TIMEOUT_MS)
         {if (hue_takeover) release_begin("target_unresponsive");else restore_begin("target_unresponsive",false);}
     if (releasing) {release_tick();return;}
     if (!playing && !restoring) return;
@@ -412,6 +527,26 @@ void hm_player_tick(bool approved)
             if (hm_send(address,endpoint,6,false,-1,0,p,sizeof(p),false,&power_tsn)!=ESP_OK) power_pending=false;
             next_due=t+20; return;
         }
+        if (retained_mode) {
+            if (bank_acked) return;
+            if (!geometry_dirty) return; // Load never starts geometry writes.
+            if (paint_step>=paint_count && paint_check_step>=ready_count) {
+                esp_err_t error=nvs_set_u8(store,"paint",0);
+                if (error==ESP_OK) error=nvs_set_u8(store,"played",1);
+                if (error==ESP_OK) error=nvs_commit(store);
+                if (error!=ESP_OK) {restore_begin("paint_commit_failed",false);return;}
+                geometry_dirty=false;playback_persisted=bank_acked=true;
+                frames_acked++;state="playing";return;
+            }
+            pending_paint=true;pending_paint_check=paint_step>=paint_count;
+            packet_t *v=pending_paint_check ? &ready_checks[paint_check_step] : &paint[paint_step];
+            pending=true;pending_until=t+4000;pending_cluster=v->cluster;
+            pending_cmd=v->response_command;
+            if (send_packet(v,false,&pending_tsn)!=ESP_OK && pending) failure("send_rejected");
+            if (!first_frame) first_frame=t;
+            if (!frames_sent) frames_sent=1;
+            return;
+        }
         // A static native palette persists in the fixture. Keep power/timeout
         // monitoring alive without retransmitting an unchanged palette.
         if (palette_mode && sample_count == 1 && bank_acked) return;
@@ -455,10 +590,12 @@ void hm_player_tick(bool approved)
             configuring=false; restoring=false; state="armed"; reason="setup_verified"; armed_until=t+120000; return;
         }
         // Only an exact matching readback retires the durable journal.
-        if (nvs_erase_key(store,"journal")!=ESP_OK || nvs_commit(store)!=ESP_OK) {
+        if (nvs_set_u8(store,"paint",0)!=ESP_OK || nvs_erase_key(store,"journal")!=ESP_OK || nvs_commit(store)!=ESP_OK) {
             restoring=false; state="recovery_required"; reason="journal_retire_failed"; return;
         }
-        durable=false; restoring=false; state="restored"; free(samples); samples=NULL; return;
+        durable=false; restoring=false;geometry_dirty=false;
+        state=geometry_release ? "released" : "restored";geometry_release=false;
+        free(samples); samples=NULL; return;
     }
     packet_t *p=checking ? (configuring ? &ready_checks[step] : &checks[step]) : (configuring ? &setup[step] : &cleanup[step]);
     pending=true; waiting_reply=checking; pending_cluster=p->cluster; pending_cmd=p->response_command;
@@ -473,7 +610,7 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
     if (strcmp(op,"player_release")==0) {
         if (releasing || (!durable && !playing)) return result(true,NULL);
         bool manual=cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(obj,"manual"));
-        if (!playing || !palette_mode || (!hue_takeover && !manual)) return result(false,"release requires active native palette playback");
+        if (!playing || (!palette_mode && !retained_mode) || (!hue_takeover && !manual)) return result(false,"release requires active native playback");
         bool released=release_begin("hue_takeover");
         return result(released,released ? NULL : "could not persist release");
     }
@@ -508,11 +645,14 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         if (err==ESP_OK) err=nvs_set_u8(store,"yield",0);
         if (err==ESP_OK) err=nvs_set_u8(store,"take",takeover);
         if (err==ESP_OK) err=nvs_set_u8(store,"played",0);
+        if (err==ESP_OK) err=nvs_set_u8(store,"paint",0);
         if (err==ESP_OK) err=nvs_commit(store);
         free(body);
         if (err!=ESP_OK) return result(false,"could not persist recovery plan");
         free(samples); samples=NULL; sample_count=0;
-        durable=true;hue_takeover=takeover;releasing=playback_persisted=false; preserve_off=false; state="configuring"; reason="prepared"; armed_until=now()+120000;
+        durable=true;hue_takeover=takeover;releasing=playback_persisted=false;
+        retained_mode=geometry_dirty=geometry_release=pending_paint=pending_paint_check=false;
+        preserve_off=false; state="configuring"; reason="prepared"; armed_until=now()+120000;
         configuring=true; restoring=true; checking=false; step=0; pending=false; next_due=now();
         // The host just resolved this IEEE and verified identity, appearance
         // and geometry at this address before preparing ownership. The hint is
@@ -522,14 +662,17 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         resolving=false; retries=0; return result(true,NULL);
     }
     if (strcmp(op,"player_load")==0) {
+        if (playing && retained_mode && geometry_dirty)
+            return result(false,"wait until the current puck scene is applied");
         const cJSON *array=cJSON_GetObjectItemCaseSensitive(obj,"samples");
         int n=cJSON_GetArraySize(array), rate, period;
         const char *transport=str(obj,"transport");
         bool native=transport && strcmp(transport,"palette")==0;
+        bool retained=transport && strcmp(transport,"retained")==0;
         if (native && cJSON_GetNumberValue(cJSON_GetObjectItemCaseSensitive(obj,"fps"))>10)
             return result(false,"native palette playback supports fps 1..10");
-        if (transport && strcmp(transport,"palette") && strcmp(transport,"segments"))
-            return result(false,"transport must be segments or palette");
+        if (transport && strcmp(transport,"palette") && strcmp(transport,"segments") && !retained)
+            return result(false,"transport must be segments, palette or retained");
         if (!durable || restoring || (strcmp(state,"armed") && strcmp(state,"playing")) || !cJSON_IsArray(array) || n<1 || n>MAX_FRAMES || !number(obj,"fps",1,25,&rate))
             return result(false,"load requires armed player, 1..64 frames and fps 1..25");
         period=1000*n/rate;
@@ -541,25 +684,42 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         for (int i=0;i<n;i++) {
             const cJSON *v=cJSON_GetArrayItem(array,i);
             int length=hm_unhex(cJSON_IsString(v)?v->valuestring:NULL,temp[i].data,HM_MAX_PAYLOAD);
-            if (length<0 || (native ? !hm_palette_frame(temp[i].data,length) :
+            if (length<0 || (retained ? length!=6 : native ? !hm_palette_frame(temp[i].data,length) :
                 (length<13 || (length-6)%7 || length>195))) { valid=false; break; }
             temp[i].length=length;
         }
         if (!valid) { free(temp); return result(false,"invalid segment/native palette frame"); }
-        free(samples); samples=temp; sample_count=n; fps=rate; cycle_ms=period; palette_mode=native; return result(true,NULL);
+        packet_t *program=NULL;size_t np=0;
+        if (retained) {
+            int positions;
+            program=calloc(MAX_STEPS,sizeof(packet_t));
+            valid=program && n==1 && number(obj,"positions",1,31,&positions) &&
+                packets(cJSON_GetObjectItemCaseSensitive(obj,"paint"),program,MAX_STEPS,&np) &&
+                retained_program(program,np,positions);
+            if (!valid) {free(program);free(temp);return result(false,"invalid retained puck program");}
+            memcpy(paint,program,np*sizeof(packet_t));paint_count=np;free(program);
+        }
+        free(samples); samples=temp; sample_count=n; fps=rate; cycle_ms=period;
+        palette_mode=native;retained_mode=retained;return result(true,NULL);
     }
     if (strcmp(op,"player_start")==0) {
         int ms;
         if (!durable || restoring || (strcmp(state,"armed") && strcmp(state,"playing")) || !samples || !number(obj,"duration_ms",0,86400000,&ms))
             return result(false,"prepare and load first; duration_ms 0 (until stopped) or <=86400000");
         bool was_playing=playing;
+        if (retained_mode) {
+            if (nvs_set_u8(store,"paint",1)!=ESP_OK || nvs_commit(store)!=ESP_OK)
+                return result(false,"could not persist painting recovery");
+            geometry_dirty=true;paint_step=paint_check_step=0;
+            pending_paint=pending_paint_check=false;
+        }
         hue_deadline=now()+15000;
         duration_ms=ms; started=now(); expires=ms ? started+ms : 0; playing=true;
         state="playing"; reason="requested_start"; next_due=started; retries=0; first_frame=ended=0; last_slot=-1; last_status=0;
         // Do not abandon an in-flight fragmented frame when a host changes scene.
         // Resynchronize the fixture at the next free slot before the new bank.
         if (!was_playing) {pending=false; pending_sync=false; counter=0;}
-        sync_requested=!palette_mode; bank_acked=false; pending_current_bank=false;
+        sync_requested=!palette_mode && !retained_mode; bank_acked=false; pending_current_bank=false;
         frames_sent=pending ? 1 : 0; frames_acked=failures=skipped=0; last_power=0; last_power_reply=last_target_ack=started;
         animation_timeouts=0;failure_cause=failure_stage="none";failure_step=0;
         return result(true,NULL);

@@ -120,6 +120,10 @@ def scattered_index(index, count):
 PUCK_EFFECTS = ("static", "flow", "chase", "bounce", "color_fade", "wave", "breathe", "heartbeat")
 
 
+def retained_scene(scene):
+    return scene.get("layout_mode") == "pucks" and len(scene.get("colors", [])) > 9
+
+
 def compile_puck_scene(scene):
     positions = integer(scene.get("positions", 27), 1, 31, "native positions")
     allowed = {
@@ -144,8 +148,11 @@ def compile_puck_scene(scene):
     if effect not in PUCK_EFFECTS:
         raise ValueError("unknown native puck effect")
     colors = scene.get("colors", ["#00d5ff", "#b000ff"])
-    if not isinstance(colors, list) or not 1 <= len(colors) <= 9:
-        raise ValueError("per-puck repeat supports 1–9 selected colors")
+    limit = positions if effect == "static" else 9
+    if not isinstance(colors, list) or not 1 <= len(colors) <= limit:
+        raise ValueError(
+            f"{effect} supports 1–{limit} selected colors; use Static repeat for more colors"
+        )
     palette = [color(c) for c in colors]
     strengths = [color_strength(c) for c in colors]
     if max(strengths) - min(strengths) > 1 / 255:
@@ -168,6 +175,10 @@ def compile_puck_scene(scene):
         raise ValueError("reverse must be boolean")
     fps = integer(scene.get("fps", 10), 1, 10, "per-puck fps")
     smoothing = integer(scene.get("smoothing", 0x2800), 0x400, 0x4000, "smoothing")
+    if len(colors) > 9:
+        # The finite paint program is compiled after the exact live geometry
+        # and collision-free aliases have been acquired. No repeating frames.
+        return [struct.pack("<IH", 0, 0x0400).hex()], 1
     fade = round(smoothing * 2560 / 65536 / 100)
     count = 1 if effect == "static" else max(2, min(64, round(fps * 4 / speed)))
     n = len(colors)
@@ -537,21 +548,26 @@ def virtual_aliases(profile, device, before, identity, count):
     if command:
         inventory = gradient_inventory(profile, device.ieee)
         for ieee in inventory["gradient_ieees"]:
-            if ieee == device.ieee:
-                continue
-            other = type(device)(profile["credentials"], ieee, device.endpoint)
-            try:
+            other = (
+                device
+                if ieee == device.ieee
+                else type(device)(profile["credentials"], ieee, device.endpoint, link=device.link)
+            )
+            # Peer wrappers share this connection and must not close it.
+            if other is not device:
                 other.connect()
-                raw = bytes.fromhex(other.custom_read(6))
+                blocked.add(other.address)
+            for bank in range(4):
+                result = other.command(0xFC01, 6, bytes([bank]), MFG)
+                raw = bytes.fromhex(result.get("received", {}).get("payload", ""))
                 if (
                     len(raw) < 3
-                    or raw[0] != 0
-                    or len(raw) != 3 + 2 * int.from_bytes(raw[1:3], "big")
+                    or raw[:2] != bytes([0, bank])
+                    or len(raw) != 3 + 2 * raw[2]
+                    or raw[2] > 10
                 ):
                     raise RuntimeError("gradient alias inventory is incomplete")
-                blocked.update(struct.unpack("<" + "H" * ((len(raw) - 3) // 2), raw[3:]))
-            finally:
-                other.close()
+                blocked.update(struct.unpack("<" + "H" * raw[2], raw[3:]))
     aliases = list(captured)
     candidate = own
     while len(aliases) < count:
@@ -650,6 +666,35 @@ class Player:
         self.retire_journal()
         return result
 
+    def start_scene(self, seconds, retained):
+        state = self.command("player_start", duration_ms=seconds * 1000)
+        if not retained:
+            return state
+        deadline = time.monotonic() + 45
+        keepalive = 0
+        while state.get("playing") and state.get("applying"):
+            if time.monotonic() >= deadline:
+                self.stop()
+                raise TimeoutError(
+                    "The puck scene did not finish applying; the previous scene was restored"
+                )
+            if state.get("hue_takeover") and time.monotonic() >= keepalive:
+                self.command("player_keepalive")
+                keepalive = time.monotonic() + 2
+            time.sleep(0.2)
+            state = self.status()
+            if state.get("state") == "recovery_required":
+                raise RuntimeError("Puck scene recovery requires attention")
+        if not state.get("playing") and state.get("state") not in (
+            "released",
+            "releasing",
+            "releasing_geometry",
+        ):
+            raise RuntimeError(
+                "The puck scene stopped before it was applied: " + state.get("reason", "unknown")
+            )
+        return state
+
     def release(self, manual=False):
         self.status()
         self.command("player_release", manual=manual)
@@ -676,11 +721,59 @@ class Player:
         with operation_lock(self.profile):
             return self._play(scene, seconds=seconds, layout=layout, aliases=aliases)
 
+    def retained_options(self, scene, before, device=None, identity=None, inventory_checked=False):
+        from .retained import program
+
+        known = device.identity if device is not None else (identity or {}).get("identity", {})
+        verified = known.get("5") == "LCX030" and known.get("16384") == "1.163.5"
+        if verified and len(before["aliases"]) >= 7:
+            # Captured addresses already belong to this fixture. Reusing them
+            # avoids allocating identifiers or opening a raw-radio connection
+            # for every palette edit. The firmware verifies the restored map.
+            if not inventory_checked:
+                provider = self.profile.get("active_entertainment_provider")
+                if callable(provider):
+                    active = provider()
+                    if not isinstance(active, list):
+                        raise RuntimeError("Live entertainment inventory is incomplete")
+                    if active:
+                        raise RuntimeError(
+                            "Hue entertainment is already active; stop it before taking control"
+                        )
+                else:
+                    gradient_inventory(self.profile, self.profile["ieee"])
+            return {
+                "transport": "retained",
+                "positions": before["logical_count"],
+                "paint": program(scene, before["aliases"], before),
+            }
+        owned = device is None
+        if owned:
+            self.http.close()
+            device, identity = connected(self.profile)
+        try:
+            if device.identity.get("5") != "LCX030" or device.identity.get("16384") != "1.163.5":
+                raise RuntimeError(
+                    "Extended static colors are currently verified only for LCX030 firmware 1.163.5"
+                )
+            aliases = virtual_aliases(
+                self.profile, device, before, identity, min(10, before["logical_count"])
+            )
+            return {
+                "transport": "retained",
+                "positions": before["logical_count"],
+                "paint": program(scene, aliases, before),
+            }
+        finally:
+            if owned:
+                device.close()
+
     def _play(self, scene, *, seconds=0, layout=None, aliases=None):
         integer(seconds, 0, 86400, "seconds")
         if isinstance(scene, dict) and scene.get("layout_mode") in ("auto", "pucks"):
             scene = fit_scene(scene)
         native = isinstance(scene, dict) and scene.get("layout_mode") == "pucks"
+        retained = native and retained_scene(scene)
         load_options = {"transport": "palette"} if native else {}
         frame_count = len(scene.get("layout", [])) if isinstance(scene, dict) else 0
         if not frame_count and isinstance(scene, dict) and scene.get("effect") == "custom":
@@ -692,6 +785,10 @@ class Player:
             raise PlaybackBlocked("takeover_update_required")
         if native and not state.get("native_palette_supported"):
             raise RuntimeError("Update the ESP32 firmware before using per-puck repeat")
+        if retained and not state.get("retained_pucks_supported"):
+            raise RuntimeError(
+                "Update the ESP32 firmware before using more than nine static colors"
+            )
         if state["armed"]:
             # Color/effect edits update the complete frame bank without remapping.
             if layout is not None or aliases is not None:
@@ -702,6 +799,16 @@ class Player:
             ]:
                 raise RuntimeError("stop before changing geometry")
             samples, fps = compile_scene(scene, saved["aliases"])
+            if retained:
+                load_options = self.retained_options(
+                    scene, saved["before"], identity=saved.get("identity")
+                )
+                # Surveying several peers can evict the C6's idle HTTPS socket.
+                # Reconnect with a read before the next write; never retry a
+                # POST whose outcome might already have taken effect.
+                current = self.status()
+                if not current.get("armed") or not current.get("playing"):
+                    raise PlaybackBlocked("fixture_changed")
             self.command(
                 "player_load",
                 samples=samples,
@@ -709,7 +816,7 @@ class Player:
                 cycle_ms=cycle_duration(scene, len(samples), fps),
                 **load_options,
             )
-            result = self.command("player_start", duration_ms=seconds * 1000)
+            result = self.start_scene(seconds, retained)
             saved["scene"] = scene
             saved["restored"] = False
             save_credentials(self.journal, saved)
@@ -755,7 +862,14 @@ class Player:
             if not d.verify_baseline(before):
                 raise PlaybackBlocked("fixture_changed")
             samples, fps = compile_scene(scene, aliases)
-            if native:
+            if retained:
+                load_options = self.retained_options(
+                    scene, before, d, identity, inventory_checked=True
+                )
+                peak = round(
+                    scene.get("brightness", 10) * color_strength(scene["colors"][0]) * 254 / 100
+                )
+            elif native:
                 peak = max(bytes.fromhex(s)[2] for s in samples)
             else:
                 peak = max(
@@ -788,7 +902,7 @@ class Player:
                 cycle_ms=cycle_duration(scene, len(samples), fps),
                 **load_options,
             )
-            return self.command("player_start", duration_ms=seconds * 1000)
+            return self.start_scene(seconds, retained)
         except BaseException:
             if not prepare_attempted:
                 raise

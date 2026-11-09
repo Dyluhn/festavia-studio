@@ -120,7 +120,10 @@ class Studio:
                         "verified_regions": 10,
                         "frame_rate_max": 25,
                         "saved_frames_max": 64,
-                        "puck_palette_max": 9,
+                        "puck_palette_max": min(31, self.profile.get("positions", 27))
+                        if status.get("retained_pucks_supported")
+                        else 9,
+                        "puck_animated_palette_max": 9,
                         "puck_frame_rate_max": 10,
                         "puck_effects": list(PUCK_EFFECTS),
                     },

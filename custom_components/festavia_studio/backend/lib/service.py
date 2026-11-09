@@ -147,6 +147,11 @@ class Installation:
                 "credentials": str(self.device_path),
                 "brightness_limit": self.limit,
                 "gradient_inventory_provider": lambda: self.inventory(True),
+                "active_entertainment_provider": lambda: [
+                    r["id"]
+                    for r in self.bridge().resources("entertainment_configuration")
+                    if r.get("status") != "inactive"
+                ],
             }
             self.studio = Studio(profile)
         return self.studio
@@ -202,7 +207,11 @@ class Installation:
                 palettes = self.color_palettes()
                 if op == "save_palette":
                     colors = data["colors"]
-                    limit = 9 if self.data.get("mode") == "native" else 27
+                    limit = (
+                        self.data.get("native", {}).get("positions", 27)
+                        if self.data.get("mode") == "native"
+                        else 27
+                    )
                     if not isinstance(colors, list) or not 1 <= len(colors) <= limit:
                         raise ValueError("Invalid palette size")
                     for item in colors:
@@ -218,7 +227,13 @@ class Installation:
                 save_credentials(self.palette_library, palettes)
                 return {"saved" if op == "save_palette" else "deleted": name}
             if op in ("play", "uniform", "save"):
-                targets = self.selected(fresh=op in ("play", "uniform"))
+                owned_native = bool(
+                    op == "play"
+                    and self.data.get("mode") == "native"
+                    and self.studio
+                    and self.studio.player.status().get("armed")
+                )
+                targets = self.selected(fresh=op in ("play", "uniform") and not owned_native)
                 if self.data.get("mode") == "native" and (
                     len(targets) != 1
                     or targets[0].get("ieee") != self.data.get("native", {}).get("ieee")
@@ -237,7 +252,13 @@ class Installation:
                     import struct
 
                     peak = (
-                        max(bytes.fromhex(s)[2] / 254 * 100 for s in samples)
+                        scene["brightness"]
+                        * max(
+                            max(int(c[i : i + 2], 16) for i in (1, 3, 5)) / 255
+                            for c in scene["colors"]
+                        )
+                        if scene["layout_mode"] == "pucks" and len(scene["colors"]) > 9
+                        else max(bytes.fromhex(s)[2] / 254 * 100 for s in samples)
                         if scene["layout_mode"] == "pucks"
                         else max(
                             (struct.unpack_from("<H", bytes.fromhex(s), p)[0] >> 5) / 2047 * 100

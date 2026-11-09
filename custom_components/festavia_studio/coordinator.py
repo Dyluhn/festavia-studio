@@ -41,6 +41,12 @@ def validate_scene(scene, status):
         )
     if scene.get("effect") not in status["effects"]:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="invalid_effect")
+    if scene.get("effect") != "static" and len(colors) > status.get("animated_palette_limit", 9):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="animated_palette_count",
+            translation_placeholders={"limit": str(status.get("animated_palette_limit", 9))},
+        )
     for key, low, high in (("brightness", 1, status["brightness_limit"]), ("speed", 0.1, 20)):
         value = scene.get(key)
         if type(value) not in (int, float) or not math.isfinite(value) or not low <= value <= high:

@@ -1,9 +1,9 @@
 {
   "name": "hue-mesh-lab",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "package_revision": 1,
   "protocol": 1,
-  "built_at": "2026-11-09T05:02:18.029444+00:00",
+  "built_at": "2026-11-09T09:07:47.617037+00:00",
   "esp_idf": "5.3.2",
   "esp_zigbee_lib": "1.6.8",
   "esp_zboss_lib": "1.6.4",
@@ -11,7 +11,7 @@
     "esp32c6": {
       "factory": "esp32c6/hue-mesh-lab.factory.bin",
       "app": "esp32c6/hue-mesh-lab.app.bin",
-      "app_size": 1413456,
+      "app_size": 1417360,
       "app_offset": 131072,
       "flash_size": "4MB",
       "ota": true,
@@ -23,20 +23,20 @@
     }
   },
   "sha256": {
-    "esp32c6/hue-mesh-lab.factory.bin": "755727d484756ee5e4faab11b6496e491259e4d95f47d831f633f9639ee7123c",
-    "esp32c6/hue-mesh-lab.app.bin": "3ca56210bee319b35e5140f741393d7cc695754af17aa8884776097aeab0663d"
+    "esp32c6/hue-mesh-lab.factory.bin": "d07000168a260544017aab983a168c29649c0a83037dc5f023f20eb578e8a54b",
+    "esp32c6/hue-mesh-lab.app.bin": "57163683b0721e008baebbb7a2f6a15a27cd90447bc24ea093f02864ab256212"
   },
   "hardware_verified": true,
   "hue_join_verified": true,
   "physical_led_control_verified": true,
   "firmware_source_sha256": {
-    "firmware/CMakeLists.txt": "028ab7dd697c3f28f2eaf9961003147aa5d24e7f1dd3d873537a5f484e022486",
+    "firmware/CMakeLists.txt": "eb4c9c68b82f1821a2bab26d1f14fcf2adbcca34f337eccb73d29623008d58c4",
     "firmware/main/CMakeLists.txt": "ce5418071c69a0ca3f2e33451001b0017dbe372f41b8140ee9ea029ff19e1aea",
     "firmware/main/idf_component.yml": "f76d5ed50b643808e5e669513fa14a32eadc568d54aa504c52fc64e24646b7d2",
     "firmware/main/main.c": "7bccc78d62d66d8b6d8d040788f6870ad5f38b91f2cf9e4e3152ce61677b3201",
     "firmware/main/network.c": "89f353f9ace36202f2fd4fbc5324821466dee0f58eec9bf027ba8c539aca81f7",
     "firmware/main/network.h": "ea1156e22e9860c51bf2c1c3c144b8bc8b1a092322fc5fdce2073383baeb0241",
-    "firmware/main/player.c": "65e9da9cd9a620d9d92847a51561643e33476ec5fe8567a9ca33c21dbda950d3",
+    "firmware/main/player.c": "3ed23528f8cec4ffdb87985cd3cdc8384cbba62f67d9289949ac752cf7b143ad",
     "firmware/main/player.h": "7647e1c4d7711a88fdd4f0697c82dae904e5348cf0c7b7e5e29cc5f4b028fa5d",
     "firmware/main/wire.c": "725aa7979f14e9bcd195c913cece2cdb30010762fa2685b8320a52aacb7b22b0",
     "firmware/main/wire.h": "7590d2f4e947c71f3f65a2e1a6c1382938302837996e7ecdcd060ad7df31e1c2",

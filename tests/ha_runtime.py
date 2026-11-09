@@ -6,6 +6,7 @@ commission, Player, encoders, stores, entity services and flows are production.
 
 import asyncio
 import copy
+import colorsys
 import hashlib
 import json
 import logging
@@ -65,6 +66,7 @@ class Wire:
             "playing": False,
             "native_palette_supported": True,
             "hue_takeover_supported": True,
+            "retained_pucks_supported": True,
             "reason": "idle",
             "frames": 0,
             "sent": 0,
@@ -169,11 +171,22 @@ class Wire:
                 )
                 self.snapshot["on"] = True
             elif op == "player_load":
-                assert data["transport"] == "palette" and 1 <= len(data["samples"]) <= 64
-                assert all(bytes.fromhex(s)[2] <= 38 for s in data["samples"]), (
-                    "brightness cap not applied"
+                assert (
+                    data["transport"] in ("palette", "retained") and 1 <= len(data["samples"]) <= 64
                 )
-                self.player.update(frames=len(data["samples"]), effective_fps=data["fps"])
+                if data["transport"] == "retained":
+                    assert data["positions"] == 27 and 1 <= len(data["paint"]) <= 16
+                    assert all(len(bytes.fromhex(p["payload"])) + 5 <= 82 for p in data["paint"])
+                else:
+                    assert all(bytes.fromhex(s)[2] <= 38 for s in data["samples"]), (
+                        "brightness cap not applied"
+                    )
+                self.player.update(
+                    frames=len(data["samples"]),
+                    effective_fps=data["fps"],
+                    transport=data["transport"],
+                    applying=False,
+                )
             elif op == "player_start":
                 self.player.update(state="playing", armed=True, playing=True)
                 self.hue_deadline = time.monotonic() + 15
@@ -267,6 +280,7 @@ class ZigbeeDevice:
     def __init__(self, credentials, ieee, endpoint, **kwargs):
         self.ieee, self.endpoint, self.address = ieee, endpoint, 123
         self.identity = {"5": "LCX030", "16384": "1.163.5"}
+        self.link = kwargs.get("link", object())
 
     def connect(self):
         return {"identity": self.identity, "esp32": {"extpan": PAN, "address": 200}}
@@ -282,6 +296,20 @@ class ZigbeeDevice:
             if a in fields:
                 wire.snapshot[b] = fields[a]
         return {"ok": True}
+
+    def command(self, cluster, command, payload, manufacturer):
+        assert cluster == 0xFC01 and command == 6
+        bank = payload[0]
+        import struct
+
+        aliases = BEFORE["aliases"] if bank == 0 else []
+        return {
+            "received": {
+                "payload": (
+                    bytes([0, bank, len(aliases)]) + struct.pack("<" + "H" * len(aliases), *aliases)
+                ).hex()
+            }
+        }
 
     def close(self):
         pass
@@ -367,7 +395,7 @@ async def main():
             count = len([c for c in wire.calls if c[1] in ("PUT", "POST") and c[2] != "/api"])
             for bad in (
                 {"brightness": 20},
-                {"colors": ["#ff0000"] * 10},
+                {"colors": ["#ff0000"] * 28},
                 {"speed": float("nan")},
                 {"effect": "bad"},
                 {"colors": ["#ff0000", "#001000"]},
@@ -390,6 +418,36 @@ async def main():
                 else:
                     raise AssertionError("reserved palette name accepted")
             checks.append("invalid_palette_and_cap_rejected_before_write")
+            original_scene = copy.deepcopy(entry.runtime_data.scene)
+            spectrum = [
+                "#" + "".join(f"{round(v * 255):02x}" for v in colorsys.hsv_to_rgb(i / 27, 1, 1))
+                for i in range(27)
+            ]
+            await action("configure", {"colors": spectrum, "effect": "static", "apply": False})
+            assert entry.runtime_data.data["palette_limit"] == 27
+            await action("save_palette", {"name": "Test27"})
+            await action("play")
+            assert wire.player["transport"] == "retained" and wire.player["playing"]
+            assert "Test27" in entry.runtime_data.data["palettes"]
+            try:
+                await action("configure", {"effect": "flow"})
+            except ServiceValidationError:
+                pass
+            else:
+                raise AssertionError("large map animation accepted")
+            await action("stop")
+            await action("delete_palette", {"name": "Test27"})
+            await action(
+                "configure",
+                {
+                    **{
+                        k: original_scene[k]
+                        for k in ("colors", "effect", "brightness", "speed", "reverse")
+                    },
+                    "apply": False,
+                },
+            )
+            checks.append("extended_static27_palette_native_controls_and_animation_limit")
             # A normal Hue light may already be brighter than Studio's effect
             # limit. Starting must capture it and lower it while OFF, rather
             # than rejecting every Play/Power button before prepare.
@@ -469,7 +527,7 @@ async def main():
             app = entry.runtime_data.api.app
             libraries = app.color_palettes()
             libraries.update(
-                {"Bridge only count": ["#ff0000"] * 10, "Bridge only tones": ["#ff0000", "#001000"]}
+                {"Bridge only count": ["#ff0000"] * 28, "Bridge only tones": ["#ff0000", "#001000"]}
             )
             save_credentials(app.palette_library, libraries)
             await entry.runtime_data.async_refresh()
@@ -522,6 +580,24 @@ async def main():
                     await asyncio.sleep(0.02)
                     if c.takeover.worker and c.takeover.worker.done():
                         break
+
+            animated_scene = copy.deepcopy(c.scene)
+            await action("play", {"effect": "static", "colors": spectrum, "brightness": 10})
+            from custom_components.festavia_studio.backend.lib.player import color
+
+            xy = color(spectrum[0])
+            same_color = {"color": {"xy": dict(zip(("x", "y"), xy))}, "dimming": {"brightness": 10}}
+            wire.lights["fixture"].update(copy.deepcopy(same_color))
+            await emit("fixture", same_color)
+            assert not c.playing and wire.player["state"] == "released"
+            await action(
+                "play",
+                {
+                    k: animated_scene[k]
+                    for k in ("effect", "colors", "brightness", "speed", "reverse")
+                },
+            )
+            checks.append("retained_static_yields_even_to_a_color_within_its_palette")
 
             before_handoff = len(wire.calls)
             wire.lights["fixture"].update(copy.deepcopy(desired))

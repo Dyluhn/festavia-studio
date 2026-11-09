@@ -39,7 +39,7 @@
       },
       "network": {
         "title": "Join the Hue Zigbee network",
-        "description": "In the Hue app, open Settings \u2192 Lights \u2192 Add lights \u2192 Search. Choose its network here. The bridge remains the Zigbee coordinator.",
+        "description": "In the Hue app, open Settings → Lights → Add lights → Search. Choose its network here. The bridge remains the Zigbee coordinator.",
         "data": {
           "network": "Zigbee network",
           "legacy": "Use legacy ZLL joining"
@@ -84,7 +84,7 @@
       },
       "recover_missing": {
         "title": "Recover after removing Hue lights",
-        "description": "Only use this after a captured light has been permanently removed or replaced in Hue. Restore every captured light still present on the original bridge and discard recovery ONLY for missing Hue resource IDs. Reconnect reachable equipment first, then confirm. After recovery, choose the replacement lights in Reconfigure \u2192 Lights and control mode.",
+        "description": "Only use this after a captured light has been permanently removed or replaced in Hue. Restore every captured light still present on the original bridge and discard recovery ONLY for missing Hue resource IDs. Reconnect reachable equipment first, then confirm. After recovery, choose the replacement lights in Reconfigure → Lights and control mode.",
         "data": {
           "confirm": "I confirm missing Hue lights were permanently removed or replaced"
         }
@@ -95,7 +95,7 @@
       "link_required": "Press the Hue bridge link button and try again.",
       "device_connection": "Cannot verify this ESP32-C6. Check its address, token, fingerprint and that playback is stopped.",
       "invalid_selection": "This selection is not supported. Native mode needs one verified LCX030 fixture. Bridge mode supports other Festavia models.",
-      "network_failed": "Could not join or verify the network. Open Add lights \u2192 Search in Hue, then try again.",
+      "network_failed": "Could not join or verify the network. Open Add lights → Search in Hue, then try again.",
       "stop_first": "Stop and restore the current effect before changing the installation.",
       "invalid_auth": "Authorization was rejected. Check the key or token.",
       "certificate_changed": "The certificate changed. Verify the device identity in Reconfigure.",
@@ -138,7 +138,7 @@
       },
       "network": {
         "title": "ESP32 Zigbee connection",
-        "description": "{state} \u00b7 channel {channel}. Pairing is preserved during wireless updates.",
+        "description": "{state} · channel {channel}. Pairing is preserved during wireless updates.",
         "data": {}
       },
       "color_palettes": {
@@ -160,7 +160,7 @@
       "link_required": "Press the Hue bridge link button and try again.",
       "device_connection": "Cannot verify this ESP32-C6. Check its address, token, fingerprint and that playback is stopped.",
       "invalid_selection": "This selection is not supported. Native mode needs one verified LCX030 fixture. Bridge mode supports other Festavia models.",
-      "network_failed": "Could not join or verify the network. Open Add lights \u2192 Search in Hue, then try again.",
+      "network_failed": "Could not join or verify the network. Open Add lights → Search in Hue, then try again.",
       "stop_first": "Stop and restore the current effect before changing the installation."
     },
     "abort": {
@@ -487,7 +487,7 @@
       "message": "The device certificate changed. Verify its identity and fingerprint in Reconfigure."
     },
     "recovery_pending": {
-      "message": "Restore the captured installation before changing fixtures. Use Reconfigure \u2192 Recover playback; if a Hue light was permanently removed, use Recover removed lights."
+      "message": "Restore the captured installation before changing fixtures. Use Reconfigure → Recover playback; if a Hue light was permanently removed, use Recover removed lights."
     },
     "unloading": {
       "message": "Festavia Studio is reloading. Try again when the integration is available."
@@ -499,7 +499,7 @@
       "message": "Native puck colors share one tone. Use matching RGB maximum values, or adjust Tone in the palette card."
     },
     "palette_count": {
-      "message": "Choose 1\u2013{limit} colors in #RRGGBB format."
+      "message": "Choose 1–{limit} colors in #RRGGBB format."
     },
     "invalid_effect": {
       "message": "This effect is unavailable for the selected control mode."
@@ -533,12 +533,15 @@
     },
     "takeover_unavailable": {
       "message": "The Hue event connection is unavailable. Reconnect the bridge, or turn off Allow Hue takeover to run without it."
+    },
+    "animated_palette_count": {
+      "message": "Animations support up to {limit} colors. Choose Static repeat for a larger palette."
     }
   },
   "issues": {
     "recovery_pending": {
       "title": "Festavia restoration is unfinished",
-      "description": "Reconnect the original bridge and ESP32. If Festavia Studio is still configured, use Reconfigure \u2192 Recover playback, or reload it to retry restoration. If it was removed, add Festavia Studio again and choose the original bridge and lights; setup offers recovery before taking control. Private credentials and the captured state were retained. Keep the component files installed until recovery is complete."
+      "description": "Reconnect the original bridge and ESP32. If Festavia Studio is still configured, use Reconfigure → Recover playback, or reload it to retry restoration. If it was removed, add Festavia Studio again and choose the original bridge and lights; setup offers recovery before taking control. Private credentials and the captured state were retained. Keep the component files installed until recovery is complete."
     }
   }
 }

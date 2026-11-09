@@ -1,6 +1,6 @@
 # Firmware
 
-Bundled hardware-tested image: Hue Mesh Lab 0.3.8, ESP32-C6, UART0 115200,
+Bundled hardware-tested image: Hue Mesh Lab 0.3.9, ESP32-C6, UART0 115200,
 4 MB flash, two 1.875 MiB application slots, HTTPS certificate pinning and
 authenticated OTA. A USB-to-UART bridge is required for this console build.
 
@@ -15,8 +15,8 @@ It joins an existing selected Hue PAN as an additional Zigbee router; it does no
 replace or modify bridge firmware. No network-key export, light reset, touchlink
 takeover or Zigbee-network merging is used.
 
-App SHA-256: `3ca56210bee319b35e5140f741393d7cc695754af17aa8884776097aeab0663d`.
-Factory SHA-256: `755727d484756ee5e4faab11b6496e491259e4d95f47d831f633f9639ee7123c`.
+App SHA-256: `57163683b0721e008baebbb7a2f6a15a27cd90447bc24ea093f02864ab256212`.
+Factory SHA-256: `d07000168a260544017aab983a168c29649c0a83037dc5f023f20eb578e8a54b`.
 The factory image covers the entire 4 MB flash, including blank Zigbee/NVS storage
 for a new installation. Use the app image for updates that preserve pairing.
 The USB installation tool verifies the manifest before first flashing. The Wi-Fi
@@ -73,5 +73,14 @@ playback during HA outages. Manual Return control to Hue works in either mode.
 The HTTPS server reclaims idle sockets and enables TCP keepalive for reconnection.
 
 The raw protocol remains available for development. General-purpose control is
-capability-gated by the integration. Firmware 0.3.8 itself is an advanced lab transport;
+capability-gated by the integration. Firmware 0.3.9 itself is an advanced lab transport;
 do not expose its private connection file or raw API to untrusted users.
+
+## Retained static colors
+
+Firmware 0.3.9 also accepts a finite, full-coverage per-puck paint program.
+Each command requires its matching application reply. Completion requires
+readback of the original Hue map and aliases. The lamp retains the colors;
+the ESP sends no repeating map or color packets for a static retained scene.
+A durable marker protects interrupted painting, and a Hue handoff repairs
+geometry without restoring old colors or power. This transport is static only.

@@ -29,6 +29,8 @@ class Playback(StudioEntity, SensorEntity):
             "effects": c.data["effects"],
             "positions": c.data["positions"],
             "palette_limit": c.data["palette_limit"],
+            "animated_palette_limit": c.data.get("animated_palette_limit", 9),
+            "applying": c.data["player"].get("applying", False),
             "brightness_limit": c.data["brightness_limit"],
             "mode": c.data["mode"],
             "playing": c.playing,
