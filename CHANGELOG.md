@@ -1,3 +1,10 @@
+# 0.11.0 — snake over a fixed background
+
+- Separate background and snake palettes in the existing native Home Assistant card and actions. A moving ordered block covers the background temporarily; each position returns to its original background color behind it.
+- Save or load either color palette independently; complete scenes save both layers with speed, direction and brightness. Live edits reuse the native animation transport and preserve Hue takeover.
+- This uses a repeating pattern of at most nine puck positions, with at least one background gap. The repeat is the largest multiple of the background color count that fits nine slots. It does not claim a single isolated snake across all 27 pucks.
+- No recurring geometry writes, ESP32 update, new app or dashboard. Firmware remains 0.3.9.
+
 # 0.10.0 — extended individual static colors
 
 - Up to 27 ordered static colors on the verified LCX030. Paint individual pucks through finite, full-coverage layouts, then restore and verify the original Hue map and aliases. Hold the scene without repeated map/color writes.

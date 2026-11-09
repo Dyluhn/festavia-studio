@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 
 FIELDS = {
     vol.Optional("colors"): [str],
+    vol.Optional("snake_colors"): [str],
     vol.Optional("effect"): str,
     vol.Optional("brightness"): vol.Coerce(float),
     vol.Optional("speed"): vol.Coerce(float),
@@ -57,7 +58,7 @@ async def async_setup(hass, config):
         changes = {
             key: value
             for key, value in call.data.items()
-            if key in ("colors", "effect", "brightness", "speed", "reverse")
+            if key in ("colors", "snake_colors", "effect", "brightness", "speed", "reverse")
         }
         if call.service == "play":
             await coordinator.play(call.data.get("preset"), changes)
@@ -68,9 +69,11 @@ async def async_setup(hass, config):
         elif call.service in ("save_preset", "save_scene"):
             await coordinator.save_preset(call.data["name"])
         elif call.service == "load_palette":
-            await coordinator.choose_palette(call.data["palette"])
+            await coordinator.choose_palette(
+                call.data["palette"], call.data.get("layer", "background")
+            )
         elif call.service == "save_palette":
-            await coordinator.save_palette(call.data["name"])
+            await coordinator.save_palette(call.data["name"], call.data.get("layer", "background"))
         elif call.service in ("delete_palette", "delete_scene"):
             await coordinator.delete_saved(
                 call.data["name"], palette=call.service == "delete_palette"
@@ -115,6 +118,8 @@ async def async_setup(hass, config):
             fields[vol.Required("preset")] = str
         if name == "load_palette":
             fields[vol.Required("palette")] = str
+        if name in ("load_palette", "save_palette"):
+            fields[vol.Optional("layer", default="background")] = vol.In(("background", "snake"))
         if name in ("save_preset", "save_scene", "save_palette", "delete_palette", "delete_scene"):
             fields[vol.Required("name")] = str
         hass.services.async_register(DOMAIN, name, handle, schema=vol.Schema(fields))

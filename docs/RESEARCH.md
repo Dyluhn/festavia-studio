@@ -53,7 +53,9 @@ for the general ten-region transport surveys all four banks on every gradient.
 The retained renderer is static only. Map persistence and endurance are not
 established, so configuration writes are confined to explicit scene changes,
 never an animation loop. Animated repeats continue to use FC03 with at most nine
-colors. Larger stream arrays that fail delivery are not proof that the lamp's
+transmitted color slots per frame. The layered snake composes a fixed background
+and a moving foreground into those slots; it repeats within nine positions,
+rather than extending the native palette count. Larger stream arrays that fail delivery are not proof that the lamp's
 parser rejects their color format: the pinned sender stack also enforces peer
 ASDU size before fragmentation. No APS-capability override is shipped.
 

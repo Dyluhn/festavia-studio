@@ -10,6 +10,47 @@ CARD = (
 
 
 class NativeCardTests(unittest.TestCase):
+    def test_snake_layers_edit_save_and_preview_independently_on_mobile(self):
+        page = self.page
+        page.locator("#effect").select_option("snake")
+        self.wait_saved()
+        background = page.evaluate("state.attributes.scene.colors")
+        page.locator("#snake-add").click()
+        page.get_by_role("button", name="Choose Warm white", exact=True).click()
+        page.get_by_role("button", name="Choose Blue", exact=True).click()
+        self.wait_saved()
+        self.assertEqual(page.evaluate("state.attributes.scene.colors"), background)
+        self.assertEqual(
+            page.evaluate("state.attributes.scene.snake_colors"), ["#ffffff", "#2040ff"]
+        )
+        page.locator("#done").click()
+        self.assertIn("Repeats every 9 pucks", page.locator("#snake-note").inner_text())
+        page.locator("#palette-save").evaluate("e=>e.open=true")
+        page.locator("#save-layer").select_option("snake")
+        page.locator("#palette-name").fill("Snake colors")
+        page.locator("#save-palette").click()
+        page.wait_for_function("()=>calls.at(-1).action==='save_palette'")
+        self.assertEqual(page.evaluate("calls.at(-1).data.layer"), "snake")
+        page.locator("#snake-palette").select_option("Christmas")
+        page.wait_for_function("()=>calls.at(-1).action==='load_palette'")
+        self.assertEqual(page.evaluate("calls.at(-1).data.layer"), "snake")
+        self.assertEqual(page.evaluate("state.attributes.scene.colors"), background)
+        page.evaluate("""()=>{
+            const card=document.querySelector('festavia-studio-card');
+            cancelAnimationFrame(card.frame);card.animate(0);cancelAnimationFrame(card.frame);
+        }""")
+        self.assertEqual(
+            page.locator(".dot").nth(3).evaluate("e=>e.style.background"), "rgb(255, 0, 0)"
+        )
+        page.evaluate("""()=>{
+            const card=document.querySelector('festavia-studio-card');
+            card.animate(4000/9*3);cancelAnimationFrame(card.frame);
+        }""")
+        self.assertEqual(
+            page.locator(".dot").nth(0).evaluate("e=>e.style.background"), "rgb(255, 0, 0)"
+        )
+        self.assertFalse(page.evaluate("document.documentElement.scrollWidth>innerWidth"))
+
     def test_extended_static_palette_and_animation_limits_are_clear_on_mobile(self):
         page = self.page
         page.evaluate("""()=>{
@@ -145,20 +186,20 @@ class NativeCardTests(unittest.TestCase):
         self.page.add_script_tag(path=str(CARD))
         self.page.evaluate("""() => {
             window.calls=[];window.delay=0;const card=document.querySelector('festavia-studio-card');
-            window.state={state:'idle',attributes:{entry_id:'test',scene:{colors:['#ff0000','#00ff00','#9900ff'],brightness:10,speed:1,effect:'static',reverse:false},presets:['Warm'],preset:'Custom',palettes:['Christmas','Winter'],palette:'Custom',effects:['static','flow','chase','bounce','color_fade','wave','breathe','heartbeat'],positions:27,palette_limit:9,brightness_limit:15,mode:'native',playing:false}};
+            window.state={state:'idle',attributes:{entry_id:'test',scene:{colors:['#ff0000','#00ff00','#9900ff'],brightness:10,speed:1,effect:'static',reverse:false},presets:['Warm'],preset:'Custom',palettes:['Christmas','Winter'],palette:'Custom',snake_palette:'Custom',effects:['static','flow','chase','bounce','color_fade','wave','breathe','heartbeat','snake'],positions:27,palette_limit:9,brightness_limit:15,mode:'native',playing:false}};
             window.hass={states:{'sensor.test':state},callService:async(domain,action,data)=>{
                 calls.push({domain,action,data:JSON.parse(JSON.stringify(data))});
                 if(delay)await new Promise(r=>setTimeout(r,delay));
                 const a={...state.attributes,scene:{...state.attributes.scene}};
                 if(action==='configure'||action==='play') {
-                    for(const key of ['colors','brightness','speed','effect','reverse'])if(key in data)a.scene[key]=data[key];
+                    for(const key of ['colors','snake_colors','brightness','speed','effect','reverse'])if(key in data)a.scene[key]=data[key];
                     a.preset='Custom';if('colors' in data && JSON.stringify(data.colors)!==JSON.stringify(state.attributes.scene.colors))a.palette='Custom';
                 }
                 if(action==='play')a.playing=true;
                 if(action==='off'||action==='stop'||action==='release')a.playing=false;
                 if(action==='release')a.reason='hue_takeover';
-                if(action==='save_palette'){a.palettes=[...a.palettes,data.name];a.palette=data.name;}
-                if(action==='load_palette'){if(data.palette!=='Custom')a.scene.colors=['#80dfff','#e4f4ff','#4040ff'];a.palette=data.palette;a.preset='Custom';}
+                if(action==='save_palette'){a.palettes=[...a.palettes,data.name];a[data.layer==='snake'?'snake_palette':'palette']=data.name;}
+                if(action==='load_palette'){if(data.palette!=='Custom')a.scene[data.layer==='snake'?'snake_colors':'colors']=['#80dfff','#e4f4ff','#4040ff'];a[data.layer==='snake'?'snake_palette':'palette']=data.palette;a.preset='Custom';}
                 if(action==='save_scene'){a.presets=[...a.presets,data.name];a.preset=data.name;}
                 state={...state,state:a.playing?'playing':'idle',attributes:a};
                 hass={...hass,states:{'sensor.test':state}};card.hass=hass;

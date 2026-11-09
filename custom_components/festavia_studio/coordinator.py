@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationErr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .api import StudioError, StudioAuthError, has_recovery, private_folder
-from .backend.lib.player import compile_puck_scene
+from .backend.lib.player import compile_puck_scene, snake_colors, snake_period
 from .const import DOMAIN
 
 DEFAULT_SCENE = {
@@ -23,6 +23,19 @@ DEFAULT_SCENE = {
     "smoothing": 10240,
     "layout_mode": "pucks",
 }
+
+
+def at_tone(colors, reference):
+    """Reuse saved hues at the native renderer's shared tone."""
+    level = max(int(reference[i : i + 2], 16) for i in (1, 3, 5))
+    result = []
+    for color in colors:
+        rgb = [int(color[i : i + 2], 16) for i in (1, 3, 5)]
+        maximum = max(rgb)
+        result.append(
+            "#" + "".join(f"{round(c * level / maximum):02x}" for c in rgb) if maximum else color
+        )
+    return result
 
 
 def validate_scene(scene, status):
@@ -60,7 +73,26 @@ def validate_scene(scene, status):
     scene["positions"] = status["positions"]
     scene["colors"] = [c.lower() for c in colors]
     if status.get("mode") == "native":
-        values = [max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in scene["colors"]]
+        all_colors = list(scene["colors"])
+        if scene.get("effect") == "snake":
+            foreground = snake_colors(scene)
+            limit = snake_period(scene) - 1
+            if (
+                not isinstance(foreground, list)
+                or not 1 <= len(foreground) <= limit
+                or any(
+                    not isinstance(c, str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", c)
+                    for c in foreground
+                )
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="snake_count",
+                    translation_placeholders={"limit": str(limit)},
+                )
+            scene["snake_colors"] = [c.lower() for c in foreground]
+            all_colors += scene["snake_colors"]
+        values = [max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in all_colors]
         if not all(values):
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="palette_black")
         if len(set(values)) != 1:
@@ -88,6 +120,7 @@ class StudioCoordinator(DataUpdateCoordinator):
         self.scene = copy.deepcopy(DEFAULT_SCENE)
         self.preset = "Custom"
         self.palette = "Custom"
+        self.snake_palette = "Custom"
         self.action_lock = asyncio.Lock()
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.scene")
         self._remote_scene = None
@@ -101,6 +134,7 @@ class StudioCoordinator(DataUpdateCoordinator):
             self.scene = saved.get("scene", self.scene)
             self.preset = saved.get("preset", "Custom")
             self.palette = saved.get("palette", "Custom")
+            self.snake_palette = saved.get("snake_palette", "Custom")
 
     @property
     def playing(self):
@@ -132,6 +166,11 @@ class StudioCoordinator(DataUpdateCoordinator):
             self.palette = "Custom"
         if result["palettes"].get(self.palette) != self.scene.get("colors"):
             self.palette = "Custom"
+        foreground = result["palettes"].get(self.snake_palette)
+        if foreground is None or at_tone(foreground, self.scene["colors"][0]) != self.scene.get(
+            "snake_colors"
+        ):
+            self.snake_palette = "Custom"
         self._remote_scene = copy.deepcopy(remote)
         if not result["player"].get("playing"):
             if self.preset not in result["presets"]:
@@ -185,14 +224,25 @@ class StudioCoordinator(DataUpdateCoordinator):
 
     async def persist(self):
         await self.store.async_save(
-            {"scene": self.scene, "preset": self.preset, "palette": self.palette}
+            {
+                "scene": self.scene,
+                "preset": self.preset,
+                "palette": self.palette,
+                "snake_palette": self.snake_palette,
+            }
         )
         self.async_update_listeners()
 
-    async def configure(self, changes, apply=True, preset="Custom", palette=None):
+    async def configure(
+        self, changes, apply=True, preset="Custom", palette=None, layer="background"
+    ):
         async with self.action_lock:
             self.check_ready()
-            if palette is not None and self.data["palettes"].get(palette) != changes.get("colors"):
+            key = "snake_colors" if layer == "snake" else "colors"
+            selected = self.data["palettes"].get(palette)
+            if selected is not None and layer == "snake":
+                selected = at_tone(selected, self.scene["colors"][0])
+            if palette is not None and selected != changes.get(key):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN, translation_key="preset_missing"
                 )
@@ -201,34 +251,48 @@ class StudioCoordinator(DataUpdateCoordinator):
                 await self.command("play", {"scene": candidate, "seconds": 0})
             self.scene, self.preset = candidate, preset
             if palette is not None:
-                self.palette = palette
+                setattr(self, "snake_palette" if layer == "snake" else "palette", palette)
             elif self.data["palettes"].get(self.palette) != candidate["colors"]:
                 self.palette = "Custom"
+            foreground = self.data["palettes"].get(self.snake_palette)
+            if foreground is None or at_tone(foreground, candidate["colors"][0]) != candidate.get(
+                "snake_colors"
+            ):
+                self.snake_palette = "Custom"
             await self.persist()
 
-    async def save_palette(self, name):
+    async def save_palette(self, name, layer="background"):
         name = name.strip()
         if not 1 <= len(name) <= 60 or name.casefold() == "custom":
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="preset_name")
         async with self.action_lock:
             self.check_ready()
             scene = validate_scene(self.scene, self.data)
-            await self.command("save_palette", {"name": name, "colors": scene["colors"]})
-            self.palette = name
+            colors = snake_colors(scene) if layer == "snake" else scene["colors"]
+            await self.command("save_palette", {"name": name, "colors": colors})
+            setattr(self, "snake_palette" if layer == "snake" else "palette", name)
             await self.persist()
 
-    async def choose_palette(self, name):
+    async def choose_palette(self, name, layer="background"):
         if name == "Custom":
             async with self.action_lock:
                 self.check_ready()
-                self.palette = name
+                setattr(self, "snake_palette" if layer == "snake" else "palette", name)
                 await self.persist()
             return
         if name not in self.data["palettes"]:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="preset_missing"
             )
-        await self.configure({"colors": self.data["palettes"][name]}, palette=name)
+        key = "snake_colors" if layer == "snake" else "colors"
+        colors = self.data["palettes"][name]
+        changes = {key: colors}
+        if self.data["mode"] == "native":
+            if layer == "snake":
+                changes[key] = at_tone(colors, self.scene["colors"][0])
+            elif self.scene.get("effect") == "snake":
+                changes["snake_colors"] = at_tone(snake_colors(self.scene), colors[0])
+        await self.configure(changes, palette=name, layer=layer)
 
     async def delete_saved(self, name, *, palette=False):
         async with self.action_lock:
@@ -240,6 +304,8 @@ class StudioCoordinator(DataUpdateCoordinator):
             await self.command("delete_palette" if palette else "delete", {"name": name})
             if palette and self.palette == name:
                 self.palette = "Custom"
+            if palette and self.snake_palette == name:
+                self.snake_palette = "Custom"
             if not palette and self.preset == name:
                 self.preset = "Custom"
             await self.persist()

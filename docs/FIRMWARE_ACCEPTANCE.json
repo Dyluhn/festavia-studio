@@ -125,5 +125,42 @@
     "finding": "Only the first apparent streaming brightness field was constrained. Under a legacy seven-byte interpretation, secondary fields included values above20%, paired with modes that were not established to be active for those identifiers.",
     "observed": "Six camera-visible pucks showed no brightening relative to low-level controls. The other21pucks were not optically observed, so the entire exploratory run cannot be certified below20%.",
     "correction": "Private exploratory harness now rejects any possible full legacy record above the bound before transmitting. No such probe is shipped; the production renderer validates and bounds known record formats. No further speculative compact probes were run."
+  },
+  "layered_snake_integration": {
+    "checked_at": "2026-11-09",
+    "integration": "0.11.0",
+    "firmware_unchanged": "0.3.9",
+    "transport": "Existing native FC03 palette frames, no recurring geometry changes",
+    "pattern": "Largest multiple of background palette count within nine native slots; separate moving foreground, at least one background gap",
+    "software": {
+      "unit_protocol_browser_release_tests": 110,
+      "actual_HA_runtime_checks": 34,
+      "HA_lifecycle_checks": 9,
+      "hassfest_invalid": 0
+    },
+    "physical_fixture": "LCX030 / 1.163.5 / 27 logical positions",
+    "physical_background_counts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8,
+      9
+    ],
+    "physical_foreground_counts": [
+      1,
+      2,
+      8
+    ],
+    "requested_brightness_percent": 9,
+    "readback_global_raw_max": 25,
+    "HA_actions": "Live playback, per-layer palette save/load, two-layer scene save/load, live edits, normal Hue Off takeover",
+    "limits": [
+      "Repeating pattern up to nine positions, not an isolated snake across27",
+      "Shared brightness",
+      "Six camera-visible pucks; daylight optical samples weak, no full-string or calibrated frame-rate claim"
+    ],
+    "private_harness_recovery": "Corrected off-state XY replay quantization; exact original snapshot recovered; no shipped firmware change"
   }
 }

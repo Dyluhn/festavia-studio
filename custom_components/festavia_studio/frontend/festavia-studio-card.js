@@ -1,4 +1,4 @@
-/* Festavia Studio 0.10.0 — dependency-free native Lovelace card. */
+/* Festavia Studio 0.11.0 — dependency-free native Lovelace card. */
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clone = value => JSON.parse(JSON.stringify(value));
 function hsv(hex) {
@@ -12,7 +12,7 @@ function hex([h,s,v]) {
   return `#${f(5)}${f(3)}${f(1)}`;
 }
 class FestaviaStudioCard extends HTMLElement {
-  constructor() { super(); this.attachShadow({mode:"open"}); this.selected=0; this.editing=false; this.dirty=false; this.busy=false; this.saving=null; this.revision=0; }
+  constructor() { super(); this.attachShadow({mode:"open"}); this.selected=0; this.layer="background"; this.editing=false; this.dirty=false; this.busy=false; this.saving=null; this.revision=0; }
   static getConfigElement() { return document.createElement("festavia-studio-card-editor"); }
   static getStubConfig(hass) {
     return {entity:Object.keys(hass.states).find(k=>hass.states[k].attributes.entry_id && hass.states[k].attributes.palette_limit)};
@@ -26,10 +26,10 @@ class FestaviaStudioCard extends HTMLElement {
     const state=value.states[id];
     if (!state) { this.state=null; this.render(); return; }
     const changed=JSON.stringify(state.attributes.scene)!==JSON.stringify(this.state?.attributes.scene);
-    const metadata = s => s && [s.state === "unavailable", s.attributes.presets, s.attributes.preset, s.attributes.palettes, s.attributes.palette, s.attributes.effects, s.attributes.positions, s.attributes.palette_limit, s.attributes.brightness_limit, s.attributes.mode];
+    const metadata = s => s && [s.state === "unavailable", s.attributes.presets, s.attributes.preset, s.attributes.palettes, s.attributes.palette, s.attributes.snake_palette, s.attributes.effects, s.attributes.positions, s.attributes.palette_limit, s.attributes.brightness_limit, s.attributes.mode];
     const metadataChanged=JSON.stringify(metadata(state))!==JSON.stringify(metadata(this.state));
     this.state=state;
-    if (!this.dirty && (!this.scene || changed)) { this.scene=clone(state.attributes.scene); this.selected=Math.min(this.selected,this.scene.colors.length-1); this.render(); }
+    if (!this.dirty && (!this.scene || changed)) { this.scene=clone(state.attributes.scene); this.render(); }
     else if (!this.dirty && metadataChanged) this.render();
     else if (!this.shadowRoot.querySelector(".studio")) this.render();
     this.updateStatus();
@@ -47,7 +47,14 @@ class FestaviaStudioCard extends HTMLElement {
     if(!this.config) return;
     if(!this.state || !this.scene) { this.shadowRoot.innerHTML='<ha-card><div style="padding:24px">Festavia is unavailable. Check its integration in Settings → Devices & services.</div></ha-card>'; return; }
     const openDetails=[...this.shadowRoot.querySelectorAll("details[id]")].filter(e=>e.open).map(e=>e.id);
-    const a=this.state.attributes,s=this.scene,selected=s.colors[this.selected],v=hsv(selected);
+    const a=this.state.attributes,s=this.scene;
+    const snake=s.effect==="snake",period=Math.floor(Math.min(9,a.positions)/s.colors.length)*s.colors.length;
+    if(snake && !s.snake_colors)s.snake_colors=[hex([0,0,hsv(s.colors[0])[2]])];
+    if(!snake)this.layer="background";
+    const active=this.layer==="snake"?s.snake_colors:s.colors;
+    this.selected=Math.min(this.selected,active.length-1);
+    const selected=active[this.selected],v=hsv(selected),selectedPalette=this.layer==="snake"?a.snake_palette:a.palette;
+    const fitsBackground=n=>!snake || Math.floor(Math.min(9,a.positions)/n)*n>(s.snake_colors?.length||1);
     const animatedLimit=a.animated_palette_limit??9, colorLimit=s.effect==="static"?a.palette_limit:Math.min(a.palette_limit,animatedLimit);
     this.shadowRoot.innerHTML=`
     <style>
@@ -57,51 +64,59 @@ class FestaviaStudioCard extends HTMLElement {
     </style>
     <ha-card><div class="studio">
       <header><div><h2>${esc(this.config.title||"Festavia")}</h2><div id="status" class="muted"></div></div><div class="power"><span>Studio</span><ha-switch id="power" aria-label="Festavia Studio playback"></ha-switch></div></header>
-      <div><label for="palette">Color palette</label><select id="palette" aria-label="Color palette"><option value="">Custom colors</option>${(a.palettes||[]).map(p=>`<option ${a.palette===p?"selected":""}>${esc(p)}</option>`).join("")}</select></div>
-      <div><div class="row"><label>Colors <span class="muted">· tap to edit</span></label><span style="text-align:right" class="muted">${s.colors.length} / ${colorLimit}</span></div><div class="palette">${s.colors.map((c,i)=>`<button class="swatch" style="background:${c}" aria-label="Color ${i+1}" aria-pressed="${this.editing && i===this.selected}" data-color="${i}"><span>${i+1}</span></button>`).join("")}<button id="add" class="add" aria-label="Add color" ${s.colors.length>=colorLimit?"disabled":""}>+</button></div></div>
+      <div><label for="palette">${snake?"Background palette":"Color palette"}</label><select id="palette" aria-label="Color palette"><option value="">Custom colors</option>${(a.palettes||[]).map(p=>`<option ${a.palette===p?"selected":""}>${esc(p)}</option>`).join("")}</select></div>
+      <div><div class="row"><label>${snake?"Background colors":"Colors"} <span class="muted">· tap to edit</span></label><span style="text-align:right" class="muted">${s.colors.length} / ${colorLimit}</span></div><div class="palette">${s.colors.map((c,i)=>`<button class="swatch" style="background:${c}" aria-label="Color ${i+1}" aria-pressed="${this.editing && i===this.selected && this.layer==="background"}" data-color="${i}" data-layer="background"><span>${i+1}</span></button>`).join("")}<button id="add" class="add" aria-label="Add color" ${s.colors.length>=colorLimit || !fitsBackground(s.colors.length+1)?"disabled":""}>+</button></div></div>
+      <div ${snake?"":"hidden"}><label for="snake-palette">Snake palette</label><select id="snake-palette" aria-label="Snake palette"><option value="">Custom colors</option>${(a.palettes||[]).map(p=>`<option ${a.snake_palette===p?"selected":""}>${esc(p)}</option>`).join("")}</select></div>
+      <div ${snake?"":"hidden"}><div class="row"><label>Snake colors <span class="muted">· one color per puck</span></label><span style="text-align:right" class="muted">${s.snake_colors?.length||1} / ${period-1}</span></div><div class="palette">${(s.snake_colors||[]).map((c,i)=>`<button class="swatch" style="background:${c}" aria-label="Snake color ${i+1}" aria-pressed="${this.editing && this.layer==="snake" && i===this.selected}" data-color="${i}" data-layer="snake"><span>${i+1}</span></button>`).join("")}<button id="snake-add" class="add" aria-label="Add snake color" ${(s.snake_colors?.length||1)>=period-1?"disabled":""}>+</button></div></div>
+      <div id="snake-note" class="notice" ${snake?"":"hidden"}>The background stays fixed and returns behind the snake. Repeats every ${period} pucks (${period-(s.snake_colors?.length||1)} background pucks between snakes). This is a repeating snake, not one isolated snake across the full string.</div>
       <button id="spectrum" ${a.mode==="native"&&s.effect==="static"&&colorLimit>9?"":"hidden"}>Fill with spectrum</button>
-      <div class="editor" ${this.editing?"":"hidden"}><div class="editor-head"><label>Edit color ${this.selected+1}</label><button id="done">Done</button></div><div class="row tools"><button id="left" ${this.selected===0?"disabled":""}>← Move</button><button id="right" ${this.selected===s.colors.length-1?"disabled":""}>Move →</button><button id="remove" ${s.colors.length===1?"disabled":""}>Remove</button></div>
+      <div class="editor" ${this.editing?"":"hidden"}><div class="editor-head"><label>Edit ${this.layer==="snake"?"snake":"background"} color ${this.selected+1}</label><button id="done">Done</button></div><div class="row tools"><button id="left" ${this.selected===0?"disabled":""}>← Move</button><button id="right" ${this.selected===active.length-1?"disabled":""}>Move →</button><button id="remove" ${active.length===1 || (this.layer==="background"&&!fitsBackground(active.length-1))?"disabled":""}>Remove</button></div>
       <div class="picker"><label>Choose a color</label><div class="wheel" role="group" aria-label="Color wheel"><span class="cursor" style="left:${50+Math.cos(v[0]*Math.PI/180)*v[1]*50}%;top:${50+Math.sin(v[0]*Math.PI/180)*v[1]*50}%"></span></div>
       <div class="quick-colors" aria-label="Quick colors">${[["Red","#ff2020"],["Orange","#ff8000"],["Yellow","#ffff00"],["Green","#00ff00"],["Cyan","#00ffff"],["Blue","#2040ff"],["Purple","#9900ff"],["Pink","#ff20a0"],["Warm white","#ffdda0"],["White","#ffffff"]].map(([name,c])=>`<button class="quick" style="background:${c}" data-quick="${c}" aria-label="Choose ${name}"></button>`).join("")}</div>
       <label for="hue">Hue</label><input aria-label="Hue" id="hue" class="hue" type="range" min="0" max="360" value="${v[0]}"><label for="saturation">Saturation</label><input id="saturation" aria-label="Saturation" type="range" min="0" max="100" value="${Math.round(v[1]*100)}">
       <details id="advanced-color" class="advanced-color"><summary>Advanced color</summary><div class="row"><input id="hex" type="text" aria-label="Hex color" maxlength="7" value="${selected}"><span class="muted">#RRGGBB</span></div><label for="tone">${a.mode==="native"?"Shared palette tone":"Color tone"}</label><input id="tone" type="range" min="1" max="100" value="${Math.round(v[2]*100)}"><div class="notice">${a.mode==="native"?"Colors share brightness. Use the main Brightness control for the lights.":""}</div></details></div></div>
-      <div class="controls"><div><label for="effect">Animation</label><select id="effect">${a.effects.map(e=>`<option value="${esc(e)}" ${e!=="static"&&s.colors.length>animatedLimit?"disabled":""} ${s.effect===e?"selected":""}>${({static:"Static repeat",flow:"Smooth flow",chase:"Step chase",bounce:"Bounce",color_fade:"Color fade",wave:"Color wave",breathe:"Breathing",heartbeat:"Heartbeat"})[e]||esc(e)}</option>`).join("")}</select></div><div><label for="direction">Direction</label><select id="direction"><option value="false" ${!s.reverse?"selected":""}>← Left</option><option value="true" ${s.reverse?"selected":""}>Right →</option></select></div><div><label for="brightness">Brightness <output id="brightness-value">${s.brightness}%</output></label><input id="brightness" type="range" min="1" max="${a.brightness_limit}" value="${s.brightness}"></div><div><label for="speed">Speed <output id="speed-value">${s.speed}×</output></label><input id="speed" type="range" min="0" max="100" step="1" value="${100*Math.log(s.speed/.1)/Math.log(200)}"></div></div>
-      <div class="notice" ${a.mode==="native"&&a.palette_limit>animatedLimit?"":"hidden"}>Static repeat supports ${a.palette_limit} colors; animations support ${animatedLimit}. Larger static palettes apply over a few seconds.</div>
+      <div class="controls"><div><label for="effect">Animation</label><select id="effect">${a.effects.map(e=>`<option value="${esc(e)}" ${e!=="static"&&(s.colors.length>animatedLimit || (e==="snake"&&a.positions<2))?"disabled":""} ${s.effect===e?"selected":""}>${({static:"Static repeat",flow:"Smooth flow",chase:"Step chase",bounce:"Bounce",color_fade:"Color fade",wave:"Color wave",breathe:"Breathing",heartbeat:"Heartbeat",snake:"Snake over background"})[e]||esc(e)}</option>`).join("")}</select></div><div><label for="direction">Direction</label><select id="direction"><option value="false" ${!s.reverse?"selected":""}>← Left</option><option value="true" ${s.reverse?"selected":""}>Right →</option></select></div><div><label for="brightness">Brightness <output id="brightness-value">${s.brightness}%</output></label><input id="brightness" type="range" min="1" max="${a.brightness_limit}" value="${s.brightness}"></div><div><label for="speed">Speed <output id="speed-value">${s.speed}×</output></label><input id="speed" type="range" min="0" max="100" step="1" value="${100*Math.log(s.speed/.1)/Math.log(200)}"></div></div>
+      <div class="notice" ${a.mode==="native"&&a.palette_limit>animatedLimit?"":"hidden"}>Static repeat supports ${a.palette_limit} colors. Animations use up to ${animatedLimit} slots per repeat. Larger static palettes apply over a few seconds.</div>
       <div><div class="muted">Preview · ${a.positions} positions · repeats in your chosen order</div><div class="preview">${Array.from({length:Math.min(100,a.positions)},()=>'<span class="dot"></span>').join("")}</div></div>
       <div class="foot"><span class="muted">Changes save automatically</span><button id="stop">Restore previous scene</button></div>
       <button id="release" ${a.mode==="native"?"":"hidden"}>Return control to Hue</button>
       <div class="error" role="alert"></div>
-      <details id="palette-save"><summary>Save these colors</summary><div class="notice">A palette saves colors only. Your animation stays as it is.</div><div class="row"><input id="palette-name" type="text" maxlength="60" aria-label="Palette name" placeholder="Palette name"><button id="save-palette">Save palette</button></div><button id="delete-palette" ${!a.palette||a.palette==="Custom"?"disabled":""}>Delete selected palette</button></details>
+      <details id="palette-save"><summary>Save these colors</summary><div class="notice">A palette saves colors only. Your animation stays as it is.</div><label for="save-layer" ${snake?"":"hidden"}>Palette to save</label><select id="save-layer" aria-label="Palette to save" ${snake?"":"hidden"}><option value="background" ${this.layer==="background"?"selected":""}>Background colors</option><option value="snake" ${this.layer==="snake"?"selected":""}>Snake colors</option></select><div class="row"><input id="palette-name" type="text" maxlength="60" aria-label="Palette name" placeholder="Palette name"><button id="save-palette">Save palette</button></div><button id="delete-palette" ${!selectedPalette||selectedPalette==="Custom"?"disabled":""}>Delete selected palette</button></details>
       <details id="scenes"><summary>Scenes · colors and animation</summary><div class="notice">A scene saves colors, animation, speed, direction and brightness.</div><label for="preset">Saved scene</label><select id="preset"><option value="">Current settings</option>${a.presets.map(p=>`<option ${a.preset===p?"selected":""}>${esc(p)}</option>`).join("")}</select><div class="row"><input id="name" type="text" maxlength="60" aria-label="Scene name" placeholder="Scene name"><button id="save">Save scene</button></div><button id="delete-scene" ${a.preset==="Custom"?"disabled":""}>Delete selected scene</button></details>
     </div></ha-card>`;
     for(const id of openDetails){const detail=this.shadowRoot.getElementById(id);if(detail)detail.open=true;}
     const $=id=>this.shadowRoot.querySelector(id);
-    this.shadowRoot.querySelectorAll("[data-color]").forEach(b=>b.onclick=()=>{this.selected=Number(b.dataset.color);this.editing=true;this.render();});
-    $("#add").onclick=()=>{s.colors.push(selected);this.selected=s.colors.length-1;this.editing=true;this.change();this.render();};
+    this.shadowRoot.querySelectorAll("[data-color]").forEach(b=>b.onclick=()=>{this.layer=b.dataset.layer;this.selected=Number(b.dataset.color);this.editing=true;this.render();});
+    $("#add").onclick=()=>{s.colors.push(s.colors[this.layer==="background"?this.selected:0]);this.layer="background";this.selected=s.colors.length-1;this.editing=true;this.change();this.render();};
     $("#spectrum").onclick=()=>{s.colors=Array.from({length:Math.min(a.positions,colorLimit)},(_,i)=>hex([i*360/Math.min(a.positions,colorLimit),.7,v[2]]));this.selected=0;this.editing=false;this.change();this.render();};
+    $("#snake-add").onclick=()=>{s.snake_colors.push(s.snake_colors.at(-1));this.layer="snake";this.selected=s.snake_colors.length-1;this.editing=true;this.change();this.render();};
     $("#done").onclick=()=>{this.editing=false;this.render();};
-    $("#remove").onclick=()=>{s.colors.splice(this.selected,1);this.selected=Math.max(0,this.selected-1);this.change();this.render();};
-    for(const [id,delta] of [["left",-1],["right",1]]) $("#"+id).onclick=()=>{[s.colors[this.selected],s.colors[this.selected+delta]]=[s.colors[this.selected+delta],s.colors[this.selected]];this.selected+=delta;this.change();this.render();};
+    $("#remove").onclick=()=>{active.splice(this.selected,1);this.selected=Math.max(0,this.selected-1);this.change();this.render();};
+    for(const [id,delta] of [["left",-1],["right",1]]) $("#"+id).onclick=()=>{[active[this.selected],active[this.selected+delta]]=[active[this.selected+delta],active[this.selected]];this.selected+=delta;this.change();this.render();};
     const updateColor=()=>{
       if(a.mode==="native") {
         v[2]=Math.max(1/255,v[2]);
-        s.colors=s.colors.map(c=>{const parts=hsv(c);parts[2]=v[2];return hex(parts);});
+        for(const palette of [s.colors,s.snake_colors||[]])palette.forEach((c,i)=>{const parts=hsv(c);parts[2]=v[2];palette[i]=hex(parts);});
       }
-      s.colors[this.selected]=hex(v);this.change();
-      $("#hex").value=s.colors[this.selected];$("#hue").value=v[0];$("#saturation").value=Math.round(v[1]*100);$("#tone").value=Math.round(v[2]*100);
+      active[this.selected]=hex(v);this.change();
+      $("#hex").value=active[this.selected];$("#hue").value=v[0];$("#saturation").value=Math.round(v[1]*100);$("#tone").value=Math.round(v[2]*100);
       $(".cursor").style.left=`${50+Math.cos(v[0]*Math.PI/180)*v[1]*50}%`;$(".cursor").style.top=`${50+Math.sin(v[0]*Math.PI/180)*v[1]*50}%`;
-      this.shadowRoot.querySelectorAll("[data-color]").forEach(b=>b.style.background=s.colors[Number(b.dataset.color)]);
+      this.shadowRoot.querySelectorAll("[data-color]").forEach(b=>b.style.background=(b.dataset.layer==="snake"?s.snake_colors:s.colors)[Number(b.dataset.color)]);
     };
     $("#hue").oninput=e=>{v[0]=Number(e.target.value);updateColor();};
     $("#saturation").oninput=e=>{v[1]=Number(e.target.value)/100;updateColor();};
     $("#tone").oninput=e=>{v[2]=Number(e.target.value)/100;updateColor();};
-    $("#hex").onchange=e=>{if(/^#[a-f0-9]{6}$/i.test(e.target.value)){const value=hsv(e.target.value);if(a.mode==="native" && value[2]===0){const message="Black gaps are unavailable in puck mode. Use Power to turn the lights off.";e.target.setCustomValidity(message);e.target.reportValidity();e.target.value=s.colors[this.selected];$(".error").textContent=message;return;}e.target.setCustomValidity("");if(a.mode==="native")value[2]=v[2];v.splice(0,3,...value);updateColor();}else e.target.value=s.colors[this.selected];};
+    $("#hex").onchange=e=>{if(/^#[a-f0-9]{6}$/i.test(e.target.value)){const value=hsv(e.target.value);if(a.mode==="native" && value[2]===0){const message="Black gaps are unavailable in puck mode. Use Power to turn the lights off.";e.target.setCustomValidity(message);e.target.reportValidity();e.target.value=active[this.selected];$(".error").textContent=message;return;}e.target.setCustomValidity("");if(a.mode==="native")value[2]=v[2];v.splice(0,3,...value);updateColor();}else e.target.value=active[this.selected];};
     this.shadowRoot.querySelectorAll("[data-quick]").forEach(button=>button.onclick=()=>{const pick=hsv(button.dataset.quick);pick[2]=v[2];v.splice(0,3,...pick);updateColor();});
     const point=e=>{const r=$(".wheel").getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;v[0]=(Math.atan2(y,x)*180/Math.PI+360)%360;v[1]=Math.min(1,Math.hypot(x,y)/(r.width/2));updateColor();};
     $(".wheel").onpointerdown=e=>{e.currentTarget.setPointerCapture(e.pointerId);point(e);};
     $(".wheel").onpointermove=e=>{if(e.currentTarget.hasPointerCapture(e.pointerId))point(e);};
     for(const key of ["brightness","speed"]) $("#"+key).oninput=e=>{s[key]=key==="speed"?Math.round(.1*Math.pow(200,Number(e.target.value)/100)*10)/10:Number(e.target.value);$("#"+key+"-value").textContent=s[key]+(key==="brightness"?"%":"×");this.change();};
-    $("#effect").onchange=e=>{s.effect=e.target.value;this.change();this.render();};
+    $("#effect").onchange=e=>{s.effect=e.target.value;
+      if(s.effect==="snake") {
+        if(!s.snake_colors)s.snake_colors=[hex([0,0,hsv(s.colors[0])[2]])];
+      }
+      this.change();this.render();};
     $("#direction").onchange=e=>{s.reverse=e.target.value==="true";this.change();};
     $("#power").onchange=e=>{const on=e.target.checked;return this.perform(async()=>{
       if(on)await this.service("play",this.changes());
@@ -113,12 +128,14 @@ class FestaviaStudioCard extends HTMLElement {
     $("#preset").onchange=e=>{const name=e.target.value||"Custom";this.perform(async()=>{if(name==="Custom" && this.dirty)await this.service("configure",this.changes());await this.service("load_scene",{preset:name});this.dirty=false;this.scene=null;this.hass=this._hass;});};
     $("#save").onclick=()=>this.perform(async()=>{const name=$("#name").value.trim();if(!name)throw Error("Enter a scene name");await this.service("configure",this.changes());await this.service("save_scene",{name});this.dirty=false;});
     $("#palette").onchange=e=>{const name=e.target.value||"Custom";this.perform(async()=>{if(this.dirty)await this.service("configure",this.changes());await this.service("load_palette",{palette:name});this.dirty=false;this.scene=null;this.hass=this._hass;});};
-    $("#save-palette").onclick=()=>this.perform(async()=>{const name=$("#palette-name").value.trim();if(!name)throw Error("Enter a palette name");await this.service("configure",this.changes());await this.service("save_palette",{name});this.dirty=false;});
-    $("#delete-palette").onclick=()=>this.perform(async()=>{if(this.dirty)await this.service("configure",this.changes());await this.service("delete_palette",{name:a.palette});this.dirty=false;});
+    $("#snake-palette").onchange=e=>{const name=e.target.value||"Custom";this.perform(async()=>{if(this.dirty)await this.service("configure",this.changes());await this.service("load_palette",{palette:name,layer:"snake"});this.dirty=false;this.scene=null;this.hass=this._hass;});};
+    $("#save-layer").onchange=e=>{this.layer=e.target.value;this.selected=0;this.render();};
+    $("#save-palette").onclick=()=>this.perform(async()=>{const name=$("#palette-name").value.trim();if(!name)throw Error("Enter a palette name");await this.service("configure",this.changes());await this.service("save_palette",{name,layer:snake?this.layer:"background"});this.dirty=false;});
+    $("#delete-palette").onclick=()=>this.perform(async()=>{if(this.dirty)await this.service("configure",this.changes());await this.service("delete_palette",{name:selectedPalette});this.dirty=false;});
     $("#delete-scene").onclick=()=>this.perform(async()=>{if(this.dirty)await this.service("configure",this.changes());await this.service("delete_scene",{name:a.preset});this.dirty=false;});
     this.updateStatus();
   }
-  changes() { const {colors,effect,brightness,speed,reverse}=this.scene;return {colors,effect,brightness,speed,reverse}; }
+  changes() { const {colors,snake_colors,effect,brightness,speed,reverse}=this.scene;return {colors,...(snake_colors?{snake_colors}:{}),effect,brightness,speed,reverse}; }
   change() {
     this.dirty=true;this.saveError=false;this.revision++;this.updateStatus();clearTimeout(this.saveTimer);
     this.saveTimer=setTimeout(()=>this.flush(),600);
@@ -131,7 +148,7 @@ class FestaviaStudioCard extends HTMLElement {
     this.saving=this.service("configure",changes);
     try {
       await this.saving;
-      if(revision===this.revision){this.dirty=false;this.saveError=false;const preset=this.shadowRoot.querySelector("#preset");if(preset)preset.value=this.state.attributes.preset==="Custom"?"":this.state.attributes.preset;const palette=this.shadowRoot.querySelector("#palette");if(palette)palette.value=this.state.attributes.palette==="Custom"?"":(this.state.attributes.palette||"");const removePalette=this.shadowRoot.querySelector("#delete-palette"),removeScene=this.shadowRoot.querySelector("#delete-scene");if(removePalette)removePalette.disabled=!this.state.attributes.palette||this.state.attributes.palette==="Custom";if(removeScene)removeScene.disabled=this.state.attributes.preset==="Custom";}
+      if(revision===this.revision){this.dirty=false;this.saveError=false;const preset=this.shadowRoot.querySelector("#preset");if(preset)preset.value=this.state.attributes.preset==="Custom"?"":this.state.attributes.preset;const palette=this.shadowRoot.querySelector("#palette");if(palette)palette.value=this.state.attributes.palette==="Custom"?"":(this.state.attributes.palette||"");const removePalette=this.shadowRoot.querySelector("#delete-palette"),removeScene=this.shadowRoot.querySelector("#delete-scene");if(removePalette){const name=this.layer==="snake"?this.state.attributes.snake_palette:this.state.attributes.palette;removePalette.disabled=!name||name==="Custom";}const snakePalette=this.shadowRoot.querySelector("#snake-palette");if(snakePalette)snakePalette.value=this.state.attributes.snake_palette==="Custom"?"":(this.state.attributes.snake_palette||"");if(removeScene)removeScene.disabled=this.state.attributes.preset==="Custom";}
       const error=this.shadowRoot.querySelector(".error");if(error)error.textContent="";
     } catch(e) {
       this.saveError=true;
@@ -153,6 +170,15 @@ class FestaviaStudioCard extends HTMLElement {
     if(this.scene && this.shadowRoot.querySelector(".preview")) {
       const s=this.scene,colors=s.colors,n=colors.length,t=time/4000*s.speed,d=s.reverse?1:-1;
       this.shadowRoot.querySelectorAll(".dot").forEach((dot,i)=>{
+        if(s.effect==="snake") {
+          const period=Math.floor(Math.min(9,this.state.attributes.positions)/n)*n;
+          const shift=(t%1)*period,whole=Math.floor(shift),fraction=shift-whole;
+          const under=colors[(i%period)%n];
+          const ends=[whole,whole+1].map(step=>{const origin=((i-d*step)%period+period)%period;return origin<s.snake_colors.length?s.snake_colors[origin]:under;});
+          const rgb=ends.map(c=>c.slice(1).match(/../g).map(v=>parseInt(v,16)));
+          const color=`rgb(${rgb[0].map((v,k)=>Math.round(v*(1-fraction)+rgb[1][k]*fraction)).join(",")})`;
+          dot.style.color=color;dot.style.background=color;dot.style.opacity=1;return;
+        }
         let p=i;
         if(s.effect==="flow")p+=d*t*n;
         if(s.effect==="chase")p+=d*Math.floor(t*n);

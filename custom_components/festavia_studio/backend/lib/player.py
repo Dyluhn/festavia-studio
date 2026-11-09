@@ -117,7 +117,57 @@ def scattered_index(index, count):
     return index if index % 2 == 0 else 1 + 2 * ((index // 2 + 1) % (count // 2))
 
 
-PUCK_EFFECTS = ("static", "flow", "chase", "bounce", "color_fade", "wave", "breathe", "heartbeat")
+PUCK_EFFECTS = (
+    "static",
+    "flow",
+    "chase",
+    "bounce",
+    "color_fade",
+    "wave",
+    "breathe",
+    "heartbeat",
+    "snake",
+)
+
+
+def snake_period(scene):
+    """Keep the background's exact repeat inside the nine-slot native renderer."""
+    capacity = min(9, scene.get("positions", 27))
+    n = len(scene["colors"])
+    if not 1 <= n <= capacity:
+        raise ValueError("Snake background supports one to nine colors")
+    return capacity // n * n
+
+
+def snake_colors(scene):
+    # Existing scenes need no storage migration. White inherits the same tone.
+    value = round(color_strength(scene["colors"][0]) * 255)
+    return scene.get("snake_colors", ["#" + f"{value:02x}" * 3])
+
+
+def snake_sample(scene, t):
+    """Composite a moving ordered block over a stationary repeating background.
+
+    Interpolate complete adjacent states, so uncovered positions retain exactly
+    their own background instead of sliding the background with the snake.
+    """
+    period = snake_period(scene)
+    background = [color(c) for c in scene["colors"]]
+    foreground = [color(c) for c in snake_colors(scene)]
+    if not 1 <= len(foreground) < period:
+        raise ValueError(f"Choose 1–{period - 1} snake colors to leave a background gap")
+    shift = (t % 1) * period
+    whole, fraction = math.floor(shift), shift % 1
+    direction = 1 if scene.get("reverse") else -1
+    result = []
+    for puck in range(period):
+        under = background[puck % len(background)]
+        ends = []
+        for step in (whole, whole + 1):
+            index = (puck + direction * step) % period
+            ends.append(foreground[index] if index < len(foreground) else under)
+        result.append([ends[0][k] * (1 - fraction) + ends[1][k] * fraction for k in range(2)])
+    return result
 
 
 def retained_scene(scene):
@@ -131,6 +181,7 @@ def compile_puck_scene(scene):
         "name",
         "effect",
         "colors",
+        "snake_colors",
         "brightness",
         "speed",
         "fps",
@@ -155,6 +206,13 @@ def compile_puck_scene(scene):
         )
     palette = [color(c) for c in colors]
     strengths = [color_strength(c) for c in colors]
+    if effect == "snake":
+        foreground = snake_colors(scene)
+        if not isinstance(foreground, list) or not 1 <= len(foreground) < snake_period(scene):
+            raise ValueError("Snake colors must leave at least one background puck per repeat")
+        for c in foreground:
+            color(c)
+        strengths += [color_strength(c) for c in foreground]
     if max(strengths) - min(strengths) > 1 / 255:
         raise ValueError(
             "per-puck repeat shares brightness across colors; use matching palette tones"
@@ -181,7 +239,13 @@ def compile_puck_scene(scene):
         return [struct.pack("<IH", 0, 0x0400).hex()], 1
     fade = round(smoothing * 2560 / 65536 / 100)
     count = 1 if effect == "static" else max(2, min(64, round(fps * 4 / speed)))
+    if effect == "snake":
+        # At slow speeds the finite bank holds a sample for several ticks.
+        # Span that interval instead of stepping then waiting at each color.
+        fade = max(1, round(40 / speed / count))
     n = len(colors)
+    if effect == "snake":
+        n = snake_period(scene)
     samples = []
     for f in range(count):
         t = f / count + phase
@@ -197,7 +261,11 @@ def compile_puck_scene(scene):
         if level <= 0:
             raise ValueError("use Lights off for a zero-brightness native scene")
         ordered = [None] * n
+        composite = snake_sample(scene, t) if effect == "snake" else None
         for residue in range(n):
+            if composite is not None:
+                ordered[scattered_index(residue, n)] = composite[residue]
+                continue
             direction = 1 if scene.get("reverse") else -1
             moving = effect in ("flow", "chase", "bounce", "wave", "color_fade")
             base = positions - 1 - residue if scene.get("reverse") and not moving else residue

@@ -25,6 +25,7 @@ class Playback(StudioEntity, SensorEntity):
             "preset": c.preset,
             "presets": list(c.data["presets"]),
             "palette": c.palette,
+            "snake_palette": c.snake_palette,
             "palettes": list(c.data["palettes"]),
             "effects": c.data["effects"],
             "positions": c.data["positions"],

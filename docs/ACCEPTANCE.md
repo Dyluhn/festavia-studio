@@ -1,3 +1,24 @@
+# Acceptance — 0.11.0
+
+Checked 2026-11-09 UTC. The integration adds a moving snake palette over a fixed
+background palette, using the existing ESP32-C6 firmware0.3.9 and native FC03
+animation transport. No new firmware flash or recurring map writes are involved.
+
+- 110 unit/protocol/mobile/release tests pass. New behavioral checks cover every background palette count1–9, every allowed foreground length, both directions, exact background restoration at uncovered positions, loop closure, external-off-preserving frames and direction matching the existing flow renderer. Slow transitions span the longer sample interval instead of pausing between samples.
+- Actual HA Core2026.10.1 passes34runtime checks with simulated network peers, including separate palette save/load, both-layer scene restoration, shared-tone loading, live edits, foreground output-echo filtering and rejection before a wire write when no background gap remains. The nine lifecycle checks and official hassfest validators pass.
+- The installed LCX030 /1.163.5 runs the native renderer in both directions. The standalone left/right holds send250frames in25seconds and178in18seconds. Background counts1,2,3,4,5,8and9 and foreground counts1,2and8 run physically, with the original map and aliases read back unchanged.
+- The live native HA controls run the snake, save/load its foreground palette without moving the background settings, save/load a complete two-layer scene, accept live edits and yield to the ordinary HA Hue light Off action. A final run checks the corrected direction and slow-speed path.
+- Physical test requests are9%, and direct level readbacks stay at or below25/254. Tests use only the already validated native frame format. Both seasonal lighting automations are paused during testing and restored afterward.
+- The camera sees only six pucks. Daylight makes tiny-emitter RGB comparisons weak; frozen composite phases and running output were captured, but this is not a calibrated or full-string optical survey, nor a new optical frame-rate measurement.
+- A private test-cleanup replay initially shifted an OFF-state white-point coordinate by one unit. The harness now uses the measured standard-XY quantizer for an ordinary non-gradient snapshot, and the exact original fixture snapshot was recovered. This correction is outside the shipped integration.
+
+The renderer repeats within at most nine puck positions, with at least one
+background gap. It does not provide one isolated snake across27positions or
+arbitrary27-color real-time animation. Existing27-color static control remains.
+Both palettes share brightness. Existing17entity identities, saved libraries,
+staged user controls, brightness cap and Hue takeover option are preserved;
+temporary acceptance palettes/scenes are removed and lights are left OFF.
+
 # Acceptance — 0.10.0
 
 Checked 2026-11-09 UTC. ESP32-C6 firmware0.3.9 and LCX030 firmware1.163.5.

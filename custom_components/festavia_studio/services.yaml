@@ -37,7 +37,8 @@
               "color_fade",
               "wave",
               "breathe",
-              "heartbeat"
+              "heartbeat",
+              "snake"
             ]
           }
         }
@@ -67,6 +68,13 @@
         "name": "Reverse direction",
         "selector": {
           "boolean": {}
+        }
+      },
+      "snake_colors": {
+        "name": "Snake colors",
+        "description": "Ordered foreground colors for Snake over background. Background colors return after it passes.",
+        "selector": {
+          "object": {}
         }
       }
     }
@@ -103,7 +111,8 @@
               "color_fade",
               "wave",
               "breathe",
-              "heartbeat"
+              "heartbeat",
+              "snake"
             ]
           }
         }
@@ -142,6 +151,13 @@
         "selector": {
           "boolean": {}
         }
+      },
+      "snake_colors": {
+        "name": "Snake colors",
+        "description": "Ordered foreground colors for Snake over background. Background colors return after it passes.",
+        "selector": {
+          "object": {}
+        }
       }
     }
   },
@@ -172,6 +188,13 @@
         "default": true,
         "selector": {
           "boolean": {}
+        }
+      },
+      "snake_colors": {
+        "name": "Snake colors",
+        "description": "Ordered foreground colors for Snake over background. Background colors return after it passes.",
+        "selector": {
+          "object": {}
         }
       }
     }
@@ -320,6 +343,18 @@
         "selector": {
           "text": {}
         }
+      },
+      "layer": {
+        "name": "Palette layer",
+        "default": "background",
+        "selector": {
+          "select": {
+            "options": [
+              "background",
+              "snake"
+            ]
+          }
+        }
       }
     }
   },
@@ -341,6 +376,18 @@
         "required": true,
         "selector": {
           "text": {}
+        }
+      },
+      "layer": {
+        "name": "Palette layer",
+        "default": "background",
+        "selector": {
+          "select": {
+            "options": [
+              "background",
+              "snake"
+            ]
+          }
         }
       }
     }

@@ -352,7 +352,14 @@ class HueTakeover:
             point = (xy["x"], xy["y"])
             palette = [color(c) for c in scene["colors"]]
             distances = []
-            for a, b in zip(palette, palette[1:] + palette[:1]):
+            pairs = list(zip(palette, palette[1:] + palette[:1]))
+            if scene.get("effect") == "snake":
+                from .backend.lib.player import snake_colors
+
+                foreground = [color(c) for c in snake_colors(scene)]
+                pairs += list(zip(foreground, foreground[1:] + foreground[:1]))
+                pairs += [(a, b) for a in palette for b in foreground]
+            for a, b in pairs:
                 dx, dy = b[0] - a[0], b[1] - a[1]
                 scale = (
                     max(

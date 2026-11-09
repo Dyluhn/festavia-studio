@@ -566,7 +566,68 @@ async def main():
                 and wire.player["playing"]
             )
             checks.append("color_palettes_preserve_motion_and_full_scenes_restore_it")
-            checks.append("all_eight_native_animations_load_through_real_entities")
+            checks.append("all_nine_native_modes_load_through_real_entities")
+            # Two native palette layers share a tone but preserve separate colors.
+            c = entry.runtime_data
+            previous_scene = copy.deepcopy(c.scene)
+            await action(
+                "configure",
+                {
+                    "effect": "snake",
+                    "colors": ["#ff0000", "#00ff00", "#0000ff"],
+                    "snake_colors": ["#ffffff", "#ff8000"],
+                    "brightness": 9,
+                },
+            )
+            background = copy.deepcopy(c.scene["colors"])
+            await action("save_palette", {"name": "Snake only", "layer": "snake"})
+            assert c.data["palettes"]["Snake only"] == ["#ffffff", "#ff8000"]
+            assert c.snake_palette == "Snake only"
+            await action("configure", {"snake_colors": ["#ff00ff"]})
+            await action("load_palette", {"palette": "Snake only", "layer": "snake"})
+            assert c.scene["colors"] == background and c.scene["effect"] == "snake"
+            assert c.scene["snake_colors"] == ["#ffffff", "#ff8000"] and c.playing
+            await action("save_scene", {"name": "Layered scene"})
+            await action("configure", {"colors": ["#ff00ff"], "snake_colors": ["#00ffff"]})
+            await action("load_scene", {"preset": "Layered scene"})
+            assert c.scene["colors"] == background and c.scene["snake_colors"] == [
+                "#ffffff",
+                "#ff8000",
+            ]
+            before_invalid = len(wire.calls)
+            try:
+                await action("configure", {"snake_colors": ["#ffffff"] * 9})
+                raise AssertionError("Snake covered its entire background")
+            except ServiceValidationError:
+                pass
+            assert len(wire.calls) == before_invalid
+            from custom_components.festavia_studio.backend.lib.player import color
+
+            assert c.takeover.is_output_echo(
+                {"color": {"xy": dict(zip(("x", "y"), color("#ffffff")))}}
+            )
+            await action("configure", {"colors": ["#800000"], "snake_colors": ["#808080"]})
+            await action("load_palette", {"palette": "Snake only", "layer": "snake"})
+            assert c.scene["colors"] == ["#800000"] and c.scene["snake_colors"] == [
+                "#808080",
+                "#804000",
+            ]
+            await c.async_refresh()
+            assert c.snake_palette == "Snake only" and c.data["palettes"]["Snake only"] == [
+                "#ffffff",
+                "#ff8000",
+            ]
+            await action("delete_palette", {"name": "Snake only"})
+            await action("delete_scene", {"name": "Layered scene"})
+            await action(
+                "configure",
+                {
+                    k: previous_scene[k]
+                    for k in ("colors", "snake_colors", "effect", "brightness", "speed", "reverse")
+                },
+            )
+            checks.append("snake_layers_save_load_live_edits_and_background_preserved")
+            checks.append("snake_invalid_gap_rejected_before_wire_and_foreground_echo_filtered")
             # Real coordinator/transport release must not restore old lamp state.
             c = entry.runtime_data
             queue = wire.hue_queues[entry.entry_id]

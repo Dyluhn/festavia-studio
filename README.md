@@ -4,9 +4,30 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.10.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
+Version **0.11.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
+
+## Snake over a background
+
+In the existing card, choose **Snake over background**. Set **Background colors**
+for the fixed pattern, then add and edit **Snake colors** for the moving block.
+The background returns in place after the snake passes. Direction and Speed
+control the movement; each chosen snake color occupies one puck at a whole step.
+Intermediate frames blend smoothly. Both layers share the main brightness control.
+
+The pattern repeats in at most nine puck positions. Its length is the largest
+multiple of the background palette count that fits nine slots (three background
+colors give nine positions; four give eight). Leave at least one background puck
+between snakes. The card shows the repeat and gap. On a 27-puck fixture this gives
+several repeated snakes, rather than one isolated snake across the entire string.
+It never animates the fixture's configuration map.
+
+Use **Palette to save** to save either layer as ordinary colors. Each layer also
+has its own saved-palette selector. A **Scene** saves both layers and movement.
+HA actions accept `effect: snake`, `colors: [...]` for the background and
+`snake_colors: [...]` for the moving block; palette actions accept
+`layer: background` or `layer: snake`.
 
 ## Install and connect
 
@@ -138,9 +159,11 @@ holds the pattern without repeated map writes. Applying a large static palette
 takes several seconds; initial discovery/setup takes longer. It updates in
 sections rather than appearing everywhere at precisely the same instant.
 
-Animations support **1–9 ordered colors** and up to **10 requested updates per
-second**: smooth flow, step chase, bounce, color fade, color wave, breathing and
-heartbeat. They retain the native FC03 transport; its nine-slot limit is unchanged.
+Single-palette animations support **1–9 ordered colors** and up to **10 requested
+updates per second**: smooth flow, step chase, bounce, color fade, color wave,
+breathing and heartbeat. Snake over background combines two palettes into at
+most nine repeating positions, as described above. All retain the native FC03
+transport; its nine-slot limit is unchanged.
 The card disables animations for larger palettes. Continuous remapping for
 high-count animation is not enabled because its persistence/write behavior is
 unverified. See [research and evidence](docs/RESEARCH.md#retained-individual-colors).

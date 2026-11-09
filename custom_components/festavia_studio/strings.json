@@ -212,7 +212,8 @@
           "color_fade": "Color fade",
           "wave": "Color wave",
           "breathe": "Breathing",
-          "heartbeat": "Heartbeat"
+          "heartbeat": "Heartbeat",
+          "snake": "Snake over background"
         }
       },
       "preset": {
@@ -283,6 +284,10 @@
         },
         "reverse": {
           "name": "Reverse direction"
+        },
+        "snake_colors": {
+          "name": "Snake colors",
+          "description": "Ordered foreground colors for Snake over background. Background colors return after it passes."
         }
       }
     },
@@ -314,6 +319,10 @@
         "apply": {
           "name": "Apply while playing",
           "description": "Update a running effect immediately; an idle effect stays staged."
+        },
+        "snake_colors": {
+          "name": "Snake colors",
+          "description": "Ordered foreground colors for Snake over background. Background colors return after it passes."
         }
       }
     },
@@ -332,6 +341,10 @@
         "apply": {
           "name": "Apply while playing",
           "description": "Update a running effect immediately; an idle effect stays staged."
+        },
+        "snake_colors": {
+          "name": "Snake colors",
+          "description": "Ordered foreground colors for Snake over background. Background colors return after it passes."
         }
       }
     },
@@ -420,6 +433,9 @@
         },
         "palette": {
           "name": "Color palette"
+        },
+        "layer": {
+          "name": "Palette layer"
         }
       }
     },
@@ -433,6 +449,9 @@
         },
         "name": {
           "name": "Palette name"
+        },
+        "layer": {
+          "name": "Palette layer"
         }
       }
     },
@@ -536,6 +555,9 @@
     },
     "animated_palette_count": {
       "message": "Animations support up to {limit} colors. Choose Static repeat for a larger palette."
+    },
+    "snake_count": {
+      "message": "Choose 1–{limit} snake colors, leaving at least one background puck in each repeat."
     }
   },
   "issues": {
