@@ -15,6 +15,7 @@ import shutil
 import sys
 import tempfile
 from unittest.mock import patch
+from types import SimpleNamespace
 
 logging.basicConfig(level=logging.ERROR)
 os.environ.pop("SUPERVISOR_TOKEN", None)
@@ -266,6 +267,8 @@ async def main():
 
         with (
             patch("http.client.HTTPSConnection", HTTPS),
+            # A just-booted CI/HA host may have uptime below the cache TTL.
+            patch.object(api, "time", SimpleNamespace(monotonic=lambda: 30.0)),
             patch.object(backend, "Device", ZigbeeDevice),
             patch.object(control, "Device", ZigbeeDevice),
         ):

@@ -501,28 +501,29 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "confirm_required"
             else:
                 try:
-                    c = getattr(self.saved_entry, "runtime_data", None)
+                    async with self.saved_entry.setup_lock:
+                        c = getattr(self.saved_entry, "runtime_data", None)
 
-                    def restore():
-                        recover_folder(
-                            private_folder(self.hass, self.saved_entry.entry_id),
-                            allow_missing=allow_missing,
-                        )
-
-                    if c and not c.api.closed:
-                        async with c.action_lock:
-                            async with c.api.lock:
-                                await self.hass.async_add_executor_job(c.api.app.close)
-                                await self.hass.async_add_executor_job(restore)
-                                c.api.app.studio = None
-                            # Removed resource IDs can prevent status polling;
-                            # release ownership so Fixtures can select replacements.
-                            c.async_set_updated_data(
-                                {**c.data, "player": {"playing": False, "state": "ready"}}
+                        def restore():
+                            recover_folder(
+                                private_folder(self.hass, self.saved_entry.entry_id),
+                                allow_missing=allow_missing,
                             )
-                        await c.async_request_refresh()
-                    else:
-                        await self.hass.async_add_executor_job(restore)
+
+                        if c and not c.api.closed:
+                            async with c.action_lock:
+                                async with c.api.lock:
+                                    await self.hass.async_add_executor_job(c.api.app.close)
+                                    await self.hass.async_add_executor_job(restore)
+                                    c.api.app.studio = None
+                                # Removed resource IDs can prevent status polling;
+                                # release ownership so Fixtures can select replacements.
+                                c.async_set_updated_data(
+                                    {**c.data, "player": {"playing": False, "state": "ready"}}
+                                )
+                            await c.async_request_refresh()
+                        else:
+                            await self.hass.async_add_executor_job(restore)
                     ir.async_delete_issue(
                         self.hass, DOMAIN, "recovery_" + self.saved_entry.entry_id
                     )

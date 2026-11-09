@@ -157,7 +157,7 @@ class NativeClient:
         self.app = None
         self.lock = asyncio.Lock()
         self.firmware = {}
-        self.firmware_at = 0
+        self.firmware_at = None
         self.closed = False
         self.targets = []
 
@@ -232,7 +232,7 @@ class NativeClient:
                         raise CertificateError("bridge")
                 candidate.update(address=host, key=key)
                 self.app.data["bridge"] = candidate
-                self.app.inventory_at = 0
+                self.app.inventory_at = float("-inf")
                 self.app.save()
 
             await self._execute(update)
@@ -289,7 +289,9 @@ class NativeClient:
             preset = copy.deepcopy(original)
             preset["brightness"] = max(1, min(app.limit, preset.get("brightness", 10)))
             presets[name] = preset
-        if app.device_path.exists() and time.monotonic() - self.firmware_at > 120:
+        if app.device_path.exists() and (
+            self.firmware_at is None or time.monotonic() - self.firmware_at > 120
+        ):
             esp = app.esp_status()
             self.firmware = {
                 k: esp.get(k) for k in ("version", "target", "approved_network", "channel")
@@ -367,7 +369,7 @@ class NativeClient:
 
     async def update_firmware(self):
         result = await self.setup("update")
-        self.firmware_at = 0
+        self.firmware_at = None
         return result
 
     async def close(self, *, restore=True):
@@ -388,7 +390,7 @@ class NativeClient:
 
                         def update_bridge():
                             self.app.data["bridge"] = copy.deepcopy(candidate)
-                            self.app.inventory_at = 0
+                            self.app.inventory_at = float("-inf")
                             self.app.save()
 
                         await self._execute(update_bridge)

@@ -44,7 +44,7 @@ class Installation:
         self.lock = threading.RLock()
         self.studio = None
         self.inventory_cache = None
-        self.inventory_at = 0
+        self.inventory_at = float("-inf")
         self.pending_bridge = None
         self.bridge_journal = self.folder / "bridge-session.json"
         self.bridge_library = self.folder / "bridge-presets.json"
@@ -326,7 +326,7 @@ class Installation:
                             )
                         }
                 self.bridge().set_light(light["id"], body)
-            self.inventory_at = 0
+            self.inventory_at = float("-inf")
             return {"applied": True}
         if op != "play":
             raise ValueError("Unknown action")
@@ -385,7 +385,7 @@ class Installation:
                         body["color"] = {"xy": dict(zip(("x", "y"), color(palette[0])))}
                 self.bridge().set_light(light["id"], body)
             self.bridge_scene = scene
-            self.inventory_at = 0
+            self.inventory_at = float("-inf")
             return {"applied": len(lights)}
         except BaseException:
             self.bridge_restore()

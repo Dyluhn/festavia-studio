@@ -87,7 +87,7 @@ class Studio:
         self.lock = threading.Lock()
         self.status_lock = threading.Lock()
         self.cached_status = None
-        self.status_at = 0
+        self.status_at = float("-inf")
 
     def close(self):
         self.player.close()
@@ -181,7 +181,7 @@ class Studio:
             finally:
                 self.lock.release()
                 with self.status_lock:
-                    self.status_at = 0
+                    self.status_at = float("-inf")
         except BaseException:
             player.close()
             raise

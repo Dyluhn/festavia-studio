@@ -197,13 +197,14 @@ async def async_unload_entry(hass, entry):
             # lease remains and the next setup retries restoration first.
             from .backend.lib.net_client import save_credentials
 
-            await hass.async_add_executor_job(
-                save_credentials,
-                private_folder(hass, entry.entry_id) / "unload-pending.json",
-                {"restore": True},
-            )
+            if await hass.async_add_executor_job(c.api.app.recovery_pending):
+                await hass.async_add_executor_job(
+                    save_credentials,
+                    private_folder(hass, entry.entry_id) / "unload-pending.json",
+                    {"restore": True},
+                )
+                recovery_notice(hass, entry.entry_id)
             await c.api.close(restore=False)
-            recovery_notice(hass, entry.entry_id)
         return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -221,6 +222,7 @@ async def async_remove_entry(hass, entry):
         if folder.exists():
             await hass.async_add_executor_job(recover_folder, folder)
             await hass.async_add_executor_job(remove_private_folder, folder)
+        ir.async_delete_issue(hass, DOMAIN, "recovery_" + entry.entry_id)
     except (OSError, http.client.HTTPException, RuntimeError, ValueError, KeyError):
         marker = folder / "removal-pending.json"
         from .backend.lib.net_client import save_credentials

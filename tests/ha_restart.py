@@ -113,6 +113,21 @@ async def main():
                 "offline_reload_uses_setup_retry_and_restores_on_reconnect_without_restart"
             )
             await e.runtime_data.play(changes={"brightness": 10, "effect": "flow"})
+            wire.offline = True
+            assert not await hass.config_entries.async_reload(e.entry_id)
+            removed_id = e.entry_id
+            assert ir.async_get(hass).async_get_issue("festavia_studio", "recovery_" + removed_id)
+            wire.offline = False
+            await hass.config_entries.async_remove(removed_id)
+            assert (
+                ir.async_get(hass).async_get_issue("festavia_studio", "recovery_" + removed_id)
+                is None
+            )
+            assert not api.private_folder(hass, removed_id).exists()
+            checks.append("successful_remove_clears_notice_from_prior_offline_reload")
+            e = entry(copy.deepcopy(data))
+            await hass.config_entries.async_add(e)
+            await e.runtime_data.play(changes={"brightness": 10, "effect": "flow"})
             # Protocol errors are not OSError, and must still preserve removal recovery.
             wire.protocol_error = http.client.IncompleteRead(b"", 10)
             old_id = e.entry_id
@@ -129,6 +144,12 @@ async def main():
             notice = ir.async_get(hass).async_get_issue("festavia_studio", "recovery_" + old_id)
             assert notice and notice.active and notice.is_persistent and not notice.is_fixable
             assert not hass.config_entries.async_entries("festavia_studio")
+            from homeassistant.helpers.translation import async_get_translations
+
+            translated = await async_get_translations(hass, "en", "issues", {"festavia_studio"})
+            prefix = "component.festavia_studio.issues.recovery_pending."
+            assert translated[prefix + "title"] == "Festavia restoration is unfinished"
+            assert "Reconfigure" in translated[prefix + "description"]
             # The persisted notice routes to a real HA config flow. It does not
             # offer a generic confirmation that could clear the issue without recovery.
             wire.protocol_error = None
