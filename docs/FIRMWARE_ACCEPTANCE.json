@@ -25,7 +25,8 @@
     "global_full_scale": 254,
     "requested_static_percent": 9,
     "stream_raw_maximum": 200,
-    "stream_full_scale": 2047
+    "stream_full_scale": 2047,
+    "scope": "Implemented retained renderer and final standalone/HA/handoff/recovery acceptance phases; not a certification of every earlier speculative packet interpretation."
   },
   "retained_static": {
     "count_sweep": [
@@ -118,5 +119,11 @@
     "original_brightness_cap": 60.0,
     "SDK_out_of_memory_errors": 0,
     "all_accepted_transactions_confirmed": true
+  },
+  "exploratory_brightness_caveat": {
+    "phase": "Earlier compact21/22-XY format probes, before the retained renderer was found",
+    "finding": "Only the first apparent streaming brightness field was constrained. Under a legacy seven-byte interpretation, secondary fields included values above20%, paired with modes that were not established to be active for those identifiers.",
+    "observed": "Six camera-visible pucks showed no brightening relative to low-level controls. The other21pucks were not optically observed, so the entire exploratory run cannot be certified below20%.",
+    "correction": "Private exploratory harness now rejects any possible full legacy record above the bound before transmitting. No such probe is shipped; the production renderer validates and bounds known record formats. No further speculative compact probes were run."
   }
 }
