@@ -8,7 +8,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
             StudioSelect(entry.runtime_data, "effect", "Effect", "mdi:animation"),
-            StudioSelect(entry.runtime_data, "preset", "Saved palette", "mdi:palette"),
+            StudioSelect(entry.runtime_data, "preset", "Scene", "mdi:animation-play"),
+            StudioSelect(entry.runtime_data, "color_palette", "Color palette", "mdi:palette"),
         ]
     )
 
@@ -21,18 +22,24 @@ class StudioSelect(StudioEntity, SelectEntity):
     @property
     def options(self):
         c = self.coordinator
-        return c.data["effects"] if self.key == "effect" else ["Custom", *c.data["presets"]]
+        if self.key == "effect":
+            return c.data["effects"]
+        return ["Custom", *c.data["palettes" if self.key == "color_palette" else "presets"]]
 
     @property
     def current_option(self):
         return (
             self.coordinator.scene.get("effect", "static")
             if self.key == "effect"
+            else self.coordinator.palette
+            if self.key == "color_palette"
             else self.coordinator.preset
         )
 
     async def async_select_option(self, option):
         if self.key == "effect":
             await self.coordinator.configure({"effect": option})
+        elif self.key == "color_palette":
+            await self.coordinator.choose_palette(option)
         else:
             await self.coordinator.choose_preset(option)

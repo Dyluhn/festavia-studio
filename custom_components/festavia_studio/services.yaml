@@ -1,7 +1,7 @@
 {
   "play": {
     "name": "Play or update",
-    "description": "Start the staged scene or a saved palette. Runs until stopped.",
+    "description": "Start the staged scene or a saved scene. Runs until stopped.",
     "fields": {
       "entry_id": {
         "name": "Studio entry ID",
@@ -13,7 +13,7 @@
         }
       },
       "preset": {
-        "name": "Saved palette",
+        "name": "Scene",
         "selector": {
           "text": {}
         }
@@ -32,7 +32,12 @@
             "options": [
               "static",
               "flow",
-              "breathe"
+              "chase",
+              "bounce",
+              "color_fade",
+              "wave",
+              "breathe",
+              "heartbeat"
             ]
           }
         }
@@ -93,7 +98,12 @@
             "options": [
               "static",
               "flow",
-              "breathe"
+              "chase",
+              "bounce",
+              "color_fade",
+              "wave",
+              "breathe",
+              "heartbeat"
             ]
           }
         }
@@ -167,8 +177,8 @@
     }
   },
   "load_preset": {
-    "name": "Load saved palette",
-    "description": "Load a saved palette; update the effect if it is playing.",
+    "name": "Load scene (legacy action)",
+    "description": "Load saved colors and animation settings.",
     "fields": {
       "entry_id": {
         "name": "Studio entry ID",
@@ -180,7 +190,7 @@
         }
       },
       "preset": {
-        "name": "Saved palette",
+        "name": "Scene",
         "selector": {
           "text": {}
         },
@@ -226,8 +236,96 @@
     }
   },
   "save_preset": {
-    "name": "Save palette",
-    "description": "Save the currently staged scene.",
+    "name": "Save scene (legacy action)",
+    "description": "Save colors, animation, speed, direction and brightness.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "name": {
+        "name": "Scene name",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      }
+    }
+  },
+  "load_scene": {
+    "name": "Load scene",
+    "description": "Load saved colors and animation settings.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "preset": {
+        "name": "Scene",
+        "selector": {
+          "text": {}
+        },
+        "required": true
+      }
+    }
+  },
+  "save_scene": {
+    "name": "Save scene",
+    "description": "Save colors, animation, speed, direction and brightness.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "name": {
+        "name": "Scene name",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      }
+    }
+  },
+  "load_palette": {
+    "name": "Load color palette",
+    "description": "Change only the ordered colors. Keep the current animation, speed, direction and brightness.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "palette": {
+        "name": "Color palette",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      }
+    }
+  },
+  "save_palette": {
+    "name": "Save color palette",
+    "description": "Save only the current ordered colors; animation settings stay separate.",
     "fields": {
       "entry_id": {
         "name": "Studio entry ID",
@@ -240,6 +338,50 @@
       },
       "name": {
         "name": "Palette name",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      }
+    }
+  },
+  "delete_palette": {
+    "name": "Delete saved color palette",
+    "description": "Remove the saved item without changing the currently displayed lights.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "name": {
+        "name": "Palette name",
+        "required": true,
+        "selector": {
+          "text": {}
+        }
+      }
+    }
+  },
+  "delete_scene": {
+    "name": "Delete saved scene",
+    "description": "Remove the saved item without changing the currently displayed lights.",
+    "fields": {
+      "entry_id": {
+        "name": "Studio entry ID",
+        "description": "Optional when only one Studio installation is configured.",
+        "selector": {
+          "config_entry": {
+            "integration": "festavia_studio"
+          }
+        }
+      },
+      "name": {
+        "name": "Scene name",
         "required": true,
         "selector": {
           "text": {}

@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-09T01:57:03.638059+00:00",
+  "checked_at": "2026-11-09T03:49:17.237579+00:00",
   "result": "passed within the stated hardware and optical scope",
   "firmware": {
     "version": "0.3.7",
@@ -19,16 +19,6 @@
       11
     ],
     "full_string_optical_survey": false
-  },
-  "brightness": {
-    "physical_tests_requested_percent": 10,
-    "native_ha_light_rounding_percent": 10.24,
-    "installation_cap_percent": 15,
-    "observed_raw_level": 26,
-    "raw_full_scale": 254,
-    "strictly_below_20_percent": true,
-    "original_stored_level": 115,
-    "original_high_level_restored_only_while_off": true
   },
   "production_c_state_checks": [
     "acknowledged power queries sustain playback despite missing ZCL status replies",
@@ -78,46 +68,6 @@
     "full_snapshots_after_soak": 30,
     "all_restorations_exact": true,
     "destination_applied_fps_measured": false
-  },
-  "home_assistant": {
-    "integration": "0.7.0",
-    "core": "2026.10.1",
-    "os": "18.3",
-    "bridge": "Hue Bridge Pro",
-    "checks": [
-      "Unsupported native palettes rejected before staging or hardware writes",
-      "Idle native palette edits retain fixture power and original appearance",
-      "All1\u20139 native palette sizes update through the real HA text entity at10%",
-      "30-second snake advances continuously with concurrent speed/direction edits; delivery counters reported",
-      "Stop restores the complete original off-state snapshot",
-      "Actual HA integration reload drains, restores and retains pairing/controls without autoplay",
-      "External off through the existing Hue light is detected and preserved with complete restoration",
-      "HA firmware entity wirelessly reinstalls and confirms bundled0.3.7 with pairing retained"
-    ],
-    "palette_sizes": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9
-    ],
-    "ota_pairing_and_boot_confirmed": true,
-    "ota_partition_changed": true,
-    "final_exact_restore": true,
-    "mobile_viewport": [
-      393,
-      852
-    ],
-    "mobile_checks": {
-      "card_native_palette_sync": true,
-      "reload_persistence": true,
-      "all_controls_on_native_device": true,
-      "card_errors": []
-    }
   },
   "previous_optical_evidence": {
     "checked_at": "2026-11-08T06:47:06.674935+00:00",
@@ -445,7 +395,7 @@
     "backend": "Claude account 2",
     "model": "claude-opus-5-5",
     "mode": "read-only",
-    "verdict": "No blocker in final liveness/ownership changes. Hardware acceptance performed separately."
+    "verdict": "No remaining functional blocker after fixes; real-device and frontend evidence gathered separately."
   },
   "remaining_limits": [
     "Verified native hardware is LCX030/1.163.5/27 logical positions on Hue Bridge Pro. Other models/firmware/counts remain gated.",
@@ -454,5 +404,285 @@
     "Previous optical evidence covers six visible pucks; no full-string optical survey.",
     "Fresh empty-board USB provisioning and initial config-flow Zigbee joining were not repeated; first-install manifest/hash/dry-run checks and a clean documented source build passed.",
     "No Home Assistant Core, HACS catalog acceptance or Integration Quality Scale tier is claimed."
-  ]
+  ],
+  "previous_070_brightness": {
+    "physical_tests_requested_percent": 10,
+    "native_ha_light_rounding_percent": 10.24,
+    "installation_cap_percent": 15,
+    "observed_raw_level": 26,
+    "raw_full_scale": 254,
+    "strictly_below_20_percent": true,
+    "original_stored_level": 115,
+    "original_high_level_restored_only_while_off": true
+  },
+  "previous_070_home_assistant": {
+    "integration": "0.7.0",
+    "core": "2026.10.1",
+    "os": "18.3",
+    "bridge": "Hue Bridge Pro",
+    "checks": [
+      "Unsupported native palettes rejected before staging or hardware writes",
+      "Idle native palette edits retain fixture power and original appearance",
+      "All1\u20139 native palette sizes update through the real HA text entity at10%",
+      "30-second snake advances continuously with concurrent speed/direction edits; delivery counters reported",
+      "Stop restores the complete original off-state snapshot",
+      "Actual HA integration reload drains, restores and retains pairing/controls without autoplay",
+      "External off through the existing Hue light is detected and preserved with complete restoration",
+      "HA firmware entity wirelessly reinstalls and confirms bundled0.3.7 with pairing retained"
+    ],
+    "palette_sizes": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "ota_pairing_and_boot_confirmed": true,
+    "ota_partition_changed": true,
+    "final_exact_restore": true,
+    "mobile_viewport": [
+      393,
+      852
+    ],
+    "mobile_checks": {
+      "card_native_palette_sync": true,
+      "reload_persistence": true,
+      "all_controls_on_native_device": true,
+      "card_errors": []
+    }
+  },
+  "brightness": {
+    "scope": "0.8.0 acceptance only",
+    "requested_percent_range": [
+      4,
+      10
+    ],
+    "max_sampled_raw_level": 25,
+    "raw_full_scale": 254,
+    "strictly_below_20_percent_in_080_acceptance": true,
+    "preceding_071_investigation_incident": "One UI replay recalled23% before immediate correction to10%; not counted as a compliant test."
+  },
+  "home_assistant": {
+    "integration": "0.8.0",
+    "core": "2026.10.1",
+    "os": "18.3",
+    "bridge": "Hue Bridge Pro",
+    "entities": 15,
+    "old_entity_ids_preserved": 14,
+    "checks": [
+      "actual_mobile_Power_starts_from_ordinary_Hue_ON",
+      "touch_wheel_and_quick_color_edit_only_selected_color",
+      "palette_save_load_colors_only_preserves_pending_motion",
+      "saved_scene_restores_colors_motion_speed_direction_brightness",
+      "real_HA_card_393px_no_horizontal_overflow_or_JavaScript_errors",
+      "owned_temporary_scene_and_palette_deleted_without_stopping_playback",
+      "Stop_exactly_restores_preexisting_Hue_ON_snapshot",
+      "external_Hue_OFF_preserved_in_standard_and_FC03_power_fields_with_exact_appearance_restoration"
+    ],
+    "above_limit_on_startup": {
+      "passed": true,
+      "integration": "0.8.0",
+      "started_from_Hue_ON_above_limit": true,
+      "original_requested_brightness": 10,
+      "temporary_cap": 5,
+      "effect_requested_brightness": 4,
+      "active_raw_level": 10,
+      "exact_Hue_ON_restoration": true
+    },
+    "firmware_unchanged": "0.3.7",
+    "sdk_no_mem_after": 0,
+    "mobile_viewport": [
+      393,
+      852
+    ],
+    "temporary_test_library_items_removed": true,
+    "original_full_scenes_preserved": true
+  },
+  "native_effect_checks": [
+    {
+      "effect": "static",
+      "frames": 1,
+      "sent_delta": 0,
+      "confirmed_delta": 0,
+      "levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "flow",
+      "frames": 40,
+      "sent_delta": 258,
+      "confirmed_delta": 246,
+      "levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "chase",
+      "frames": 40,
+      "sent_delta": 262,
+      "confirmed_delta": 238,
+      "levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "bounce",
+      "frames": 40,
+      "sent_delta": 180,
+      "confirmed_delta": 161,
+      "levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "color_fade",
+      "frames": 40,
+      "sent_delta": 172,
+      "confirmed_delta": 164,
+      "levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "wave",
+      "frames": 40,
+      "sent_delta": 210,
+      "confirmed_delta": 196,
+      "levels": [
+        25,
+        25,
+        25
+      ]
+    },
+    {
+      "effect": "breathe",
+      "frames": 40,
+      "sent_delta": 355,
+      "confirmed_delta": 338,
+      "levels": [
+        19,
+        5,
+        20
+      ]
+    },
+    {
+      "effect": "heartbeat",
+      "frames": 40,
+      "sent_delta": 223,
+      "confirmed_delta": 212,
+      "levels": [
+        2,
+        10,
+        2
+      ]
+    }
+  ],
+  "new_optical_evidence": {
+    "camera_visible_positions": [
+      16,
+      15,
+      14,
+      13,
+      12,
+      11
+    ],
+    "capture_fps": 8,
+    "total_frames": 640,
+    "requested_brightness_percent": 10,
+    "metrics": [
+      {
+        "effect": "static",
+        "samples": 80,
+        "color_std": 0.002017,
+        "luma_std": 0.5428,
+        "luma_peak_to_peak_mean": 2.1363,
+        "raw_level": 25
+      },
+      {
+        "effect": "flow",
+        "samples": 80,
+        "color_std": 0.112013,
+        "luma_std": 5.4971,
+        "luma_peak_to_peak_mean": 19.011,
+        "raw_level": 25,
+        "visible_variation_above_static_noise": true
+      },
+      {
+        "effect": "chase",
+        "samples": 80,
+        "color_std": 0.170942,
+        "luma_std": 4.6606,
+        "luma_peak_to_peak_mean": 13.4318,
+        "raw_level": 25,
+        "visible_variation_above_static_noise": true
+      },
+      {
+        "effect": "bounce",
+        "samples": 80,
+        "color_std": 0.081212,
+        "luma_std": 4.7967,
+        "luma_peak_to_peak_mean": 16.4816,
+        "raw_level": 25,
+        "visible_variation_above_static_noise": true
+      },
+      {
+        "effect": "color_fade",
+        "samples": 80,
+        "color_std": 0.105775,
+        "luma_std": 6.1586,
+        "luma_peak_to_peak_mean": 19.0491,
+        "raw_level": 25,
+        "visible_variation_above_static_noise": true
+      },
+      {
+        "effect": "wave",
+        "samples": 80,
+        "color_std": 0.101031,
+        "luma_std": 4.9086,
+        "luma_peak_to_peak_mean": 15.6473,
+        "raw_level": 25,
+        "visible_variation_above_static_noise": true
+      },
+      {
+        "effect": "breathe",
+        "samples": 80,
+        "color_std": 0.035494,
+        "luma_std": 10.9661,
+        "luma_peak_to_peak_mean": 30.1554,
+        "raw_level": 25,
+        "visible_variation_above_static_noise": true
+      },
+      {
+        "effect": "heartbeat",
+        "samples": 80,
+        "color_std": 0.046575,
+        "luma_std": 10.1627,
+        "luma_peak_to_peak_mean": 34.5549,
+        "raw_level": 5,
+        "visible_variation_above_static_noise": true
+      }
+    ],
+    "all_animated_modes_show_visible_variation": true,
+    "full_string_optical_survey": false,
+    "destination_optical_fps_measured": false,
+    "limitations": "Uncalibrated camera and six visible pucks; variations are sampled diagnostics, not a perceptual smoothness or color accuracy guarantee.",
+    "integration": "0.8.0",
+    "firmware": "0.3.7",
+    "scope": "Six existing camera-visible pucks. Visible variation is diagnostic; full-string color/order/smoothness is not certified."
+  }
 }

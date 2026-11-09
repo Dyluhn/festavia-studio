@@ -24,6 +24,8 @@ class Playback(StudioEntity, SensorEntity):
             "scene": c.scene,
             "preset": c.preset,
             "presets": list(c.data["presets"]),
+            "palette": c.palette,
+            "palettes": list(c.data["palettes"]),
             "effects": c.data["effects"],
             "positions": c.data["positions"],
             "palette_limit": c.data["palette_limit"],

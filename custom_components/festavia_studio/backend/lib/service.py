@@ -22,6 +22,14 @@ from .errors import RecoveryPending
 ROOT = Path(__file__).resolve().parent
 RELEASE = ROOT.parent / "release"
 CAPABILITIES = json.loads((ROOT / "capabilities.json").read_text())["native_profiles"]
+DEFAULT_PALETTES = {
+    "Christmas": ["#ff2020", "#00ff00", "#ffdda0"],
+    "Candy cane": ["#ff2020", "#fff1d6"],
+    "Rainbow": ["#ff0000", "#ff8000", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#9900ff"],
+    "Winter": ["#80dfff", "#e4f4ff", "#4040ff"],
+    "Warm whites": ["#ffbb66", "#ffdda0", "#fff1d6", "#ffffff"],
+    "Halloween": ["#ff6600", "#9900ff", "#40ff00"],
+}
 
 
 def bounded(value, low, high):
@@ -51,6 +59,7 @@ class Installation:
         self.bridge_scene = None
         self.device_path = self.folder / "esp" / "credentials.json"
         self.active_ota = False
+        self.palette_library = self.folder / "color-palettes.json"
         # Startup never resumes playback. Firmware owns native recovery. A bridge
         # lease is recovered before any new write, including after a container restart.
 
@@ -80,6 +89,27 @@ class Installation:
 
     def save(self):
         save_credentials(self.file, self.data)
+
+    def color_palettes(self):
+        """Colors only; legacy scene presets retain all their motion settings."""
+        if not self.palette_library.exists():
+            return copy.deepcopy(DEFAULT_PALETTES)
+        try:
+            saved = json.loads(self.palette_library.read_text())
+        except (OSError, ValueError):
+            return copy.deepcopy(DEFAULT_PALETTES)
+        if not isinstance(saved, dict):
+            return copy.deepcopy(DEFAULT_PALETTES)
+        return {
+            name: [c.lower() for c in colors]
+            for name, colors in saved.items()
+            if isinstance(name, str)
+            and 1 <= len(name.strip()) <= 60
+            and name.casefold() != "custom"
+            and isinstance(colors, list)
+            and 1 <= len(colors) <= 27
+            and all(isinstance(c, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", c) for c in colors)
+        }
 
     def bridge(self):
         if not self.data.get("bridge"):
@@ -165,6 +195,28 @@ class Installation:
         with self.lock:
             if self.active_ota:
                 raise RuntimeError("A firmware update is in progress")
+            if op in ("save_palette", "delete_palette"):
+                name = data["name"].strip()
+                if not 1 <= len(name) <= 60 or name.casefold() == "custom":
+                    raise ValueError("Choose a palette name other than Custom")
+                palettes = self.color_palettes()
+                if op == "save_palette":
+                    colors = data["colors"]
+                    limit = 9 if self.data.get("mode") == "native" else 27
+                    if not isinstance(colors, list) or not 1 <= len(colors) <= limit:
+                        raise ValueError("Invalid palette size")
+                    for item in colors:
+                        if not isinstance(item, str) or not re.fullmatch(r"#[a-fA-F0-9]{6}", item):
+                            raise ValueError("Palette colors must be #RRGGBB")
+                    if self.data.get("mode") == "native":
+                        tones = {max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in colors}
+                        if len(tones) != 1 or 0 in tones:
+                            raise ValueError("Native palette colors share a nonzero tone")
+                    palettes[name] = [c.lower() for c in colors]
+                else:
+                    palettes.pop(name, None)
+                save_credentials(self.palette_library, palettes)
+                return {"saved" if op == "save_palette" else "deleted": name}
             if op in ("play", "uniform", "save"):
                 targets = self.selected(fresh=op in ("play", "uniform"))
                 if self.data.get("mode") == "native" and (
@@ -356,13 +408,6 @@ class Installation:
                 raise RecoveryPending("Restore the captured lights before changing the selection")
         if not self.bridge_journal.exists():
             before = {l["id"]: writable_state(l["state"]) for l in lights}
-            if any(
-                s["on"]["on"] and s.get("dimming", {}).get("brightness", 0) > self.limit
-                for s in before.values()
-            ):
-                raise ValueError(
-                    "Lower the existing brightness below the configured limit before capturing a scene"
-                )
             save_credentials(
                 self.bridge_journal, {"bridge_id": self.data["bridge"]["id"], "before": before}
             )

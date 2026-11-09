@@ -5,6 +5,44 @@ from hue_mesh import pack_xy
 
 
 class PuckRepeatTests(unittest.TestCase):
+    def test_all_effects_are_bounded_and_never_send_power_commands(self):
+        from player import PUCK_EFFECTS
+
+        for n, speed in ((n, speed) for n in (1, 2, 3, 4, 9) for speed in (0.1, 1, 20)):
+            for effect in PUCK_EFFECTS:
+                for reverse in (False, True):
+                    samples, fps = compile_scene(
+                        self.scene(n, effect=effect, reverse=reverse, speed=speed), []
+                    )
+                    self.assertLessEqual(len(samples), 64)
+                    self.assertLessEqual(fps, 10)
+                    for sample in samples:
+                        data = bytes.fromhex(sample)
+                        self.assertFalse(data[0] & 1, (n, effect))
+                        self.assertTrue(1 <= data[2] <= 25, (n, effect, data[2]))
+
+    def test_new_effects_have_distinct_meaningful_motion(self):
+        from player import PUCK_EFFECTS
+
+        banks = {effect: compile_scene(self.scene(effect=effect), [])[0] for effect in PUCK_EFFECTS}
+        self.assertEqual(len({tuple(bank) for bank in banks.values()}), len(PUCK_EFFECTS))
+        self.assertEqual(banks["bounce"][5], banks["bounce"][-5])
+        for frame in banks["color_fade"]:
+            data = bytes.fromhex(frame)
+            self.assertEqual(len({data[i : i + 3] for i in range(10, 22, 3)}), 1)
+        allowed = {pack_xy(*color(c)) for c in self.scene()["colors"]}
+        for frame in banks["chase"]:
+            data = bytes.fromhex(frame)
+            self.assertEqual(data[3:5], b"\0\0")
+            self.assertTrue(all(data[i : i + 3] in allowed for i in range(10, 22, 3)))
+        levels = [bytes.fromhex(frame)[2] for frame in banks["heartbeat"]]
+        peaks = [
+            i
+            for i in range(1, len(levels) - 1)
+            if levels[i] > levels[i - 1] and levels[i] > levels[i + 1]
+        ]
+        self.assertEqual(len(peaks), 2)
+
     def test_owner_reuses_tls_between_commands_and_closes_it_explicitly(self):
         from unittest.mock import Mock
         from player import Player

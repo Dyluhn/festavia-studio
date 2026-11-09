@@ -15,3 +15,11 @@ class CertificateError(RuntimeError):
 
 class RecoveryPending(RuntimeError):
     """The captured installation must be restored before changing ownership."""
+
+
+class PlaybackBlocked(ValueError):
+    """A known playback precondition, identified without remote response text."""
+
+    def __init__(self, reason):
+        self.reason = reason
+        super().__init__(reason)

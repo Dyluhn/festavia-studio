@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .control_core import integer
 from .net_client import save_credentials
-from .player import Player, compile_scene, fit_scene
+from .player import PUCK_EFFECTS, Player, compile_scene, fit_scene
 
 ROOT = Path(__file__).resolve().parent
 DEFAULTS = {
@@ -122,7 +122,7 @@ class Studio:
                         "saved_frames_max": 64,
                         "puck_palette_max": 9,
                         "puck_frame_rate_max": 10,
-                        "puck_effects": ["static", "flow", "breathe"],
+                        "puck_effects": list(PUCK_EFFECTS),
                     },
                 }
             if not self.lock.acquire(blocking=False):

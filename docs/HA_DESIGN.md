@@ -19,7 +19,7 @@ and renewed credentials (reauthentication). Runtime light controls are entities
 and actions, not a configuration website.
 
 - **Device Controls:** effect light power/brightness/effect, ordered palette,
-  speed, reverse direction, saved palette, stop-and-restore.
+  speed, reverse direction, color palette, full scene, stop-and-restore.
 - **Device Configuration:** brightness limit and ESP32 firmware update.
 - **Configure:** saved-palette removal and Zigbee connection status.
 - **Reconfigure:** Hue/ESP32 connection, fixture selection, control mode, Zigbee joining and recovery.
@@ -48,3 +48,11 @@ issue-tracker or release URLs before publication.
 Only LCX030 / 1.163.5 / 27 logical positions is physically accepted for individual
 puck playback. Reading a different fixture's count does not prove its mapping.
 Other Festavia models use Hue bridge gradients until their mappings are verified.
+
+## Palette and scene separation (0.8.0)
+
+WLED exposes a color-palette select for the current effect separately from full presets.
+Festavia follows that distinction: a palette contains only ordered colors; a Scene
+contains colors and motion settings. The original full-preset storage and entity IDs
+remain; their visible label is now Scene. A separate native Color palette select and
+save/load/delete actions share state with the optional card. No external editor is used.

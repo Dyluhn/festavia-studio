@@ -4,7 +4,7 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.7.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
+Version **0.8.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
 
@@ -39,19 +39,27 @@ without any custom card:
 | Effect light | Standard `light.turn_on`/`turn_off`, brightness and effect controls |
 | Palette | Ordered hex colors, such as `#ff0000, #00ff00, #9900ff`; one color per puck, repeated |
 | Speed / Reverse direction | Adjust the animation while it runs |
-| Saved palette | Load a saved palette; updates a running effect |
+| Color palette | Save/load ordered colors without changing the animation, speed, direction or brightness |
+| Scene | Save/load the complete setup: colors, animation, speed, direction and brightness |
 | Stop and restore | Restore the appearance captured before Studio playback |
 | Brightness limit | Installation cap, under Configuration; persists across reloads |
 | Firmware | Standard HA update entity; installs the bundled verified ESP32 image over Wi-Fi |
+
+Starting works when Hue already has the lights on, including above Studio’s
+brightness limit. Native startup switches off before setting the effect level,
+then turns on; bridge mode sends the requested brightness with its power-on update.
+The limit applies to Studio effects; **Stop and restore** returns the
+captured Hue appearance, including its previous brightness.
 
 Ordinary Home Assistant restarts preserve an already running ESP effect or bridge
 scene; HA adopts its saved scene when it reconnects. Explicit integration reloads
 stop and restore playback.
 
 Edits while off save your controls without turning on the lights. Edits while
-playing update the running effect. Power starts your saved controls. Save a named
-palette with **Developer tools → Actions → Festavia Studio: Save palette** or the
-optional card. Configure offers saved-palette removal and Zigbee status.
+playing update the running effect. Power starts your saved controls. Save colors with **Festavia Studio: Save color palette**, or save a complete setup
+with **Save scene**. Both actions are available in the optional card. Existing saved
+items remain full scenes, with their colors and animations preserved. Configure offers
+scene/palette removal and Zigbee status.
 Use the integration menu's **Reconfigure** to change connections, fixtures or mode,
 or to recover unfinished playback.
 Diagnostics are available from the integration's normal download menu.
@@ -67,9 +75,24 @@ title: Festavia
 ```
 
 The integration registers the resource. Tap a numbered swatch to edit its color,
-add/remove/reorder colors, choose motion and use Power. Edits save automatically.
+use the touch color wheel or quick colors, add/remove/reorder colors, choose an
+animation and use Power. Save colors and full scenes separately. Edits save automatically.
 There is no additional app to open or synchronize. Native controls and the card
-share the same saved state. In YAML-managed dashboards, add the module resource
+share the same saved state. After upgrading, refresh the HA page or reopen the
+Companion app once to load the updated card.
+
+| Animation | What it does |
+|---|---|
+| Static repeat | Repeat your exact ordered colors, one per puck |
+| Smooth flow | Scroll the palette continuously |
+| Step chase | Move by whole pucks, keeping your selected colors exact |
+| Bounce | Scroll out and back |
+| Color fade | Fade the entire fixture through the palette together |
+| Color wave | Move a rolling wave of palette colors |
+| Breathing | Fade the repeated colors up and down |
+| Heartbeat | Pulse the repeated colors twice per cycle |
+
+In YAML-managed dashboards, add the module resource
 `/festavia_studio/festavia-studio-card.js` to your dashboard resources manually.
 
 ## Compatibility and automatic sizing
@@ -79,7 +102,8 @@ share the same saved state. In YAML-managed dashboards, add the module resource
 | Hue bridge gradient | Reported API gradient color points across selected strings | Static ordered palettes; points may blend across multiple physical lights |
 | ESP32 individual pucks | Live logical count checked against a verified model/firmware profile | LCX030 Permanent / firmware 1.163.5 / 27 logical positions physically tested |
 
-Native mode supports **1–9 ordered colors**, static, flow/snake and breathing,
+Native mode supports **1–9 ordered colors**, static repeat, smooth flow, step chase,
+bounce, color fade, color wave, breathing and heartbeat,
 and up to **10 requested updates per second**. Brightness/tone is shared across
 native palette colors. Native colors must be non-black and have equal RGB maximum
 values; unsupported palettes are rejected immediately with an HA error. The encoder does not support independent arbitrary puck
@@ -137,7 +161,9 @@ data:
   effect: flow
 ```
 
-Additional actions: `configure`, `play`, `load_preset`, `save_preset`, `stop`, `off`.
+Additional actions: `configure`, `play`, `load_palette`, `save_palette`, `delete_palette`,
+`load_scene`, `save_scene`, `delete_scene`, `stop`, `off`. Legacy `load_preset` and
+`save_preset` remain aliases for complete scenes.
 When multiple Studio entries exist, supply `entry_id` for Studio actions. Standard
 light/text/number/select/switch actions use ordinary entity targets.
 

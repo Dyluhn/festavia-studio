@@ -54,6 +54,7 @@ class ReleaseTests(unittest.TestCase):
             "studio-presets.json",
             "removal-pending.json",
             "unload-pending.json",
+            "color-palettes.json",
         ):
             with self.subTest(name=name):
                 path = folder / name

@@ -15,5 +15,6 @@ async def async_get_config_entry_diagnostics(hass, entry):
             "effects",
             "player",
             "firmware",
+            "last_error",
         )
     }

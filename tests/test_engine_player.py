@@ -278,6 +278,12 @@ class SceneTests(unittest.TestCase):
         self.assertEqual(len(plan["verify"]), 5)
         self.assertEqual(plan["ready"][0]["expect"], "00000200010102")
         self.assertEqual(plan["restore"][-1]["command"], 1)
+        self.assertEqual((plan["setup"][0]["cluster"], plan["setup"][0]["command"]), (6, 0))
+        level_index = next(i for i, p in enumerate(plan["setup"]) if p["cluster"] == 8)
+        on_index = next(
+            i for i, p in enumerate(plan["setup"]) if p["cluster"] == 6 and p["command"] == 1
+        )
+        self.assertLess(level_index, on_index)
         json.dumps(plan, allow_nan=False)
 
     def test_rgb_black_and_white_have_valid_whitepoints(self):

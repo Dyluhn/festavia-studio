@@ -11,9 +11,14 @@ import time
 
 from homeassistant.exceptions import HomeAssistantError
 from .backend.lib.bridge import Bridge, probe
-from .backend.lib.errors import AuthenticationError, CertificateError, RecoveryPending
+from .backend.lib.errors import (
+    AuthenticationError,
+    CertificateError,
+    PlaybackBlocked,
+    RecoveryPending,
+)
 from .backend.lib.net_client import save_credentials, PinnedHTTPS
-from .backend.lib.player import Player
+from .backend.lib.player import PUCK_EFFECTS, Player
 from .backend.lib.service import Installation, RELEASE
 from .const import DOMAIN, VERSION
 
@@ -160,6 +165,7 @@ class NativeClient:
         self.firmware_at = None
         self.closed = False
         self.targets = []
+        self.last_error = None
 
     async def initialize(self):
         def create():
@@ -258,7 +264,18 @@ class NativeClient:
             raise StudioError("certificate_changed") from None
         except RecoveryPending:
             raise StudioError("recovery_pending") from None
-        except (OSError, http.client.HTTPException, RuntimeError, ValueError, KeyError, TypeError):
+        except PlaybackBlocked as exc:
+            self.last_error = {"reason": exc.reason, "exception": type(exc).__name__}
+            raise StudioError(exc.reason) from None
+        except (
+            OSError,
+            http.client.HTTPException,
+            RuntimeError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ) as exc:
+            self.last_error = {"reason": "operation_failed", "exception": type(exc).__name__}
             raise StudioError() from None
 
     def _status(self):
@@ -273,7 +290,7 @@ class NativeClient:
         for name, original in state.get("presets", {}).items():
             colors = original.get("colors", [])
             if name.casefold() == "custom" or original.get("effect", "static") not in (
-                ["static", "flow", "breathe"] if native else ["static"]
+                PUCK_EFFECTS if native else ["static"]
             ):
                 continue
             if native and (original.get("layout_mode") != "pucks" or original.get("fps", 10) > 10):
@@ -308,12 +325,21 @@ class NativeClient:
             "brightness_limit": app.limit,
             "positions": limits.get("logical_positions", 1),
             "palette_limit": limits.get("puck_palette_max", 9) if native else 27,
-            "effects": limits.get("puck_effects", ["static", "flow", "breathe"])
-            if native
-            else ["static"],
+            "effects": limits.get("puck_effects", list(PUCK_EFFECTS)) if native else ["static"],
             "scene": copy.deepcopy(state.get("scene")),
             "presets": presets,
+            "palettes": {
+                name: colors
+                for name, colors in app.color_palettes().items()
+                if not native
+                or (
+                    len(colors) <= 9
+                    and len({max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in colors}) == 1
+                    and max(int(colors[0][i : i + 2], 16) for i in (1, 3, 5)) > 0
+                )
+            },
             "firmware": copy.deepcopy(self.firmware),
+            "last_error": copy.deepcopy(self.last_error),
             "player": {
                 key: state.get("player", {}).get(key)
                 for key in (
@@ -339,10 +365,19 @@ class NativeClient:
             def run():
                 if operation == "off":
                     self.app.control("uniform", {"state": {"on": False}})
-                elif operation in ("play", "stop", "save", "delete"):
+                elif operation in (
+                    "play",
+                    "stop",
+                    "save",
+                    "delete",
+                    "save_palette",
+                    "delete_palette",
+                ):
                     self.app.control(operation, data or {})
                 elif operation is not None:
                     raise ValueError("Unsupported action")
+                if operation is not None:
+                    self.last_error = None
                 return self._status()
 
             return await self._execute(run)

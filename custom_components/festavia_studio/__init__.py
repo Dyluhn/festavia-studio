@@ -63,10 +63,18 @@ async def async_setup(hass, config):
             await coordinator.play(call.data.get("preset"), changes)
         elif call.service in ("configure", "set_palette"):
             await coordinator.configure(changes, apply=call.data.get("apply", True))
-        elif call.service == "load_preset":
+        elif call.service in ("load_preset", "load_scene"):
             await coordinator.choose_preset(call.data["preset"])
-        elif call.service == "save_preset":
+        elif call.service in ("save_preset", "save_scene"):
             await coordinator.save_preset(call.data["name"])
+        elif call.service == "load_palette":
+            await coordinator.choose_palette(call.data["palette"])
+        elif call.service == "save_palette":
+            await coordinator.save_palette(call.data["name"])
+        elif call.service in ("delete_palette", "delete_scene"):
+            await coordinator.delete_saved(
+                call.data["name"], palette=call.service == "delete_palette"
+            )
         else:
             async with coordinator.action_lock:
                 await coordinator.command(
@@ -74,7 +82,21 @@ async def async_setup(hass, config):
                 )
 
     base = {vol.Optional("entry_id"): str}
-    for name in ("play", "configure", "set_palette", "stop", "off", "save_preset", "load_preset"):
+    for name in (
+        "play",
+        "configure",
+        "set_palette",
+        "stop",
+        "off",
+        "save_preset",
+        "load_preset",
+        "save_scene",
+        "load_scene",
+        "save_palette",
+        "load_palette",
+        "delete_palette",
+        "delete_scene",
+    ):
         fields = dict(base)
         if name in ("play", "configure", "set_palette"):
             fields.update(FIELDS)
@@ -87,9 +109,11 @@ async def async_setup(hass, config):
             fields[vol.Optional("apply", default=True)] = bool
         if name == "stop":
             fields[vol.Optional("off", default=False)] = bool
-        if name == "load_preset":
+        if name in ("load_preset", "load_scene"):
             fields[vol.Required("preset")] = str
-        if name == "save_preset":
+        if name == "load_palette":
+            fields[vol.Required("palette")] = str
+        if name in ("save_preset", "save_scene", "save_palette", "delete_palette", "delete_scene"):
             fields[vol.Required("name")] = str
         hass.services.async_register(DOMAIN, name, handle, schema=vol.Schema(fields))
     return True

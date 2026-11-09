@@ -147,6 +147,7 @@ class Wire:
             op = data["op"]
             if op == "player_prepare":
                 assert data["restore"] and data["verify"] and data["setup"]
+                self.captured = copy.deepcopy(self.snapshot)
                 self.player.update(state="armed", armed=True, playing=False)
                 self.snapshot["on"] = True
             elif op == "player_load":
@@ -159,7 +160,7 @@ class Wire:
                 self.player.update(state="playing", armed=True, playing=True)
             elif op == "player_stop":
                 self.player.update(state="restored", armed=False, playing=False)
-                self.snapshot = copy.deepcopy(BEFORE)
+                self.snapshot = copy.deepcopy(getattr(self, "captured", BEFORE))
             elif op not in ("status", "player_status"):
                 raise AssertionError(op)
             return 200, {
@@ -298,8 +299,8 @@ async def main():
             assert entry.state.value == "loaded", entry.state
             assert "url" not in entry.data and "token" not in entry.data
             names = [s.entity_id for s in hass.states.async_all() if "_studio_" in s.entity_id]
-            assert len(names) == 14, names
-            checks.append("real_commission_and_14_entities")
+            assert len(names) == 15, names
+            checks.append("real_commission_and_15_entities")
 
             async def service(domain, name, data):
                 await hass.services.async_call(domain, name, data, blocking=True)
@@ -347,6 +348,42 @@ async def main():
                 else:
                     raise AssertionError("reserved palette name accepted")
             checks.append("invalid_palette_and_cap_rejected_before_write")
+            # A normal Hue light may already be brighter than Studio's effect
+            # limit. Starting must capture it and lower it while OFF, rather
+            # than rejecting every Play/Power button before prepare.
+            wire.snapshot.update(on=True, level=115)
+            original_on = copy.deepcopy(wire.snapshot)
+            await service(
+                "light",
+                "turn_on",
+                {"entity_id": "light.festavia_studio_effect_light", "brightness": 26},
+            )
+            assert wire.player["playing"]
+            prepare = next(
+                call[3]
+                for call in reversed(wire.calls)
+                if call[2] == "/api/command" and call[3].get("op") == "player_prepare"
+            )
+            assert prepare["setup"][0]["cluster"] == 6 and prepare["setup"][0]["command"] == 0
+            await action("stop")
+            assert wire.snapshot == original_on
+            checks.append("start_from_existing_hue_brightness_above_effect_limit_and_restore")
+            wire.snapshot = copy.deepcopy(BEFORE)
+            wire.snapshot["fc03"] = "0001"
+            try:
+                await action("play")
+            except api.StudioError as exc:
+                assert exc.key == "hue_effect_active"
+            else:
+                raise AssertionError("Unsupported Hue effect was silently overwritten")
+            await entry.runtime_data.async_refresh()
+            diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+            assert diagnostics["last_error"] == {
+                "reason": "hue_effect_active",
+                "exception": "PlaybackBlocked",
+            }
+            checks.append("unsupported_hue_state_has_actionable_error_and_safe_diagnostics")
+            wire.snapshot = copy.deepcopy(BEFORE)
             await service(
                 "light",
                 "turn_on",
@@ -373,6 +410,63 @@ async def main():
             await action("save_preset", {"name": "Saved test"})
             assert "Saved test" in entry.runtime_data.data["presets"]
             checks.append("real_player_prepare_load_start_live_edits_and_concurrency")
+            # Color palettes preserve motion; complete scenes restore it.
+            motion = {
+                k: entry.runtime_data.scene[k] for k in ("effect", "speed", "reverse", "brightness")
+            }
+            await action("save_palette", {"name": "Colors only"})
+            assert isinstance(entry.runtime_data.data["palettes"]["Colors only"], list)
+            await service(
+                "select",
+                "select_option",
+                {"entity_id": "select.festavia_studio_color_palette", "option": "Winter"},
+            )
+            assert {k: entry.runtime_data.scene[k] for k in motion} == motion
+            assert entry.runtime_data.scene["colors"] == ["#80dfff", "#e4f4ff", "#4040ff"]
+            assert entry.runtime_data.palette == "Winter"
+            app = entry.runtime_data.api.app
+            libraries = app.color_palettes()
+            libraries.update(
+                {"Bridge only count": ["#ff0000"] * 10, "Bridge only tones": ["#ff0000", "#001000"]}
+            )
+            save_credentials(app.palette_library, libraries)
+            await entry.runtime_data.async_refresh()
+            assert "Bridge only count" not in entry.runtime_data.data["palettes"]
+            assert "Bridge only tones" not in entry.runtime_data.data["palettes"]
+            entry.runtime_data.palette = "Removed elsewhere"
+            await entry.runtime_data.async_refresh()
+            assert entry.runtime_data.palette == "Custom"
+            checks.append("native_palettes_filtered_and_stale_selection_reconciled")
+            await action("load_palette", {"palette": "Colors only"})
+            assert {k: entry.runtime_data.scene[k] for k in motion} == motion
+            from custom_components.festavia_studio.backend.lib.player import PUCK_EFFECTS
+
+            for effect in PUCK_EFFECTS:
+                await service(
+                    "select",
+                    "select_option",
+                    {"entity_id": "select.festavia_studio_effect", "option": effect},
+                )
+                assert wire.player["playing"] and entry.runtime_data.scene["effect"] == effect
+            await action("save_scene", {"name": "Complete scene"})
+            full_scene = copy.deepcopy(entry.runtime_data.scene)
+            await action("configure", {"effect": "static", "speed": 3})
+            await action("load_scene", {"preset": "Complete scene"})
+            assert all(
+                entry.runtime_data.scene[k] == full_scene[k]
+                for k in ("colors", "effect", "speed", "brightness", "reverse")
+            )
+            await action("delete_palette", {"name": "Colors only"})
+            assert (
+                "Colors only" not in entry.runtime_data.data["palettes"] and wire.player["playing"]
+            )
+            await action("delete_scene", {"name": "Complete scene"})
+            assert (
+                "Complete scene" not in entry.runtime_data.data["presets"]
+                and wire.player["playing"]
+            )
+            checks.append("color_palettes_preserve_motion_and_full_scenes_restore_it")
+            checks.append("all_eight_native_animations_load_through_real_entities")
             reconfig = await hass.config_entries.flow.async_init(
                 "festavia_studio", context={"source": "reconfigure", "entry_id": entry.entry_id}
             )

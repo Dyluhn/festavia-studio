@@ -54,6 +54,7 @@ def main():
         "ha-connection.json",
         "studio-presets.json",
         "bridge-presets.json",
+        "color-palettes.json",
         "migration-options.json",
         "removal-pending.json",
         "unload-pending.json",

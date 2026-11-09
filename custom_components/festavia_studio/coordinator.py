@@ -81,6 +81,7 @@ class StudioCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.scene = copy.deepcopy(DEFAULT_SCENE)
         self.preset = "Custom"
+        self.palette = "Custom"
         self.action_lock = asyncio.Lock()
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.scene")
         self._remote_scene = None
@@ -91,6 +92,7 @@ class StudioCoordinator(DataUpdateCoordinator):
         if saved:
             self.scene = saved.get("scene", self.scene)
             self.preset = saved.get("preset", "Custom")
+            self.palette = saved.get("palette", "Custom")
 
     @property
     def playing(self):
@@ -119,6 +121,9 @@ class StudioCoordinator(DataUpdateCoordinator):
         ):
             self.scene = {**copy.deepcopy(DEFAULT_SCENE), **copy.deepcopy(remote)}
             self.preset = "Custom"
+            self.palette = "Custom"
+        if result["palettes"].get(self.palette) != self.scene.get("colors"):
+            self.palette = "Custom"
         self._remote_scene = copy.deepcopy(remote)
         if not result["player"].get("playing"):
             if self.preset not in result["presets"]:
@@ -158,16 +163,64 @@ class StudioCoordinator(DataUpdateCoordinator):
             await self.persist()
 
     async def persist(self):
-        await self.store.async_save({"scene": self.scene, "preset": self.preset})
+        await self.store.async_save(
+            {"scene": self.scene, "preset": self.preset, "palette": self.palette}
+        )
         self.async_update_listeners()
 
-    async def configure(self, changes, apply=True, preset="Custom"):
+    async def configure(self, changes, apply=True, preset="Custom", palette=None):
         async with self.action_lock:
             self.check_ready()
+            if palette is not None and self.data["palettes"].get(palette) != changes.get("colors"):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="preset_missing"
+                )
             candidate = validate_scene({**self.scene, **changes}, self.data)
             if self.playing and apply:
                 await self.command("play", {"scene": candidate, "seconds": 0})
             self.scene, self.preset = candidate, preset
+            if palette is not None:
+                self.palette = palette
+            elif self.data["palettes"].get(self.palette) != candidate["colors"]:
+                self.palette = "Custom"
+            await self.persist()
+
+    async def save_palette(self, name):
+        name = name.strip()
+        if not 1 <= len(name) <= 60 or name.casefold() == "custom":
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="preset_name")
+        async with self.action_lock:
+            self.check_ready()
+            scene = validate_scene(self.scene, self.data)
+            await self.command("save_palette", {"name": name, "colors": scene["colors"]})
+            self.palette = name
+            await self.persist()
+
+    async def choose_palette(self, name):
+        if name == "Custom":
+            async with self.action_lock:
+                self.check_ready()
+                self.palette = name
+                await self.persist()
+            return
+        if name not in self.data["palettes"]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="preset_missing"
+            )
+        await self.configure({"colors": self.data["palettes"][name]}, palette=name)
+
+    async def delete_saved(self, name, *, palette=False):
+        async with self.action_lock:
+            self.check_ready()
+            if name not in self.data["palettes" if palette else "presets"]:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="preset_missing"
+                )
+            await self.command("delete_palette" if palette else "delete", {"name": name})
+            if palette and self.palette == name:
+                self.palette = "Custom"
+            if not palette and self.preset == name:
+                self.preset = "Custom"
             await self.persist()
 
     async def command(self, operation, data=None):
@@ -194,6 +247,8 @@ class StudioCoordinator(DataUpdateCoordinator):
             scene = validate_scene({**scene, **(changes or {})}, self.data)
             await self.command("play", {"scene": scene, "seconds": 0})
             self.scene, self.preset = scene, preset or "Custom"
+            if self.data["palettes"].get(self.palette) != scene["colors"]:
+                self.palette = "Custom"
             await self.persist()
 
     async def choose_preset(self, name):

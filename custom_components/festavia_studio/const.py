@@ -1,7 +1,7 @@
 """Shared identifiers."""
 
 DOMAIN = "festavia_studio"
-VERSION = "0.7.0"
+VERSION = "0.8.0"
 PLATFORMS = [
     "light",
     "text",

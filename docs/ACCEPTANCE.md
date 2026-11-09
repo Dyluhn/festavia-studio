@@ -1,41 +1,56 @@
-# Acceptance — 0.7.0
+# Acceptance — 0.8.0
 
-Checked 2026-11-09 UTC. No Core/HACS acceptance or quality tier is claimed.
+Checked 2026-11-09 UTC. No Home Assistant Core/HACS acceptance or quality tier is claimed.
 
 ## Automated
 
-- 83 protocol/unit/mobile-card/release tests pass against the shipped code, including four production-C player state scenarios with clock/NVS/radio boundaries simulated. Lost status replies, actual loss of contact, external off, and incorrect/late confirmations are covered.
-- Actual HA Core 2026.10.1 container: 17 integration checks and eight restart/lifecycle checks pass. Installation, commissioning, Bridge, pinned HTTPS, Player, encoders, config entries, stores, coordinator and entities are real; only network peer responses and physical Zigbee primitives are simulated.
-- Coverage includes all 14 entities; validation before writes; native prepare/load/start/live edits; serialized presets/actions; authentication/reauthentication; existing Hue key/address following; diagnostics redaction; OTA failures; offline removal across a real HA restart; retryable unload/recovery; partial cleanup; removed-light recovery; registry identity; and ordinary restarts preserving existing playback.
-- All hassfest validators from pinned HA Core 2026.10.1 pass. Ruff checks and formatting pass. The isolated puck test also passes alone.
-- Release checks build real archives, verify source/image hashes, reject private runtime files/symlinks/modified firmware, and run from an extracted full source archive. No HA pyserial/CLI/server/add-on runtime is shipped.
-- The documented firmware build succeeds from a clean source copy with locked dependencies and the same configuration as the installed image. First-install image/hash/dry-run checks pass; the working board was not erased for a new USB installation.
+- 93 protocol, unit, mobile-card and release tests pass, including the production-C player state harness. Native effects are bounded across 1/2/3/4/9 colors, speeds 0.1/1/20 and both directions.
+- Actual HA Core 2026.10.1: 22 integration checks and eight restart/lifecycle checks pass. Integration, stores, entities, bridge/ESP transports, player and encoders run as shipped; network peer responses and physical Zigbee primitives are simulated in these suites.
+- All 15 native entities, ordinary ON startup above the effect limit, actionable errors, colors-only palettes, complete scenes, incompatible-palette filtering, damaged-file handling, stale selection and all eight modes are covered.
+- Browser regressions cover touch color selection, shared tone, rejection of black, pending edits across palette load/delete, current-scene selection, save serialization and expanded controls surviving re-renders.
+- All hassfest validators from pinned HA Core 2026.10.1 pass, together with Ruff checks/formatting and archive privacy/source/image verification.
 
 ## Live Home Assistant and hardware
 
 HAOS 18.3 / Core 2026.10.1, Hue Bridge Pro, ESP32-C6 firmware 0.3.7,
-Festavia Permanent LCX030 firmware 1.163.5, 27 logical positions. All commanded
-light-on tests used 10% (HA light quantization 10.24%); the installation cap remained 15%.
-The original stored level 115 was restored only while off.
+Festavia Permanent LCX030 firmware 1.163.5, 27 logical positions. The new 0.8.0
+acceptance commands use 4–10% brightness. Optical capture covers six visible pucks.
 
-- Five complete edit/play/restore cycles, each exercising 1–9 ordered colors, static/flow/breathe, speed 0.1/1/2/20 and both directions. Every full original snapshot matched after Stop: power, level, color/mode, FC03 payload, logical count, region map and aliases.
-- Three minutes of continuous four-color flow: 1,766 sends, 1,735 successful confirmations, 30 failures and one presentation timeout. Send/confirmation rates across the sampled interval were 9.518/9.346 per second. Playback remained active throughout, with no reboot or memory error. SDK free buffers returned from 33 to 33. Thirty subsequent complete vendor snapshots matched.
-- Native HA text accepted every palette size 1–9. Invalid black/mixed-tone palettes were rejected before staging or writes. Concurrent speed/direction edits both survived. Stop and actual entry reload restored exactly, retained controls/cap/pairing, and did not autoplay.
-- Switching off through the existing Hue light stopped native playback, preserved off, and restored the exact original appearance.
-- Standard HA `update.install` wirelessly reinstalled bundled 0.3.7, changed OTA partition, confirmed boot and retained the selected PAN/pairing. No USB connection was used.
-- Actual HA frontend at 393×852: native device controls present; optional card edits synchronized with the native palette entity, persisted after reload while off, and produced no card JavaScript error or horizontal overflow. One existing optional dashboard retained; no additional page/app/panel created.
-- Independent read-only Claude account 2 / Opus 5.5 review found no blocker in the final ownership/liveness changes. It is separate from the live evidence above.
+- Real HA frontend at 393×852: Power starts from an ordinary Hue ON state; the touch wheel and quick colors change only the selected color. No horizontal overflow or Festavia card JavaScript exception. Existing unrelated kiosk-mode exceptions were separately reproduced on an idle page load.
+- Colors-only save/load preserves animation, speed, direction and brightness, including pending edits. Complete scene save/load restores all five fields. Save/delete leaves playback running; all uniquely owned temporary items were removed. Expanded editing sections remain open after saving.
+- All eight modes run through the actual card and ESP32. Static sends its one frame once; animated-mode send/confirmation counters advance. Sampled raw levels remain below 20%. Stop restores the complete preexisting ON snapshot; external Hue off preserves OFF in both standard and composite reports while restoring color, level, geometry and aliases.
+- Above-limit startup regression: existing Hue ON at 10%, Studio limit 5%, effect requested 4%. Playback starts, stays active and Stop restores the original ON snapshot exactly.
+- Existing camera: 80 frames per mode at 8 Hz (640 total), six visible pucks. Every animated mode shows color or intensity variation above the static capture's noise level. These are real optical samples, separate from send counters.
+- The original 14 entity IDs and unique IDs remain; the new Color palette entity makes 15. Existing complete scene libraries remain semantically unchanged. Installed component hashes match the tested integration archive. No new app, panel or dashboard was created.
+- Independent read-only Claude account 2 / Opus 5.5 code review found no remaining functional blocker after the fixes. Real-device and frontend acceptance was performed separately.
 
-## Scope and limitations
+## Earlier firmware reliability evidence
 
-The original incorrect application send-slot gate and the false stop caused by
-ZCL-only liveness were reproduced under load before their fixes. This evidence
-supersedes short-run 0.3.4 reliability claims. Radio loss still occurs; these
-counters do not establish lossless Zigbee delivery or destination optical fps.
+Firmware is unchanged from 0.3.7. The earlier 0.7.0 acceptance exercised five
+complete 1–9-color edit/play/restore cycles and a three-minute continuous flow:
+1,766 sends, 1,735 confirmations, 30 failures, one presentation timeout; SDK free
+buffers returned from 33 to 33 with no no-memory error. Thirty subsequent complete
+vendor snapshots matched. The HA update entity wirelessly reinstalled and confirmed
+0.3.7 with pairing retained. A clean documented source build and first-install
+image/hash/dry-run checks passed; the existing board was not erased for a fresh
+USB installation.
 
-The palette mapping and six-visible-puck optical evidence from 0.3.4 is retained
-and explicitly dated in `FIRMWARE_ACCEPTANCE.json`; it is not a new full-string
-optical survey. A different model/firmware/count, square BSB002 bridge, multiple
-simultaneous native fixtures, empty-board USB install, and first config-flow
-join on a fresh PAN still need separate physical acceptance before broadening
-compatibility. Routine Wi-Fi updating and native HA control are physically tested.
+The earlier short tests missed startup from an already-on Hue light above the
+Studio effect limit. That was reproduced after the user reported the failure.
+0.8.0 includes the startup correction and explicitly tests that normal-use path.
+During the preceding 0.7.1 investigation, one UI replay used a saved 23% setting
+before it was immediately reduced to 10%; no claim is made that the entire
+maintenance session stayed below 20%. The 0.8.0 acceptance uses the bounds above.
+
+## Scope
+
+The six-puck mapping/direction optical evidence from 0.3.4 remains dated separately
+in FIRMWARE_ACCEPTANCE.json. New camera traces are a sampled diagnostic, not a
+full-string color calibration, perceptual smoothness guarantee or destination
+optical fps measurement. Radio loss and skipped samples remain possible.
+
+Other models/firmware/counts, a square BSB002 bridge, simultaneous native fixtures,
+empty-board USB installation and first config-flow joining on a fresh PAN still
+need separate physical acceptance before support is broadened. Bridge fallback
+above-limit startup is covered using the real Installation with a simulated bridge;
+the existing physical installation uses native mode.

@@ -145,6 +145,42 @@ class PortableTests(unittest.TestCase):
 
 
 class ServiceTests(unittest.TestCase):
+    def test_bridge_start_from_above_limit_captures_and_restores_original(self):
+        for fixture in self.fake.lights:
+            fixture["state"].update(on={"on": True}, dimming={"brightness": 45})
+        self.fake.lights[0]["state"]["gradient"] = {
+            "points": [{"color": {"xy": {"x": 0.3, "y": 0.3}}}] * 3
+        }
+        before = copy.deepcopy(self.fake.lights)
+        self.app.control(
+            "play", {"scene": {"effect": "static", "colors": ["#ff0000"], "brightness": 10}}
+        )
+        self.assertTrue(all(body["dimming"]["brightness"] == 10 for _, body in self.fake.calls))
+        self.app.control("stop", {})
+        self.assertEqual(self.fake.lights, before)
+
+    def test_color_palette_file_corruption_and_invalid_entries_do_not_break_status(self):
+        for text in ("{broken", "[]", "null"):
+            self.app.palette_library.write_text(text)
+            self.assertIn("Christmas", self.app.color_palettes())
+        self.app.palette_library.write_text(
+            json.dumps({"Valid": ["#FF0000"], "bad": None, "badhex": ["no"], "Custom": ["#ff0000"]})
+        )
+        self.assertEqual(self.app.color_palettes(), {"Valid": ["#ff0000"]})
+
+    def test_color_palette_is_only_colors_and_does_not_write_lights_or_scenes(self):
+        self.app.data["mode"] = "native"
+        colors = ["#ff2020", "#00ff00", "#ffdda0"]
+        self.app.control("save_palette", {"name": "My colors", "colors": colors, "effect": "flow"})
+        saved = json.loads(self.app.palette_library.read_text())
+        self.assertEqual(saved["My colors"], colors)
+        self.assertFalse(self.app.bridge_library.exists())
+        self.assertEqual(self.fake.calls, [])
+        self.assertEqual(self.app.palette_library.stat().st_mode & 0o777, 0o600)
+        self.app.control("delete_palette", {"name": "My colors"})
+        self.assertNotIn("My colors", self.app.color_palettes())
+        self.assertEqual(self.fake.calls, [])
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.app = Installation(self.tmp.name, brightness_limit=15)

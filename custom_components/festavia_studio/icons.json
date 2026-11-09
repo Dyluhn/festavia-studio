@@ -31,6 +31,9 @@
         "default": "mdi:animation"
       },
       "preset": {
+        "default": "mdi:animation-play"
+      },
+      "color_palette": {
         "default": "mdi:palette"
       }
     },

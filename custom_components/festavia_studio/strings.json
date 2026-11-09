@@ -123,21 +123,28 @@
         "title": "Festavia Studio options",
         "description": "Adjust everyday controls, brightness limit and firmware on the device. Use Reconfigure to change connections, lights or control mode.",
         "menu_options": {
-          "palettes": "Delete a saved palette",
-          "network": "Zigbee connection status"
+          "palettes": "Delete scenes",
+          "network": "Zigbee connection status",
+          "color_palettes": "Delete color palettes"
         }
       },
       "palettes": {
-        "title": "Delete a saved palette",
+        "title": "Delete a scene",
         "description": "The current colors stay unchanged. Use the palette card or Save palette action to save a palette.",
         "data": {
-          "preset": "Palette to delete"
+          "preset": "Scene"
         }
       },
       "network": {
         "title": "ESP32 Zigbee connection",
         "description": "{state} \u00b7 channel {channel}. Pairing is preserved during wireless updates.",
         "data": {}
+      },
+      "color_palettes": {
+        "title": "Delete a color palette",
+        "data": {
+          "palette": "Color palette"
+        }
       }
     },
     "error": {
@@ -188,10 +195,23 @@
     },
     "select": {
       "effect": {
-        "name": "Effect"
+        "name": "Effect",
+        "state": {
+          "static": "Static repeat",
+          "flow": "Smooth flow",
+          "chase": "Step chase",
+          "bounce": "Bounce",
+          "color_fade": "Color fade",
+          "wave": "Color wave",
+          "breathe": "Breathing",
+          "heartbeat": "Heartbeat"
+        }
       },
       "preset": {
-        "name": "Saved palette"
+        "name": "Scene"
+      },
+      "color_palette": {
+        "name": "Color palette"
       }
     },
     "switch": {
@@ -224,14 +244,14 @@
   "services": {
     "play": {
       "name": "Play or update",
-      "description": "Start the staged scene or a saved palette. Runs until stopped.",
+      "description": "Start the staged scene or a saved scene. Runs until stopped.",
       "fields": {
         "entry_id": {
           "name": "Studio entry ID",
           "description": "Optional when only one Studio installation is configured."
         },
         "preset": {
-          "name": "Saved palette"
+          "name": "Scene"
         },
         "colors": {
           "name": "Colors",
@@ -302,15 +322,15 @@
       }
     },
     "load_preset": {
-      "name": "Load saved palette",
-      "description": "Load a saved palette; update the effect if it is playing.",
+      "name": "Load scene (legacy action)",
+      "description": "Load saved colors and animation settings.",
       "fields": {
         "entry_id": {
           "name": "Studio entry ID",
           "description": "Optional when only one Studio installation is configured."
         },
         "preset": {
-          "name": "Saved palette"
+          "name": "Scene"
         }
       }
     },
@@ -338,8 +358,60 @@
       }
     },
     "save_preset": {
-      "name": "Save palette",
-      "description": "Save the currently staged scene.",
+      "name": "Save scene (legacy action)",
+      "description": "Save colors, animation, speed, direction and brightness.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "name": {
+          "name": "Scene name"
+        }
+      }
+    },
+    "load_scene": {
+      "name": "Load scene",
+      "description": "Load saved colors and animation settings.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "preset": {
+          "name": "Scene"
+        }
+      }
+    },
+    "save_scene": {
+      "name": "Save scene",
+      "description": "Save colors, animation, speed, direction and brightness.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "name": {
+          "name": "Scene name"
+        }
+      }
+    },
+    "load_palette": {
+      "name": "Load color palette",
+      "description": "Change only the ordered colors. Keep the current animation, speed, direction and brightness.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "palette": {
+          "name": "Color palette"
+        }
+      }
+    },
+    "save_palette": {
+      "name": "Save color palette",
+      "description": "Save only the current ordered colors; animation settings stay separate.",
       "fields": {
         "entry_id": {
           "name": "Studio entry ID",
@@ -347,6 +419,32 @@
         },
         "name": {
           "name": "Palette name"
+        }
+      }
+    },
+    "delete_palette": {
+      "name": "Delete saved color palette",
+      "description": "Remove the saved item without changing the currently displayed lights.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "name": {
+          "name": "Palette name"
+        }
+      }
+    },
+    "delete_scene": {
+      "name": "Delete saved scene",
+      "description": "Remove the saved item without changing the currently displayed lights.",
+      "fields": {
+        "entry_id": {
+          "name": "Studio entry ID",
+          "description": "Optional when only one Studio installation is configured."
+        },
+        "name": {
+          "name": "Scene name"
         }
       }
     }
@@ -399,6 +497,12 @@
     },
     "firmware_version": {
       "message": "Only the firmware bundled with this integration is supported."
+    },
+    "hue_effect_active": {
+      "message": "This light is running a Hue gradient scene or effect that Studio cannot restore yet. Set a solid color or white using its Hue light controls, then press Play."
+    },
+    "fixture_changed": {
+      "message": "Another controller changed this light during startup. Stop the competing automation and press Play again."
     }
   },
   "issues": {

@@ -612,7 +612,27 @@ class FestaviaOptions(OptionsFlow):
     async def async_step_init(self, user_input=None):
         if self.config_entry.state.value != "loaded":
             return self.async_abort(reason="not_loaded")
-        return self.async_show_menu(step_id="init", menu_options=["palettes", "network"])
+        return self.async_show_menu(
+            step_id="init", menu_options=["palettes", "color_palettes", "network"]
+        )
+
+    async def async_step_color_palettes(self, user_input=None):
+        if self.config_entry.state.value != "loaded":
+            return self.async_abort(reason="not_loaded")
+        c = self.config_entry.runtime_data
+        if user_input is not None:
+            async with c.action_lock:
+                await c.command("delete_palette", {"name": user_input["palette"]})
+                if c.palette == user_input["palette"]:
+                    c.palette = "Custom"
+                    await c.persist()
+            return self.async_create_entry(data=dict(self.config_entry.options))
+        return self.async_show_form(
+            step_id="color_palettes",
+            data_schema=vol.Schema(
+                {vol.Required("palette"): choices({n: n for n in c.data["palettes"]})}
+            ),
+        )
 
     async def async_step_palettes(self, user_input=None):
         if self.config_entry.state.value != "loaded":

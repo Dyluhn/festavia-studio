@@ -19,6 +19,7 @@ from pathlib import Path
 
 from .control import connected
 from .control_core import frame_encode, integer, segments_encode, snapshot_effect
+from .errors import PlaybackBlocked
 from .hue_mesh import combined_state, pack_xy
 from .net_client import PinnedHTTPS, credentials, save_credentials
 
@@ -116,6 +117,9 @@ def scattered_index(index, count):
     return index if index % 2 == 0 else 1 + 2 * ((index // 2 + 1) % (count // 2))
 
 
+PUCK_EFFECTS = ("static", "flow", "chase", "bounce", "color_fade", "wave", "breathe", "heartbeat")
+
+
 def compile_puck_scene(scene):
     positions = integer(scene.get("positions", 27), 1, 31, "native positions")
     allowed = {
@@ -137,8 +141,8 @@ def compile_puck_scene(scene):
     if "layout" in scene and scene["layout"] != [[i, 1] for i in range(positions)]:
         raise ValueError("per-puck repeat uses the complete discovered fixture")
     effect = scene.get("effect", "static")
-    if effect not in ("static", "flow", "breathe"):
-        raise ValueError("per-puck repeat supports static, color flow and breathing")
+    if effect not in PUCK_EFFECTS:
+        raise ValueError("unknown native puck effect")
     colors = scene.get("colors", ["#00d5ff", "#b000ff"])
     if not isinstance(colors, list) or not 1 <= len(colors) <= 9:
         raise ValueError("per-puck repeat supports 1–9 selected colors")
@@ -173,14 +177,30 @@ def compile_puck_scene(scene):
         level = brightness * strengths[0]
         if effect == "breathe":
             level *= 0.03 + 0.97 * (math.sin(2 * math.pi * t) + 1) / 2
+        elif effect == "heartbeat":
+            beat = t % 1
+            level *= 0.06 + 0.94 * max(
+                math.exp(-(((beat - 0.2) / 0.065) ** 2)),
+                0.75 * math.exp(-(((beat - 0.4) / 0.085) ** 2)),
+            )
         if level <= 0:
             raise ValueError("use Lights off for a zero-brightness native scene")
         ordered = [None] * n
         for residue in range(n):
-            base = positions - 1 - residue if scene.get("reverse") and effect != "flow" else residue
-            p = (
-                base + (t * n * (1 if scene.get("reverse") else -1) if effect == "flow" else 0)
-            ) % n
+            direction = 1 if scene.get("reverse") else -1
+            moving = effect in ("flow", "chase", "bounce", "wave", "color_fade")
+            base = positions - 1 - residue if scene.get("reverse") and not moving else residue
+            p = base
+            if effect in ("flow", "chase"):
+                shift = t * n if effect == "flow" else math.floor(t * n)
+                p += direction * shift
+            elif effect == "bounce":
+                p += direction * n * (1 - abs(2 * (t % 1) - 1))
+            elif effect == "color_fade":
+                p = direction * t * n
+            elif effect == "wave":
+                p += n / 3 * math.sin(2 * math.pi * (t + direction * residue / n))
+            p %= n
             a = int(p) % n
             xy = [
                 palette[a][k] + (p % 1) * (palette[(a + 1) % n][k] - palette[a][k])
@@ -194,7 +214,7 @@ def compile_puck_scene(scene):
         samples.append(
             combined_state(
                 brightness=max(1, round(level * 254 / 100)),
-                fade=fade,
+                fade=0 if effect == "chase" else min(fade, 1) if effect == "heartbeat" else fade,
                 colors=ordered,
                 style=2,
                 scale=positions,
@@ -469,6 +489,7 @@ def recovery_plan(profile, device, before, layout, aliases, *, startup_level=1, 
         "restore": restore,
         "verify": verify,
         "setup": [
+            packet(6, 0),
             sync,
             *([] if native else geometry(layout, aliases)),
             packet(0xFC03, 0, combined_state(effect=0), MFG),
@@ -687,18 +708,10 @@ class Player:
         prepare_attempted = False
         try:
             before = d.snapshot()
-            if before["on"] and before["level"] / 254 * 100 > self.profile.get(
-                "brightness_limit", 100
-            ):
-                raise ValueError(
-                    "Lower the existing light brightness below the configured limit before capturing playback"
-                )
             if int.from_bytes(
                 bytes.fromhex(before["fc03"])[:2], "little"
             ) & 0x100 or snapshot_effect(before):
-                raise ValueError(
-                    "Use Apply white to replace the current Hue palette or effect, then play the scene"
-                )
+                raise PlaybackBlocked("hue_effect_active")
             if native:
                 if before["logical_count"] != scene.get("positions", 27):
                     raise RuntimeError("per-puck repeat count differs from the discovered fixture")
@@ -725,7 +738,7 @@ class Player:
                 raise ValueError("map/alias count mismatch")
             segments_encode(layout, before["logical_count"])
             if not d.verify_baseline(before):
-                raise RuntimeError("fixture state changed before acquiring playback ownership")
+                raise PlaybackBlocked("fixture_changed")
             samples, fps = compile_scene(scene, aliases)
             if native:
                 peak = max(bytes.fromhex(s)[2] for s in samples)

@@ -1,3 +1,11 @@
+# 0.8.0 — palettes, scenes and a clearer editor
+
+- Color palettes save only ordered colors. Loading one keeps the animation, speed, direction and brightness. Existing saved setups remain complete Scenes; their original IDs and settings are preserved.
+- Native Color palette and Scene selects plus save/load/delete actions. Color palettes live in the existing private integration storage and are excluded from release archives.
+- Mobile color wheel and quick color choices; hex/tone controls under Advanced. Picking a color no longer changes every other color’s tone.
+- Eight native animation modes: static repeat, smooth flow, step chase, bounce, color fade, color wave, breathing and heartbeat. New modes use the existing bounded native frame format.
+- Fix the missed normal-use failure: Play previously rejected a Hue light already on above the Studio brightness limit. Capture that state and switch off before setting the effect level. Return actionable errors for unsupported Hue effects and competing controllers.
+
 # 0.7.0 — lifecycle and reliability fixes
 
 - Real authentication errors and native reauthentication; follow current credentials/address from an existing Hue entry, with identity and certificate checks.
