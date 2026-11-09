@@ -103,7 +103,8 @@
       "cannot_connect": "Cannot reach the device. Use Reconfigure to check its connection.",
       "unique_id_mismatch": "This connection identifies a different bridge. Add it as a new integration after restoring the current lights.",
       "recovery_successful": "Playback restored.",
-      "recovery_required": "Unfinished recovery exists for these lights. Complete the Festavia repair before taking control."
+      "recovery_required": "Unfinished recovery exists for these lights. Complete the Festavia repair before taking control.",
+      "restart_required": "Home Assistant could not unload the integration. Restart Home Assistant before reconfiguring it; recovery data is retained."
     }
   },
   "options": {
@@ -144,7 +145,8 @@
       "reconfigure_successful": "Connection updated.",
       "reauth_successful": "Authorization updated.",
       "no_esp": "No ESP32 is configured. Use Reconfigure to add one.",
-      "cannot_connect": "Cannot reach the device. Use Reconfigure to check its connection."
+      "cannot_connect": "Cannot reach the device. Use Reconfigure to check its connection.",
+      "not_loaded": "The integration is not loaded. Reconnect the equipment or use Reconfigure to recover it first."
     }
   },
   "entity": {
@@ -390,25 +392,9 @@
     }
   },
   "issues": {
-    "removal_recovery": {
+    "recovery_pending": {
       "title": "Festavia restoration is unfinished",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Recover removed Festavia controller",
-            "description": "Restoration was not confirmed during removal. Reconnect the original bridge and ESP32, then select Submit to restore the captured appearance and remove its retained private credentials and recovery files. Empty connection fields keep the saved values.",
-            "data": {
-              "bridge_host": "Bridge address",
-              "bridge_key": "Hue application key",
-              "device_url": "ESP32 HTTPS address",
-              "device_token": "ESP32 token"
-            }
-          }
-        },
-        "error": {
-          "recovery_failed": "Recovery could not be confirmed. Check the connections and credentials and retry. The recovery data remains saved."
-        }
-      }
+      "description": "Reconnect the original bridge and ESP32. If Festavia Studio is still configured, use Reconfigure \u2192 Recover playback, or reload it to retry restoration. If it was removed, add Festavia Studio again and choose the original bridge and lights; setup offers recovery before taking control. Private credentials and the captured state were retained. Keep the component files installed until recovery is complete."
     }
   }
 }

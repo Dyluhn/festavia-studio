@@ -1,17 +1,24 @@
 """Home Assistant commissioning, reconfiguration, and device options."""
 
 import copy
+from uuid import uuid4
 import http.client
 import probatio as vol
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from .api import commission, has_recovery, private_folder, recover_folder, StudioError
+from .api import (
+    commission,
+    has_recovery,
+    private_folder,
+    recover_folder,
+    remove_private_folder,
+    StudioError,
+)
 from .backend.lib.errors import AuthenticationError, CertificateError, RecoveryPending
 from .backend.lib.net_client import save_credentials
 from homeassistant.helpers import issue_registry as ir
 import json
-import shutil
 from .backend.lib.bridge import probe
 from .const import DOMAIN
 
@@ -311,7 +318,12 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
             selected = set((self.selection or {}).get("ids", self.installation.get("selected", [])))
             matches = []
             for marker in private_folder(self.hass, "").glob("*/removal-pending.json"):
-                old = json.loads((marker.parent / "installation.json").read_text())
+                try:
+                    old = json.loads((marker.parent / "installation.json").read_text())
+                except (OSError, ValueError):
+                    # Keep the persistent recovery notice/material, but an
+                    # incomplete unrelated record cannot crash all new setups.
+                    continue
                 path = marker.parent / "esp/credentials.json"
                 same_device = bool(
                     self.device
@@ -361,7 +373,7 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
                 old["bridge"] = self.installation["bridge"]
                 save_credentials(folder / "installation.json", old)
                 recover_folder(folder)
-                shutil.rmtree(folder)
+                remove_private_folder(folder)
                 removed.append(folder.name)
             return removed
 
@@ -417,9 +429,7 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="stop_first")
         if not self.saved_entry and not self.orphans_confirmed and await self.orphan_folders():
             return await self.async_step_orphan_recover()
-        identifier = (
-            f"{self.installation['bridge']['id']}_{'_'.join(sorted(self.installation['selected']))}"
-        )
+        identifier = "controller_" + uuid4().hex
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if self.saved_entry and entry.entry_id == self.saved_entry.entry_id:
                 continue
@@ -434,6 +444,8 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
         if self.saved_entry:
+            if not self.saved_entry.state.recoverable:
+                return self.async_abort(reason="restart_required")
             # Keep existing IDs, automations, palettes and scene storage stable.
             current = getattr(self.saved_entry, "runtime_data", None)
             if current and not current.api.closed:
@@ -483,15 +495,17 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
                 if c and not c.api.closed:
                     async with c.action_lock:
                         async with c.api.lock:
-                            await self.hass.async_add_executor_job(
-                                recover_folder, private_folder(self.hass, self.saved_entry.entry_id)
-                            )
                             await self.hass.async_add_executor_job(c.api.app.close)
+                            await self.hass.async_add_executor_job(
+                                recover_folder,
+                                private_folder(self.hass, self.saved_entry.entry_id),
+                            )
                             c.api.app.studio = None
                     await c.async_request_refresh()
                 else:
                     await self.hass.async_add_executor_job(
-                        recover_folder, private_folder(self.hass, self.saved_entry.entry_id)
+                        recover_folder,
+                        private_folder(self.hass, self.saved_entry.entry_id),
                     )
                 return self.async_abort(reason="recovery_successful")
             except (
@@ -571,9 +585,13 @@ class FestaviaOptions(OptionsFlow):
     """Installation choices; runtime controls remain entities and actions."""
 
     async def async_step_init(self, user_input=None):
+        if self.config_entry.state.value != "loaded":
+            return self.async_abort(reason="not_loaded")
         return self.async_show_menu(step_id="init", menu_options=["palettes", "network"])
 
     async def async_step_palettes(self, user_input=None):
+        if self.config_entry.state.value != "loaded":
+            return self.async_abort(reason="not_loaded")
         c = self.config_entry.runtime_data
         if user_input is not None:
             async with c.action_lock:
@@ -590,6 +608,8 @@ class FestaviaOptions(OptionsFlow):
         )
 
     async def async_step_network(self, user_input=None):
+        if self.config_entry.state.value != "loaded":
+            return self.async_abort(reason="not_loaded")
         c = self.config_entry.runtime_data
         if not c.api.app.device_path.exists():
             return self.async_abort(reason="no_esp")

@@ -32,7 +32,7 @@ and actions, not a configuration website.
 The protocol library runs in HA's executor behind one serialized client. Playback
 runs on the ESP32; HA does not stream an animation frame on every poll. Private
 journals survive restarts. Setup and reload never start playback automatically.
-Existing entity unique IDs and saved controls survive migration when the old private installation is present. Native polling reuses its pinned ESP TLS connection, with Hue inventory refreshed before acquisition/writes. Lifecycle operations share the same action and transport locks. Removal retains a native Repairs flow whenever recovery cannot be confirmed.
+Existing entity unique IDs and saved controls survive migration when the old private installation is present. Native polling reuses its pinned ESP TLS connection, with Hue inventory refreshed before acquisition/writes. Lifecycle operations share the same action and transport locks. Unconfirmed restoration retains a persistent HA recovery notice. Native Reconfigure/re-add flows perform recovery, including after restart with no configured entry. A generic Repairs confirmation cannot accidentally retire the recovery capsule.
 
 ## Community contribution boundaries
 

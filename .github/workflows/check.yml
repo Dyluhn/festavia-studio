@@ -21,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
       - run: docker run --rm -v "$PWD:/work:ro" --entrypoint python ghcr.io/home-assistant/home-assistant:2026.10.1 /work/tests/ha_runtime.py
+      - run: docker run --rm -v "$PWD:/work:ro" --entrypoint python ghcr.io/home-assistant/home-assistant:2026.10.1 /work/tests/ha_restart.py
   hassfest:
     runs-on: ubuntu-24.04
     steps:

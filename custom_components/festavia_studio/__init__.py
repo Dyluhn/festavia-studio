@@ -8,9 +8,9 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.storage import Store
 import logging
-import shutil
+import http.client
 import json
-from .api import NativeClient, StudioError, private_folder, recover_folder
+from .api import NativeClient, StudioError, private_folder, recover_folder, remove_private_folder
 from .const import DOMAIN, PLATFORMS, VERSION
 from .coordinator import StudioCoordinator
 
@@ -118,6 +118,7 @@ async def async_setup_entry(hass, entry):
 
             raise ConfigEntryNotReady(translation_domain=DOMAIN, translation_key=exc.key) from None
         raise
+    ir.async_delete_issue(hass, DOMAIN, "recovery_" + entry.entry_id)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -192,8 +193,10 @@ async def async_unload_entry(hass, entry):
         try:
             await c.api.close()
         except StudioError:
-            c.reconfiguring = False
-            return False
+            # A network outage must not strand HA in FAILED_UNLOAD. The durable
+            # lease remains and the next setup retries restoration first.
+            await c.api.close(restore=False)
+            recovery_notice(hass, entry.entry_id)
         return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -210,21 +213,26 @@ async def async_remove_entry(hass, entry):
         # this callback. Preserve the recovery material if contact is lost.
         if folder.exists():
             await hass.async_add_executor_job(recover_folder, folder)
-            await hass.async_add_executor_job(shutil.rmtree, folder)
-    except (OSError, RuntimeError, ValueError, KeyError):
+            await hass.async_add_executor_job(remove_private_folder, folder)
+    except (OSError, http.client.HTTPException, RuntimeError, ValueError, KeyError):
         marker = folder / "removal-pending.json"
         from .backend.lib.net_client import save_credentials
 
         await hass.async_add_executor_job(save_credentials, marker, {"entry_id": entry.entry_id})
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "recovery_" + entry.entry_id,
-            is_fixable=True,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="removal_recovery",
-            data={"entry_id": entry.entry_id},
-        )
+        recovery_notice(hass, entry.entry_id)
     await Store(hass, 1, f"{DOMAIN}.{entry.entry_id}.scene").async_remove()
     if not hass.config_entries.async_entries(DOMAIN):
         await async_remove_resource(hass)
+
+
+def recovery_notice(hass, entry_id):
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "recovery_" + entry_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="recovery_pending",
+        data={"entry_id": entry_id},
+    )

@@ -603,10 +603,7 @@ class Player:
             and result.get("state") in ("restored", "idle")
             and self.journal.exists()
         ):
-            saved = json.loads(self.journal.read_text())
-            if not saved.get("restored"):
-                saved["restored"] = True
-                save_credentials(self.journal, saved)
+            self.retire_journal()
         return result
 
     def wait(self, states, timeout=45):
@@ -627,11 +624,19 @@ class Player:
     def stop(self, off=False):
         self.command("player_stop", off=off)
         result = self.wait({"restored", "idle"}, 60)
-        if self.journal.exists():
+        self.retire_journal()
+        return result
+
+    def retire_journal(self):
+        if not self.journal.exists():
+            return
+        try:
             saved = json.loads(self.journal.read_text())
+        except ValueError:
+            saved = {}
+        if not saved.get("restored"):
             saved["restored"] = True
             save_credentials(self.journal, saved)
-        return result
 
     def play(self, scene, *, seconds=0, layout=None, aliases=None):
         with operation_lock(self.profile):

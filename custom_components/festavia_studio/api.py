@@ -89,6 +89,23 @@ def recover_folder(folder, updates=None):
         app.close()
 
 
+def remove_private_folder(folder):
+    """Keep minimal connection metadata retryable if filesystem cleanup fails."""
+    import shutil
+
+    metadata = {
+        name: (folder / name).read_bytes()
+        for name in ("installation.json", "esp/credentials.json")
+        if (folder / name).exists()
+    }
+    try:
+        shutil.rmtree(folder)
+    except OSError:
+        for name, raw in metadata.items():
+            save_credentials(folder / name, json.loads(raw))
+        raise
+
+
 def commission(installation, device, operation, data):
     """Validate candidates in temporary storage; never borrow a live journal."""
     with tempfile.TemporaryDirectory(prefix="festavia-setup-") as folder:
@@ -170,6 +187,10 @@ class NativeClient:
 
         self.app = await self._execute(create)
         await self._sync_hue()
+        # An interrupted unload keeps its lease. Reconnect/retry restores it
+        # before exposing controls; startup never resumes a previous playback.
+        if await self._execute(self.app.recovery_pending):
+            await self._execute(self.app.restore)
         self.targets = await self._execute(self.app.selected)
 
     async def _sync_hue(self):

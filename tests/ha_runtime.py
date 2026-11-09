@@ -50,6 +50,7 @@ class Wire:
         self.token = TOKEN
         self.link = False
         self.offline = False
+        self.protocol_error = None
         self.device_auth = False
         self.ota_error = False
         self.calls = []
@@ -87,6 +88,8 @@ class Wire:
         self.calls.append((host, method, path, copy.deepcopy(data)))
         if self.offline:
             raise OSError("private-wire-detail")
+        if self.protocol_error is not None:
+            raise self.protocol_error
         device = host == "192.168.1.3"
         if not device:
             if path == "/api/config":
@@ -258,7 +261,6 @@ async def main():
         from custom_components.festavia_studio.backend.lib import service as backend, control
         from custom_components.festavia_studio.diagnostics import async_get_config_entry_diagnostics
         from custom_components.festavia_studio.api import private_folder, has_recovery
-        from custom_components.festavia_studio.repairs import async_create_fix_flow
         from custom_components.festavia_studio.backend.lib.net_client import save_credentials
         from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -514,17 +516,11 @@ async def main():
             assert offline_folder in await reconnect.orphan_folders(), (
                 "same ESP lease lost when new fixture differs"
             )
-            repair = await async_create_fix_flow(hass, issue_id, {"entry_id": entry.entry_id})
-            repair.hass = hass
-            assert (await repair.async_step_init())["step_id"] == "confirm"
-            result = await repair.async_step_confirm({})
-            assert (
-                result["type"] == "create_entry"
-                and not offline_folder.exists()
-                and not wire.player["armed"]
-            ), result
+            assert issue.is_persistent and not issue.is_fixable
+            await reconnect.recover_orphans()
+            assert not offline_folder.exists() and not wire.player["armed"]
             assert ir.async_get(hass).async_get_issue("festavia_studio", issue_id) is None
-            checks.append("offline_remove_retains_recovery_and_native_repair_restores")
+            checks.append("offline_remove_retains_recovery_and_native_readd_restores")
             # Reuse an existing HA Hue entry; a disabled Hue entry avoids opening
             # a second real Hue connection in this isolated runtime.
             from homeassistant.config_entries import ConfigEntryDisabler
@@ -656,4 +652,5 @@ async def main():
         shutil.rmtree(folder)
 
 
-print(json.dumps(asyncio.run(main())))
+if __name__ == "__main__":
+    print(json.dumps(asyncio.run(main())))

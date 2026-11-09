@@ -1,12 +1,13 @@
 # 0.7.0 — lifecycle and reliability fixes
 
 - Real authentication errors and native reauthentication; follow current credentials/address from an existing Hue entry, with identity and certificate checks.
-- Restore and drain on unload/removal; confirm restored power by bridge readback before retiring its journal. Preserve failed restoration in an HA Repairs flow; recover armed devices during recommissioning.
+- Restore and drain on unload/removal; confirm restored power by bridge readback before retiring its journal. Preserve failed restoration with a persistent HA recovery notice and native setup recovery; recover armed devices during recommissioning.
 - Protect actual recovery journals before fixture/mode changes, including unloaded entries.
 - Reject black/mixed-tone native palettes before staging; reserve Custom, serialize preset saves and concurrent edits.
 - Translate OTA/connection errors; declare HA dependencies/config schema, entity translations/icons/categories and actual firmware version.
 - Reuse the pinned native transport, poll every 10 seconds, cache inventory/firmware and avoid recorder churn from failure counters.
 - Remove legacy app/CLI/USB dependencies from HA runtime and test the actual packaged backend; add lifecycle, failure, concurrency and release privacy regressions.
+- Survive restart after offline removal, retry offline reload without Failed unload, retain legacy entity IDs while allowing former fixtures to be added again, and keep partial filesystem cleanup retryable.
 - ESP32 firmware remains the hardware-tested 0.3.4 image.
 
 # 0.6.0 — Home Assistant integration

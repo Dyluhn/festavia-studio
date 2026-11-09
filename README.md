@@ -152,12 +152,18 @@ not mirror a Hue light switched on independently. Turning the effect light off
 switches the selected lights off. Stop and restore restores the captured appearance
 and respects an external power-off.
 
-Reload and removal drain pending actions and restore playback. Online removal
+Reload and removal drain pending actions and restore playback. If a reload
+cannot reach the device, HA retries setup and restores the retained lease on
+reconnection, without getting stuck in Failed unload. Online removal
 cleans private state and the optional card resource when the last entry is removed.
-If restoration cannot be confirmed during removal, **Settings → System → Repairs**
-keeps a Festavia repair with private recovery data. Reconnect the original equipment
-and complete that repair; updated addresses/credentials can be supplied there.
-Re-adding the same lights also offers recovery. Do not manually delete recovery
+If restoration cannot be confirmed, **Settings → System → Repairs** keeps a
+persistent Festavia recovery notice, including after an HA restart. Reconnect the
+original equipment. If the entry still exists, use **Reconfigure → Recover
+playback** or reload it; connection changes belong in **Reconfigure → Connection**.
+If removed, **add Festavia Studio again**, select the original bridge/lights and
+confirm recovery when offered. Updated credentials can be entered during setup.
+The notice clears only after recovery. It deliberately offers no generic Repair
+confirmation when the component is unloaded. Do not manually delete recovery
 files before restoration. Remove any card you added yourself, then the component
 files. Removing the integration does not reset or unpair Hue lights or the ESP32.
 

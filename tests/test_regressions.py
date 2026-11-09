@@ -85,6 +85,19 @@ class RecoveryTests(unittest.TestCase):
             self.assertFalse(owner.library.exists())
             owner.close()
 
+    def test_corrupt_host_journal_can_retire_after_firmware_confirms_restore(self):
+        with tempfile.TemporaryDirectory() as folder:
+            config = Path(folder) / "credentials.json"
+            net_client.save_credentials(
+                config, {"url": "https://192.168.1.2", "token": "a" * 64, "tls_sha256": "b" * 64}
+            )
+            owner = player.Player({"credentials": str(config)})
+            owner.journal.write_text("{broken")
+            with patch.object(owner, "command", return_value={"armed": False, "state": "restored"}):
+                owner.stop()
+            self.assertTrue(json.loads(owner.journal.read_text())["restored"])
+            owner.close()
+
 
 class TransportTests(unittest.TestCase):
     def connection(self, status):
