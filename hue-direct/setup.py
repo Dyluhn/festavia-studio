@@ -223,6 +223,19 @@ def print_status(identity, state):
     print(f"Master: {'on' if state['master'] else 'off'}; program: {state['effect']}")
     print(f"Installation brightness ceiling: {state['installation_cap']}%")
     print(f"Status: {state['state']}; {state['error']}")
+    player = state.get("player", {})
+    reason = player.get("reason")
+    if not player.get("playing") and reason in (
+        "target_unresponsive",
+        "target_unreachable",
+        "delivery_failed",
+        "hue_watchdog_expired",
+        "network_changed",
+        "restore_unconfirmed",
+    ):
+        print(f"Last playback stopped: {reason}")
+        print("Check the light's power and radio range, then the controller's Hue connection.")
+        print("Playback stays stopped until you deliberately start it again.")
 
 
 def verify_ready(credentials):

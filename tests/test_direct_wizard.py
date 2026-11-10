@@ -65,6 +65,21 @@ class WizardTests(unittest.TestCase):
             args += ["--device-credentials", str(self.credentials)]
         return args + list(extra)
 
+    def test_check_surfaces_delivery_stops_even_when_master_returns_to_idle(self):
+        self.status["player"] = {
+            "playing": False,
+            "state": "released",
+            "reason": "target_unresponsive",
+        }
+        wizard.print_status({}, self.status)
+        self.assertIn("Last playback stopped: target_unresponsive", self.output.getvalue())
+        self.assertIn("until you deliberately start", self.output.getvalue())
+        self.output.seek(0)
+        self.output.truncate(0)
+        self.status["player"]["reason"] = "requested_stop"
+        wizard.print_status({}, self.status)
+        self.assertNotIn("Last playback stopped:", self.output.getvalue())
+
     def commissioning(self, argv):
         result = {
             "positions": 27,

@@ -177,6 +177,7 @@ not stored there. Extracting a newer release does not erase these saved files.
 | Wi-Fi fails | Check the exact SSID/password and 2.4 GHz coverage. Continue the saved first-install session; do not reflash just to correct Wi-Fi. |
 | No supported Festavia | Confirm the chosen bridge, model LCX030 and software 1.163.5. This candidate does not claim compatibility with all Festavia products. |
 | Preset scene does not start | Choose a single plain color on the real Festavia, stop Hue Sync/native effects, then try again. Use Check a controller for the reported error. |
+| Playback stops with `target_unresponsive` / `delivery_failed` | Check the Festavia's power and radio coverage. Check a controller shows the last playback stop even after Master returns to off/idle. The controller leaves playback stopped; after fixing the connection, deliberately recall your scene or turn Master on. |
 | Address changed | Reserve DHCP addresses. For a moved C6, update `url` in its private `device.json`; for a moved bridge, Continue with `--bridge NEW_IP` and authorize it again. |
 
 Advanced command-line options remain in [README.md](README.md). Discovery and

@@ -1,6 +1,6 @@
 # Validation record — 2026-11-09–10
 
-The combined community beta passes 178 repository tests across both editions.
+The combined community beta passes 179 repository tests across both editions.
 The historical 156-test Direct-branch result below predates their combination.
 Both are software results; hardware scope is stated separately.
 

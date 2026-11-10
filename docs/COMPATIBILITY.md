@@ -2,7 +2,7 @@
 
 The combined source contains both the HA edition (integration 0.13.0 / firmware
 0.4.0) and Hue-only Direct (firmware 0.5.0). The complete combined check passes
-**178 tests**, including production C for both editions, all-count rendering,
+**179 tests**, including production C for both editions, all-count rendering,
 mobile editing, both installers and extracted packaging. This catches shared
 Python imports and packaging dependencies that separate-branch checks miss.
 The images are unchanged; their source/image identities are verified when packed.
@@ -43,6 +43,20 @@ transport correction, not a claim about the SDK's underlying cause.
 Saved presets, palette, brightness ceilings and Hue takeover settings survived.
 The fixture stayed OFF. Its original appearance, map and aliases were restored
 and checked separately from the controller's image identity.
+
+## Actual Home Assistant UI and upgrade
+
+A disposable HA Core 2026.10.1 installation completed the native config flow,
+selected the real bridge/fixture in gradient mode, and added the bundled card
+through the normal dashboard card picker. No production HA dashboard or entry
+was created for this check. Playback in this disposable instance was not started.
+
+After saving a three-color palette and a complete scene in 0.12.1, upgrading to
+0.13.0 preserved all 14 bridge-mode entity identities, entry options (including
+the 19% ceiling) and saved library files. An old staged seven-color selection
+fitted to the fixture's five API gradient points. Both saved items loaded through
+the actual card. At 390-pixel phone width, editing one swatch persisted its new
+color while retaining the other colors and 6% staged brightness.
 
 The sections below retain dated evidence. Current-commit CI and public download
 checks are linked from the release. A software pass never qualifies unavailable
