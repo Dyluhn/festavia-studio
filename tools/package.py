@@ -113,6 +113,10 @@ def main():
         "ACCEPTANCE.md",
         "FIRMWARE.md",
         "FIRMWARE_ACCEPTANCE.json",
+        "INSTALL.md",
+        "RELEASING.md",
+        "COMPATIBILITY.md",
+        "RELEASE_NOTES.md",
     ):
         entries["docs/" + name] = (ROOT / "docs" / name).read_bytes()
     for name in (
@@ -122,11 +126,13 @@ def main():
         "transport.py",
         "package.py",
         "check.sh",
+        "compatibility.py",
     ):
         entries["tools/" + name] = (ROOT / "tools" / name).read_bytes()
     add(release, "firmware-release")
     sums = "".join(f"{sha(raw)}  {name}\n" for name, raw in sorted(entries.items()))
     entries["SHA256SUMS"] = sums.encode()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     write_zip(args.output, entries, "festavia-studio/")
     integration = args.output.parent / f"festavia-studio-integration-{version}.zip"
     native = {
@@ -136,6 +142,10 @@ def main():
     }
     write_zip(integration, native)
     assert not any("config.yaml" in name or "/web/" in name for name in native)
+    checksums = args.output.parent / f"festavia-studio-{version}-SHA256SUMS"
+    checksums.write_text(
+        "".join(f"{sha(p.read_bytes())}  {p.name}\n" for p in (args.output, integration))
+    )
     print(
         json.dumps(
             {
@@ -144,6 +154,7 @@ def main():
                 "files": len(entries),
                 "integration_archive": str(integration),
                 "integration_sha256": sha(integration.read_bytes()),
+                "checksums": str(checksums),
                 "firmware_verified": True,
                 "source_verified": True,
                 "no_installable_addon": True,

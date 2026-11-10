@@ -9,7 +9,10 @@ virtual environment, install `requirements-dev.txt`, then run
 `python -m playwright install chromium` and `bash tools/check.sh`. The C harness
 compiles the shipped player; only its radio, clock and NVS boundaries are simulated.
 Run `tests/ha_runtime.py` and `tests/ha_restart.py` using the pinned Home Assistant
-container in CI. Keep protocol calls in the executor; keep one serialized device owner and
+containers in CI. `python tools/compatibility.py --output /tmp/festavia-compat`
+runs both suites on the minimum, installed-regression and current HA versions,
+with both bridge model responses and container networking disabled. Each case
+must emit its expected HA version and pass all assertions. Keep protocol calls in the executor; keep one serialized device owner and
 persistent recovery journals. Never restart playback during setup/reload.
 
 For a new native fixture profile, contribute model, fixture firmware, live logical
@@ -24,3 +27,9 @@ validate HACS metadata, and keep the included hassfest workflow passing.
 Core submission additionally needs a standalone protocol library
 and the current Bronze requirements. No certification or quality tier is implied
 by this preview.
+
+See [installation](docs/INSTALL.md), [release procedure](docs/RELEASING.md) and the
+dated [compatibility report](docs/COMPATIBILITY.md). Keep physical hardware
+evidence separate from the isolated HA matrix. USB-tool CI verifies imports,
+dependencies, CLI help and image validation on all three desktop platforms;
+it does not flash physical boards on those platforms.

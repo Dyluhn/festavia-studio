@@ -23,6 +23,7 @@ from ha_runtime import (
     wire,
     fake_hue_events,
     HomeAssistant,
+    HA_VERSION,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import issue_registry as ir
@@ -350,7 +351,13 @@ async def main():
             checks.append(
                 "removed_hue_lights_require_confirmation_restore_present_lights_and_allow_reselection"
             )
-            return {"passed": True, "checks": checks, "actual_ha_restart": True}
+            return {
+                "passed": True,
+                "home_assistant": HA_VERSION,
+                "bridge_model": wire.bridge_model,
+                "checks": checks,
+                "actual_ha_restart": True,
+            }
         finally:
             wire.offline = False
             wire.protocol_error = None

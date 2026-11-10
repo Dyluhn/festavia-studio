@@ -18,12 +18,38 @@ jobs:
       - run: bash tools/check.sh
   home-assistant:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        home-assistant: ["2026.10.0", "2026.10.1", "2026.11.1"]
+        bridge: [BSB002, BSB003]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-      - run: docker run --rm -v "$PWD:/work:ro" --entrypoint python ghcr.io/home-assistant/home-assistant:2026.10.1 /work/tests/ha_runtime.py
-      - run: docker run --rm -v "$PWD:/work:ro" --entrypoint python ghcr.io/home-assistant/home-assistant:2026.10.1 /work/tests/ha_restart.py
+      - run: docker run --rm -e FESTAVIA_TEST_BRIDGE_MODEL=${{ matrix.bridge }} -v "$PWD:/work:ro" --entrypoint python ghcr.io/home-assistant/home-assistant:${{ matrix.home-assistant }} /work/tests/ha_runtime.py
+      - run: docker run --rm -e FESTAVIA_TEST_BRIDGE_MODEL=${{ matrix.bridge }} -v "$PWD:/work:ro" --entrypoint python ghcr.io/home-assistant/home-assistant:${{ matrix.home-assistant }} /work/tests/ha_restart.py
+  usb-tools:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -r requirements-usb.txt
+      - run: python tools/first-install.py --help
+      - run: python tools/first-install.py --port UNUSED --ssid Test --dry-run
   hassfest:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
       - uses: home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361
+  hacs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
+        with:
+          category: integration
+          comment: false

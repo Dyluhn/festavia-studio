@@ -24,6 +24,7 @@ os.environ.pop("SUPERVISOR_TOKEN", None)
 os.environ.pop("HASSIO", None)
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from homeassistant import bootstrap, loader
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame, issue_registry as ir
 
@@ -49,6 +50,8 @@ class Wire:
     """Small firmware/Hue simulator at the requests and physical-ZCL boundary."""
 
     def __init__(self):
+        self.bridge_model = os.environ.get("FESTAVIA_TEST_BRIDGE_MODEL", "BSB003")
+        assert self.bridge_model in ("BSB002", "BSB003")
         self.key = "test-private"
         self.token = TOKEN
         self.link = False
@@ -105,7 +108,11 @@ class Wire:
         device = host == "192.168.1.3"
         if not device:
             if path == "/api/config":
-                return 200, {"bridgeid": "testbridge", "name": "Test bridge", "modelid": "BSB003"}
+                return 200, {
+                    "bridgeid": "testbridge",
+                    "name": "Test bridge",
+                    "modelid": self.bridge_model,
+                }
             if path == "/api":
                 return 200, [{"success": {"username": self.key}}] if self.link else [
                     {"error": {"type": 101}}
@@ -1257,6 +1264,8 @@ async def main():
             checks.append("bridge_lease_reauth_restores_with_new_key_during_unload")
             return {
                 "passed": True,
+                "home_assistant": HA_VERSION,
+                "bridge_model": wire.bridge_model,
                 "checks": checks,
                 "production_backend": True,
                 "transport_only_simulation": True,

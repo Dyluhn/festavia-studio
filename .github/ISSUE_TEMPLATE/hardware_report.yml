@@ -1,0 +1,28 @@
+name: Hardware compatibility result
+description: Contribute physical results from another installation
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: HA and integration versions, bridge model, ESP32 board/firmware
+    validations:
+      required: true
+  - type: input
+    id: fixture
+    attributes:
+      label: Festavia model, fixture firmware and detected logical count
+      description: Distinguish physical lamp count, marketing count and count reported in Studio diagnostics. Note any cut or extension.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What was physically verified?
+      description: Describe setup/join, static order/repeat, motion/direction, Hue takeover, Stop and restore, and OTA. Mark untested items. Use a low brightness and respect your configured cap.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and limitations
+      description: Include reviewed diagnostics and observed coverage. Do not share device connection files, PAN/IEEE identifiers or household names. Do not bypass a rejected native model/firmware profile.

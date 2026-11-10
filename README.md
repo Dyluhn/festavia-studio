@@ -1,5 +1,7 @@
 # Festavia Studio
 
+![Festavia Studio](custom_components/festavia_studio/brand/icon.png)
+
 A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
@@ -31,6 +33,9 @@ HA actions accept `effect: snake`, `colors: [...]` for the background and
 
 ## Install and connect
 
+Start with the [installation guide](docs/INSTALL.md) for the Home Assistant
+download, first USB setup on Windows/macOS/Linux, and ordinary wireless updates.
+
 Requires Home Assistant **2026.10 or newer**, a square Hue Bridge or Bridge Pro,
 and Festavia lights already paired to that bridge. HA Container and HAOS are
 supported; Supervisor is not required. Bridge Pro is physically tested. The
@@ -49,6 +54,10 @@ original round bridge lacks the required local API v2 and is unsupported.
 
 A public repository is not yet published. The release is structured for a HACS
 custom integration; it is not in HACS' default catalog or Home Assistant Core.
+On HA 2026.11+, Marketplace replaces HACS. Once the repository is public,
+**Settings → Marketplace → Add from link** is the intended installation path;
+HA 2026.10 users can add it as a HACS custom repository. The integration and its
+optional card are installed together. Manual ZIP installation works now.
 
 ## Use it in Home Assistant
 

@@ -100,6 +100,7 @@ single-frame transport, and maps are never rewritten in a repeating animation.
 The host waits according to program length and rejects older firmware before
 writing a program beyond that firmware’s advertised capacity.
 
-The same binary handles 16/32/48-point descriptors in production C and HA runtime
-tests. The physically available LCX030/1.163.5 reports 27 points; other physical
-kit sizes are supported by discovery but have not been physically certified here.
+The same binary handles every installed count from 1 through 48; there is no
+pack-size setting. Production C static paint/recovery tests cover every count
+10–48, and HA setup/playback tests cover every count 1–48. The physically available
+LCX030/1.163.5 reports 27 points; other lengths have not been physically tested here.

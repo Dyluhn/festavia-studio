@@ -1,5 +1,6 @@
 # 0.12.1 — every installed count through 48
 
+- Prepare the community preview: desktop-specific first-install guide, Marketplace/HACS instructions, download checksums, hardware report forms and a validated draft-only release workflow. Expand actual HA compatibility to 2026.10.0/2026.10.1/2026.11.1 with square/Pro bridge responses. Runtime component and firmware are unchanged by this packaging pass.
 - Treat the supported quantity as every integer from 1 through 48, including shortened strings; no pack-size selection is required.
 - Resize default and staged palettes/layouts to the discovered length. Short strings no longer inherit more default colors than they have pucks. Preserve complete saved libraries.
 - Hide Snake over background when only one puck exists; its foreground requires a background gap. Other available effects and palette limits follow the detected count.

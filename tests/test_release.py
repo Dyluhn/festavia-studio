@@ -1,6 +1,7 @@
 """Build real release archives and refuse secrets or unverified firmware."""
 
 import json
+import hashlib
 from pathlib import Path
 import shutil
 import subprocess
@@ -36,7 +37,10 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         info = json.loads(result.stdout)
         self.assertTrue(info["firmware_verified"] and info["source_verified"])
-        with zipfile.ZipFile(info["integration_archive"]) as archive:
+        with (
+            zipfile.ZipFile(info["integration_archive"]) as archive,
+            zipfile.ZipFile(info["archive"]) as source,
+        ):
             names = archive.namelist()
             self.assertIn("custom_components/festavia_studio/config_flow.py", names)
             self.assertFalse(
@@ -45,6 +49,23 @@ class ReleaseTests(unittest.TestCase):
                     for n in names
                 )
             )
+            for name in names:
+                self.assertEqual(archive.read(name), source.read("festavia-studio/" + name))
+            for name in ("INSTALL.md", "COMPATIBILITY.md", "RELEASING.md"):
+                self.assertIn("festavia-studio/docs/" + name, source.namelist())
+            for line in source.read("festavia-studio/SHA256SUMS").decode().splitlines():
+                digest, name = line.split("  ", 1)
+                self.assertEqual(
+                    hashlib.sha256(source.read("festavia-studio/" + name)).hexdigest(), digest
+                )
+        for line in Path(info["checksums"]).read_text().splitlines():
+            digest, name = line.split("  ", 1)
+            self.assertEqual(
+                hashlib.sha256((self.output.parent / name).read_bytes()).hexdigest(), digest
+            )
+        rebuilt = json.loads(self.run_package().stdout)
+        self.assertEqual(info["sha256"], rebuilt["sha256"])
+        self.assertEqual(info["integration_sha256"], rebuilt["integration_sha256"])
 
     def test_private_runtime_files_and_symlinks_abort_packaging(self):
         folder = self.root / "custom_components/festavia_studio"

@@ -1,0 +1,31 @@
+name: Bug report
+description: A setup, palette, playback or update failure
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach device credentials, HA .storage files or complete backups. Review diagnostics before attaching them.
+  - type: input
+    id: versions
+    attributes:
+      label: Integration and Home Assistant versions
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: Bridge model, Festavia model/firmware and detected puck count
+      description: Include ESP32 board and firmware version for individual-puck mode.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected behavior and actual result
+      description: Include mode, effect, palette length and the exact HA error, if any.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reviewed diagnostics or relevant log excerpt
+      description: Remove tokens, addresses, household names and unrelated devices.
