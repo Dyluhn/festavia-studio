@@ -1,10 +1,19 @@
 name: Hardware compatibility result
 description: Contribute physical results from another installation
 body:
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options:
+        - Home Assistant integration
+        - Hue-only (Festavia Direct)
+    validations:
+      required: true
   - type: input
     id: versions
     attributes:
-      label: HA and integration versions, bridge model, ESP32 board/firmware
+      label: Project release, bridge model, ESP32 board/firmware; HA version if using HA
     validations:
       required: true
   - type: input

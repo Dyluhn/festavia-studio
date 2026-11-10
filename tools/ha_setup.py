@@ -9,11 +9,15 @@ import subprocess
 import sys
 import uuid
 
-import bootstrap
 from transport import module
 from usb_link import Link
 
 ROOT = Path(__file__).resolve().parents[1]
+_bootstrap_spec = importlib.util.spec_from_file_location(
+    "festavia_ha_bootstrap", ROOT / "tools/bootstrap.py"
+)
+bootstrap = importlib.util.module_from_spec(_bootstrap_spec)
+_bootstrap_spec.loader.exec_module(bootstrap)
 net = module("net_client")
 spec = importlib.util.spec_from_file_location("first_install", ROOT / "tools/first-install.py")
 installer = importlib.util.module_from_spec(spec)

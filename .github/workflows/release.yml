@@ -1,4 +1,4 @@
-name: Prepare release draft
+name: Prepare combined release draft
 on:
   workflow_dispatch:
     inputs:
@@ -37,10 +37,19 @@ jobs:
       - name: Build verified release artifacts
         run: |
           mkdir -p "$RUNNER_TEMP/release"
-          python3 tools/package.py --output "$RUNNER_TEMP/release/festavia-studio-${{ steps.version.outputs.value }}.zip"
-      - name: Create private reviewable draft
+          docker run --rm -v "$PWD:/project" -w /project \
+            espressif/idf:v5.3.2 bash -ec '. "$IDF_PATH/export.sh"; idf.py -C hue-direct/firmware-source -B build-direct -DIDF_TARGET=esp32c6 -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32c6" build; python hue-direct/package.py --build build-direct --output dist/festavia-direct.zip'
+          python3 tools/release.py --tag "$RELEASE_TAG" \
+            --direct-archive dist/festavia-direct.zip --output "$RUNNER_TEMP/release"
+      - name: Create or update reviewable draft
         run: |
-          gh release create "$RELEASE_TAG" "$RUNNER_TEMP"/release/* \
-            --target "$GITHUB_SHA" --draft --prerelease \
-            --title "Festavia Studio $RELEASE_TAG — community preview" \
-            --notes-file docs/RELEASE_NOTES.md
+          if gh release view "$RELEASE_TAG" --json isDraft > "$RUNNER_TEMP/existing-release.json" 2>/dev/null; then
+            python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))["isDraft"] else "Refusing to replace a published release")' "$RUNNER_TEMP/existing-release.json"
+            gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease \
+              --title "Festavia Studio $RELEASE_TAG — public beta" --notes-file docs/RELEASE_NOTES.md
+            gh release upload "$RELEASE_TAG" "$RUNNER_TEMP"/release/* --clobber
+          else
+            gh release create "$RELEASE_TAG" "$RUNNER_TEMP"/release/* \
+              --target "$GITHUB_SHA" --draft --prerelease \
+              --title "Festavia Studio $RELEASE_TAG — public beta" --notes-file docs/RELEASE_NOTES.md
+          fi

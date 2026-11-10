@@ -54,6 +54,7 @@ def main():
         "node_modules",
         "test-results",
         "managed_components",
+        "controllers",
         "build",
     }
     private = {
@@ -64,6 +65,8 @@ def main():
         "player-session.json",
         "ha-connection.json",
         "festavia-ha-connection.json",
+        "festavia-direct-setup.json",
+        "hue-setup.json",
         "setup.json",
         "studio-presets.json",
         "bridge-presets.json",
@@ -111,7 +114,14 @@ def main():
         "pyproject.toml",
     ):
         entries[name] = (ROOT / name).read_bytes()
-    for name in ("custom_components", "firmware-source", "third_party", "tests", ".github"):
+    for name in (
+        "custom_components",
+        "firmware-source",
+        "third_party",
+        "tests",
+        ".github",
+        "hue-direct",
+    ):
         add(ROOT / name, name)
     for name in (
         "HA_DESIGN.md",
@@ -135,6 +145,7 @@ def main():
         "compatibility.py",
         "bootstrap.py",
         "ha_setup.py",
+        "release.py",
     ):
         entries["tools/" + name] = (ROOT / "tools" / name).read_bytes()
     launcher_folder = ROOT / "tools/launchers"

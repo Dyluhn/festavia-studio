@@ -68,21 +68,16 @@ def check_build(build):
     return data, description, files, current
 
 
-def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--build", type=Path, required=True)
-    p.add_argument("--output", type=Path, required=True)
-    p.add_argument("--esptool-python", default=sys.executable)
-    args = p.parse_args()
-    data, description, files, source_hashes = check_build(args.build)
-    release = args.output.parent / ("festavia-direct-" + VERSION + "-images")
+def prepare_build(build, output, esptool_python):
+    data, description, files, source_hashes = check_build(build)
+    release = output.parent / ("festavia-direct-" + VERSION + "-images")
     release.mkdir(parents=True, exist_ok=True)
     app = release / "festavia-direct-esp32c6.app.bin"
     app.write_bytes(data)
     factory = release / "festavia-direct-esp32c6.factory.bin"
-    flash = json.loads((args.build / "flasher_args.json").read_text())
+    flash = json.loads((build / "flasher_args.json").read_text())
     command = [
-        args.esptool_python,
+        esptool_python,
         "-m",
         "esptool",
         "--chip",
@@ -100,7 +95,7 @@ def main():
         "4MB",
     ]
     for offset, path in flash["flash_files"].items():
-        command += [offset, str(args.build / path)]
+        command += [offset, str(build / path)]
     subprocess.run(command, check=True)
     manifest = {
         "edition": "Festavia Direct",
@@ -122,6 +117,72 @@ def main():
     }
     manifest_path = release / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+    return files, app, factory, manifest_path, description, {}
+
+
+def reuse_archive(archive, output):
+    """Reuse unchanged qualified images; bind every input file to its manifest."""
+    prefix = "festavia-direct-" + VERSION + "/"
+    with zipfile.ZipFile(archive) as z:
+        sums = z.read(prefix + "SHA256SUMS").decode().splitlines()
+        for line in sums:
+            digest, name = line.split("  ", 1)
+            if sha(z.read(prefix + name)) != digest:
+                raise ValueError("Archive checksum mismatch: " + name)
+        manifest_raw = z.read(prefix + "hue-direct/release/manifest.json")
+        manifest = json.loads(manifest_raw)
+        files = source_files()
+        current = {f.relative_to(ROOT).as_posix(): sha(f.read_bytes()) for f in files}
+        if (
+            manifest.get("edition") != "Festavia Direct"
+            or manifest.get("version") != VERSION
+            or manifest.get("chip") != "esp32c6"
+            or manifest.get("flash_size") != "4MB"
+            or current != manifest.get("source_sha256")
+        ):
+            raise ValueError("Archive firmware source/version/target does not match")
+        names = ("festavia-direct-esp32c6.app.bin", "festavia-direct-esp32c6.factory.bin")
+        images = {}
+        for name in names:
+            raw = z.read(prefix + "hue-direct/release/" + name)
+            if sha(raw) != manifest["sha256"].get(name):
+                raise ValueError("Image checksum mismatch")
+            images[name] = raw
+        app = images[names[0]]
+        if app[176:208].hex() != manifest["elf_sha256"]:
+            raise ValueError("Image identity mismatch")
+        licenses = {
+            n.removeprefix(prefix): z.read(n)
+            for n in z.namelist()
+            if n.startswith(prefix + "hue-direct/licenses/") and not n.endswith("/")
+        }
+        if not licenses:
+            raise ValueError("Archive is missing SDK/library license notices")
+    release = output.parent / ("festavia-direct-" + VERSION + "-images")
+    release.mkdir(parents=True, exist_ok=True)
+    for name, raw in images.items():
+        (release / name).write_bytes(raw)
+    manifest_path = release / "manifest.json"
+    manifest_path.write_bytes(manifest_raw)
+    return files, release / names[0], release / names[1], manifest_path, None, licenses
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--build", type=Path)
+    source.add_argument("--reuse-archive", type=Path, help="Reuse source-bound unchanged firmware")
+    p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--esptool-python", default=sys.executable)
+    args = p.parse_args()
+    if args.build:
+        files, app, factory, manifest_path, description, licenses = prepare_build(
+            args.build, args.output, args.esptool_python
+        )
+    else:
+        files, app, factory, manifest_path, description, licenses = reuse_archive(
+            args.reuse_archive, args.output
+        )
     entries = {f.relative_to(ROOT).as_posix(): f.read_bytes() for f in files}
     public_files = [
         "hue-direct/README.md",
@@ -143,7 +204,10 @@ def main():
     for relative in public_files:
         entries[relative] = (ROOT / relative).read_bytes()
     for name in ("Setup Windows.cmd", "Setup macOS.command", "Setup Linux.sh"):
-        entries[name] = (ROOT / "hue-direct/launchers" / name).read_bytes()
+        launcher = ROOT / "hue-direct/launchers" / name
+        if not launcher.is_file():
+            launcher = ROOT / name
+        entries[name] = launcher.read_bytes()
     entries["README.md"] = (
         b"# Festavia Direct 0.5.0\n\n"
         b"Start with [GETTING_STARTED.md](hue-direct/GETTING_STARTED.md).\n\n"
@@ -175,15 +239,20 @@ def main():
     entries["LICENSE"] = (ROOT / "LICENSE").read_bytes()
     # Carry SDK/library notices with downloadable images, including the
     # separately licensed ZBOSS binary. Only license files enter the archive.
-    idf = Path(description["idf_path"])
-    for base, label in [
-        (idf, "esp-idf"),
-        *[
-            (Path(p), "components/" + Path(p).name)
-            for p in description["build_component_paths"]
-            if p
-        ],
-    ]:
+    entries.update(licenses)
+    idf = Path(description["idf_path"]) if description else None
+    for base, label in (
+        []
+        if description is None
+        else [
+            (idf, "esp-idf"),
+            *[
+                (Path(p), "components/" + Path(p).name)
+                for p in description["build_component_paths"]
+                if p
+            ],
+        ]
+    ):
         candidates = [base / "LICENSE", base / "NOTICE", base / "COPYING"]
         if label != "esp-idf":
             candidates += [

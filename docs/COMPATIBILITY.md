@@ -1,3 +1,21 @@
+# Combined community beta — 2026-11-10
+
+The combined source contains both the HA edition (integration 0.13.0 / firmware
+0.4.0) and Hue-only Direct (firmware 0.5.0). The complete combined check passes
+**174 tests**, including production C for both editions, all-count rendering,
+mobile editing, both installers and extracted packaging. This catches shared
+Python imports and packaging dependencies that separate-branch checks miss.
+The images are unchanged; their source/image identities are verified when packed.
+
+Both editions share one project GitHub release stream. HACS downloads the HA
+component from that project tag; the Direct ZIP and images have explicit edition
+names. Do not treat separate firmware versions as separate integration updates.
+
+The sections below retain dated evidence. Current-commit CI and public download
+checks are linked from the release. A software pass never qualifies unavailable
+physical bridges, counts or other Festavia models. Fresh pairing and independent
+household evidence remain distinct beta tasks.
+
 # Compatibility evidence
 
 ## 0.13.0 guided setup — checked 2026-11-10

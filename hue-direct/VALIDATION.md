@@ -1,5 +1,9 @@
 # Validation record — 2026-11-09–10
 
+The combined community beta passes 174 repository tests across both editions.
+The historical 156-test Direct-branch result below predates their combination.
+Both are software results; hardware scope is stated separately.
+
 Festavia Direct 0.5.0 is an experimental standalone edition. Hardware qualification
 uses an ESP32-C6 with 4 MB flash, Hue Bridge Pro BSB003 (API 1.78.0), and an LCX030
 on firmware 1.163.5 with 27 logical pucks. All controlled physical output stays

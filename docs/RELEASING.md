@@ -1,74 +1,80 @@
 # Community releases
 
-The first community release is a **preview**. The repository is currently private;
-preparing a draft does not make it public. Native hardware coverage is LCX030 /
-1.163.5 at 27 detected positions. Every count 1–48 is covered in production
-software tests. A square BSB002 bridge and a fresh-board first installation still
-need independent physical evidence. Preserve those distinctions in release notes.
+Festavia Studio uses one project release stream, tagged `v<integration-version>`.
+Each release contains the Home Assistant edition and the standalone Hue-only
+edition. Direct firmware keeps its independent image version. Never publish a
+separate `hue-direct-v...` release in this repository: HACS reads the shared feed
+and would offer the wrong product tag as an integration version.
 
-## Prepare a candidate
+## Prepare and validate
 
-1. Keep the manifest version, `const.py` version and card header aligned. Add
-   release notes describing behavior and actual validation. Keep firmware versions
-   separate; do not rebuild or reflash an unchanged image for a documentation update.
-2. Run `bash tools/check.sh` in the documented developer environment. The packager
-   verifies firmware/source hashes and rejects private runtime files and symlinks.
-3. Extract the resulting full-source ZIP into a fresh directory. Install its pinned
-   dependencies in a new environment and run its check script there. Its repackaged
-   archives should match the originals byte for byte.
+1. Align the integration manifest, const.py and card header. Keep the image version
+   unchanged when firmware source is unchanged. Update release notes and guides.
+2. Run `bash tools/check.sh` with the developer requirements, Chromium and cJSON.
+   Both editions must pass in the same checkout. The full Studio source archive
+   contains the Hue-only source/tests too; the small integration ZIP contains only
+   HA runtime files and installation documentation.
+3. Extract the full source archive into a fresh folder and run its checks using a
+   clean environment. Repackaged archives must match byte for byte. Run the
+   standalone ZIP's launchers and CLI dry runs from an extracted folder too.
 4. Run `python tools/compatibility.py --source <extracted-source> --output <evidence>`.
-   This runs actual HA in isolated containers, with network peers and Zigbee
-   simulated, on the minimum/current/regression versions and both bridge models.
-   A zero exit status requires explicit success reports from every suite.
-5. Require the three desktop USB-tool jobs, HA matrix and hassfest to pass.
-   The HACS action refuses private repositories, so its job is explicitly skipped
-   while private. Once public it runs automatically and must pass, without ignored
-   checks, before a public release/catalog submission. This private draft is not
-   HACS-validated. The USB jobs never open hardware. Record new physical results
-   separately; no physical capability is inferred from a simulator.
+   These real-HA containers simulate the network and Zigbee peers; they do not
+   establish physical hardware compatibility. Keep physical test records separate.
+5. Require desktop USB-tool jobs, both editions' tests, the HA matrix and hassfest
+   on the final commit. HACS validation must pass when public. Never suppress a
+   validator failure to qualify a release.
+6. Review intended Git history and all download assets for private information.
+   Keep setup folders, device files and household evidence outside the repository.
+7. Record fresh-install and hardware coverage honestly. Native qualification is
+   LCX030 / 1.163.5 at 27 detected positions on BSB003; counts 1–48 and BSB002
+   responses have software coverage. Additional physical combinations remain beta
+   testing, not blanket certification. Keep controlled physical tests below 20%.
 
-## Build and draft
+## Build a combined release
 
-`python tools/package.py --output <directory>/festavia-studio-<version>.zip`
-produces:
+The manual **Prepare combined release draft** workflow requires a successful
+Validate package run on its exact commit. It builds Direct with ESP-IDF 5.3.2,
+verifies source/image identities, then packages both editions. Rerunning updates
+an existing draft and refuses to replace a published release. It never changes
+repository visibility or publishes by itself.
 
-- `festavia-studio-<version>.zip`: complete source, guide and first-install image.
-- `festavia-studio-integration-<version>.zip`: manual HA installation.
-- `festavia-studio-<version>-SHA256SUMS`: checksums of both download archives.
+To package locally with a completed Direct build:
 
-The integration ZIP includes its `custom_components/` path for manual copying.
-Marketplace/HACS installs `custom_components/festavia_studio` directly from the
-tagged repository; `zip_release` is intentionally not enabled for that ZIP layout.
-User data stays in HA storage, not in the replaced component folder.
+```sh
+python tools/release.py --tag v0.13.0 --direct-build /path/to/build-direct --output /path/to/release
+```
 
-The **Prepare release draft** workflow is manual. Run it on the reviewed commit
-with a tag matching the integration version. It refuses a commit whose Validate
-package workflow has not passed, builds the artifacts, and creates a **draft
-prerelease** with the commit pinned. It never changes repository visibility or
-publishes the draft. A successful private run does not establish HACS acceptance;
-run Validate package again after making the repository public. Attach a concise
-human-reviewed note with the compatibility
-scope, limitations and link to the install guide before publishing.
+For unchanged qualified firmware, `--direct-archive /path/to/verified-direct.zip`
+can replace `--direct-build`. Every source hash, image hash, archive checksum and
+image identity is verified before reuse. SDK/library license notices travel with
+those images. It never substitutes a different image for changed firmware source.
 
-## Public beta and catalog
+The output contains the full Studio source ZIP, smaller HA integration ZIP,
+standalone Direct ZIP, Direct app/factory images and image manifest, plus a
+combined `SHA256SUMS` and `release-manifest.json`. All artifact names distinguish
+editions. The integration ZIP includes its `custom_components/` path for manual
+copying. HACS installs the component from the project tag; `zip_release` remains
+false because that manual ZIP is not laid out as a HACS runtime-only ZIP.
 
-The repository needs to be public before other users can use Marketplace custom
-repositories. Review the tracked source and intended history before changing
-visibility. Do not publish household profiles, device connection files or private
-test evidence. A source archive with valid checksums does not audit old Git history.
+## Publish a beta
 
-Once public, use a small volunteer beta with different detected lengths, square
-and Pro bridges, desktop USB hosts and network layouts. Request the structured
-hardware report in the issue templates. Keep native model/firmware qualification
-strict until readback, direction/order and restoration are verified on each new
-profile. A support statement for every physical Festavia variant would be premature.
+After reviewing the source, make the repository public and rerun validation so
+the HACS job actually executes. Publish the matching draft as a prerelease only
+after that passes. Verify signed-out documentation and downloads, every asset's
+checksum, clean HACS/Marketplace/manual installation, and version selection with
+prereleases enabled. Check an update from actual public assets preserves settings.
+Do not call a draft or tag alone an installable GitHub release.
 
-Users can then add the repository themselves. Do not wait for catalog acceptance
-to offer a public custom-repository install. After a stable release and user
-feedback, submit to the shared Marketplace/HACS catalog with passing metadata
-and hassfest checks. Catalog inclusion and HA Core inclusion are separate reviews;
-this project claims neither a Core quality tier nor official Hue certification.
+Use a small volunteer beta across actual quantities 1–48, shortened strings,
+square/Pro bridges and different computer/network combinations. Use the hardware
+issue form; mark untested items. Stable release needs independent installations,
+longer hardware reliability evidence and resolution of significant pairing,
+restoration, ownership, configuration-loss and update/recovery failures.
 
-Publisher references: [integration structure and validation](https://contributors.home-assistant.io/marketplace/guides/integrations/),
+Default catalog submission can follow successful beta feedback. Core inclusion
+is a separate review and is not required for custom-repository installation.
+Neither official Hue certification nor an HA quality tier is claimed.
+
+Publisher references: [integration validation](https://contributors.home-assistant.io/marketplace/guides/integrations/),
 [releases and prereleases](https://contributors.home-assistant.io/marketplace/guides/releases/),
-[catalog submission](https://contributors.home-assistant.io/marketplace/guides/catalog/).
+[HACS release selection](https://www.hacs.xyz/docs/publish/integration/).

@@ -27,8 +27,8 @@ it. The lights stay paired to Hue. The round first-generation bridge is unsuppor
 
 ## 1. Install the integration
 
-The repository is currently private. Use a supplied release ZIP for this preview.
-The repository instructions below apply once a maintainer makes it public.
+Download the [v0.13.0 public beta](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
+Choose a Home Assistant archive below; the separate Direct ZIP is the Hue-only edition.
 
 ### Release ZIP: works without HACS
 
@@ -51,7 +51,7 @@ Open **Settings → Marketplace → Add from link**, enter
 `https://github.com/Dyluhn/festavia-studio`, and install Festavia Studio as an
 integration. Follow the setup flow. First installations can enter setup directly;
 updates still need the restart HA requests. Custom repositories need a GitHub
-connection and cannot fetch this repository while it is private.
+connection. Enable prereleases in the repository controls to select this beta.
 
 ### HACS on Home Assistant 2026.10
 
@@ -247,3 +247,15 @@ and [Marketplace release documentation](https://contributors.home-assistant.io/m
 
 The native upload follows Home Assistant's [Local Calendar import flow](https://github.com/home-assistant/core/blob/2026.10.0/homeassistant/components/local_calendar/config_flow.py)
 and [temporary-upload API](https://github.com/home-assistant/core/blob/2026.10.0/homeassistant/components/file_upload/__init__.py).
+
+## Remove the integration or switch editions
+
+Stop playback and wait for restoration before removing the integration through
+Devices & services. Resolve any reported recovery failure first. Saved Studio
+entities and library data are removed with the entry; export any scenes you want
+to keep. The Hue bridge and physical lights are not factory-reset.
+
+HA and Hue-only images are separate editions. Switching is a deliberate new USB
+installation, not a routine wireless update. Back up private setup data, stop
+playback, remove the previous integration/control configuration, and follow the
+other edition's first-install guide. Do not remove/reset the actual Festavia.

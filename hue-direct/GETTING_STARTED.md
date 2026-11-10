@@ -30,9 +30,11 @@ every count 1–48. Read [the validation record](VALIDATION.md) before buying ha
 
 ## 1. Download and extract
 
-Download **festavia-direct-0.5.0.zip** from this project's Releases. Choose the
-standalone **Festavia Direct** package. While the candidate is private, access is
-limited to invited testers.
+Download **festavia-direct-0.5.0.zip** from the
+[v0.13.0 project beta](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
+Choose the standalone **Festavia Direct** package and check it against the release's
+`SHA256SUMS`. Project and firmware versions are separate: this project release
+contains Direct firmware 0.5.0 and HA firmware 0.4.0.
 
 Extract the whole ZIP into a folder. **Do not run setup from inside the ZIP.**
 The package contains its firmware images, checksums, guide and installer.
@@ -179,3 +181,12 @@ not stored there. Extracting a newer release does not erase these saved files.
 
 Advanced command-line options remain in [README.md](README.md). Discovery and
 link-button authorization follow the [Hue developer setup guidance](https://developers.meethue.com/develop/get-started-2/).
+
+## Remove Direct or switch to Home Assistant
+
+Turn Master off and wait for restoration. Remove only Direct's virtual controls,
+zone and scenes from Hue, then power down the C6. Keep the physical Festavia
+paired. To switch the C6 to HA, follow the [HA first-install guide](https://github.com/Dyluhn/festavia-studio/blob/main/docs/INSTALL.md)
+from the full Studio package. It replaces the C6's firmware/settings and requires
+USB; it is not a same-edition wireless update. Back up your private setup folder
+beforehand. The standalone ZIP does not include the HA integration.

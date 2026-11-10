@@ -6,9 +6,25 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.13.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
+The Home Assistant edition **0.13.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
+
+## Choose your edition
+
+| Where you want to adjust your lights | Download | Start here |
+|---|---|---|
+| Home Assistant devices, automations and optional palette card | `festavia-studio-0.13.0.zip` for a new C6; integration ZIP for an existing controller | [Home Assistant installation](docs/INSTALL.md) |
+| Stock Hue app controls and scenes, with no HA required | `festavia-direct-0.5.0.zip` | [Hue-only installation](hue-direct/GETTING_STARTED.md) |
+
+Get both editions from the [v0.13.0 public beta release](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
+They use different ESP32 firmware; install one edition on a controller at a time.
+Normal same-edition updates are wireless. Initial setup requires USB, and recovery
+or switching editions can require it again. Existing lights stay paired to Hue.
+
+This is an experimental beta: LCX030 / 1.163.5 and a 27-puck BSB003 installation
+are physically qualified. Every quantity 1–48 and BSB002 responses have software
+tests; more household hardware reports are needed. See [compatibility](docs/COMPATIBILITY.md).
 
 ## Snake over a background
 
@@ -225,19 +241,12 @@ ESP32 families are not interchangeable with its 802.15.4 radio. First installati
 needs USB once; routine updates retain Wi-Fi, TLS identity and Hue network and
 use the HA firmware entity. Keep the board powered during an update.
 
-The full source release includes `tools/first-install.py` and pinned USB
-requirements. On the USB computer, create a Python environment, install
-`requirements-usb.txt`, and run:
-
-```sh
-python tools/first-install.py --port /dev/ttyUSB0 --ssid 'Your Wi-Fi'
-```
-
-The tool asks before first flashing, prompts privately for the Wi-Fi password,
-checks bundled image hashes and verifies HTTPS against the USB certificate pin.
-It saves a private device connection file. Enter its `url`, `token` and
-`tls_sha256` into the integration. Do not publish that file. Use a data cable;
-BOOT held while tapping RESET can enter flashing mode when necessary.
+Download and extract `festavia-studio-0.13.0.zip`, then open its **Setup Home
+Assistant** launcher for your computer. It prepares the tools, walks through USB
+and Wi-Fi setup, and creates a private connection file to upload in HA. See the
+[installation guide](docs/INSTALL.md) for the full flow, requirements
+and recovery. The advanced `tools/first-install.py` CLI remains available.
+Do not publish your connection file.
 
 For Zigbee joining, Hue's **Add lights → Search** opens the joining window.
 The API link button authorizes bridge access; it does not open Zigbee joining.

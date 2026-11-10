@@ -15,7 +15,8 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import ha_setup as wizard
-import bootstrap
+
+bootstrap = wizard.bootstrap
 
 DEVICE = {
     "target": "esp32c6",

@@ -4,10 +4,19 @@ body:
   - type: markdown
     attributes:
       value: Do not attach device credentials, HA .storage files or complete backups. Review diagnostics before attaching them.
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options:
+        - Home Assistant integration
+        - Hue-only (Festavia Direct)
+    validations:
+      required: true
   - type: input
     id: versions
     attributes:
-      label: Integration and Home Assistant versions
+      label: Project release and firmware versions; HA version if using HA
     validations:
       required: true
   - type: input
@@ -21,7 +30,7 @@ body:
     id: reproduce
     attributes:
       label: Steps, expected behavior and actual result
-      description: Include mode, effect, palette length and the exact HA error, if any.
+      description: Include mode, effect, palette length and the exact error shown by HA, Hue or the installer, if any.
     validations:
       required: true
   - type: textarea

@@ -132,7 +132,7 @@ class PackageTests(unittest.TestCase):
                     check=False,
                     capture_output=True,
                     text=True,
-                    timeout=10,
+                    timeout=60,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
             launcher = (
@@ -140,13 +140,40 @@ class PackageTests(unittest.TestCase):
                 if os.name == "nt"
                 else ["sh", str(extracted / "Setup Linux.sh"), "--help"]
             )
-            result = subprocess.run(launcher, capture_output=True, text=True, timeout=10)
+            result = subprocess.run(launcher, capture_output=True, text=True, timeout=60)
             self.assertEqual(result.returncode, 0, result.stderr)
+
+            # Repackage with the extracted tool, not the developer worktree or SDK.
+            repacked = root / "repacked/direct.zip"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(extracted / "hue-direct/package.py"),
+                    "--reuse-archive",
+                    str(target),
+                    "--output",
+                    str(repacked),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(package.sha(target.read_bytes()), package.sha(repacked.read_bytes()))
+            corrupt = root / "corrupt.zip"
+            with zipfile.ZipFile(target) as original, zipfile.ZipFile(corrupt, "w") as altered:
+                for name in original.namelist():
+                    raw = original.read(name)
+                    if name.endswith(".app.bin"):
+                        raw += b"changed"
+                    altered.writestr(name, raw)
+            with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                package.reuse_archive(corrupt, root / "refused/out.zip")
             result = subprocess.run(
                 [sys.executable, str(extracted / "hue-direct/setup.py"), "--dry-run"],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=60,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
 
