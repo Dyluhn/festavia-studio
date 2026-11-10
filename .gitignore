@@ -20,3 +20,9 @@ removal-pending.json
 firmware-source/managed_components/
 firmware-source/sdkconfig
 firmware-source/sdkconfig.old
+
+# Standalone Hue edition build inputs and private setup output.
+hue-direct/firmware-source/managed_components/
+hue-direct/firmware-source/sdkconfig
+hue-direct/firmware-source/sdkconfig.old
+festavia-direct-setup.json

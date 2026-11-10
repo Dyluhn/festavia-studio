@@ -15,6 +15,7 @@ jobs:
           python-version: "3.13"
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y libcjson-dev
       - run: bash tools/check.sh
   home-assistant:
     runs-on: ubuntu-24.04
@@ -40,6 +41,9 @@ jobs:
           python-version: "3.13"
       - run: python -m pip install -r requirements-usb.txt
       - run: python tools/first-install.py --help
+      - run: python hue-direct/install.py --help
+      - run: python hue-direct/update.py --help
+      - run: python hue-direct/commission.py --help
       - run: python tools/first-install.py --port UNUSED --ssid Test --dry-run
   hassfest:
     runs-on: ubuntu-24.04

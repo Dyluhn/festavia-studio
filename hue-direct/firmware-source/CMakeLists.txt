@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.16)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(hue_mesh_lab VERSION 0.5.0)
+
+if(NOT IDF_TARGET STREQUAL "esp32c6")
+    message(FATAL_ERROR "Festavia Direct requires an ESP32-C6 with 4 MB flash")
+endif()
+# Bind downloadable images to the exact source inputs used by this build.
+file(GLOB hd_main CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/main/*")
+set(hd_inputs CMakeLists.txt stamp_build.py dependencies.lock partitions.csv sdkconfig.defaults sdkconfig.defaults.esp32c6)
+foreach(path IN LISTS hd_main)
+    if(NOT IS_DIRECTORY "${path}")
+        file(RELATIVE_PATH relative "${CMAKE_CURRENT_SOURCE_DIR}" "${path}")
+        list(APPEND hd_inputs "${relative}")
+    endif()
+endforeach()
+set(hd_json "{")
+set(hd_sep "")
+foreach(relative IN LISTS hd_inputs)
+    set(path "${CMAKE_CURRENT_SOURCE_DIR}/${relative}")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${path}")
+    file(SHA256 "${path}" digest)
+    string(APPEND hd_json "${hd_sep}\"${relative}\":\"${digest}\"")
+    set(hd_sep ",")
+endforeach()
+string(APPEND hd_json "}\n")
+file(WRITE "${CMAKE_BINARY_DIR}/hue-direct-source.json" "${hd_json}")
+
+idf_build_get_property(hd_python PYTHON)
+add_custom_command(TARGET app POST_BUILD
+    COMMAND "${hd_python}" "${CMAKE_CURRENT_SOURCE_DIR}/stamp_build.py" "${CMAKE_BINARY_DIR}" "${SDKCONFIG}"
+    VERBATIM)
