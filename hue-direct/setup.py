@@ -225,6 +225,23 @@ def print_status(identity, state):
     print(f"Status: {state['state']}; {state['error']}")
 
 
+def verify_ready(credentials):
+    deadline = time.monotonic() + 20
+    while True:
+        try:
+            _, state = read_status(credentials)
+            if state["bridge_connected"]:
+                return
+        except OSError:
+            pass  # Only repeat read-only diagnostics after a transient disconnect.
+        if time.monotonic() >= deadline:
+            raise RuntimeError(
+                "Hue controls were saved, but the C6's bridge connection is not ready. "
+                "Check that its Wi-Fi can reach the bridge over HTTPS, then Continue or Check."
+            )
+        time.sleep(1)
+
+
 def wireless_update(args, credentials):
     manifest = json.loads((args.release / "manifest.json").read_text())
     identity, _ = read_status(credentials)
@@ -334,6 +351,8 @@ def run_setup(args):
     )
     result = json.loads(result_file.read_text())
     state.update(positions=result["positions"], report=str(result_file))
+    save_state(path, state, "configured")
+    verify_ready(credentials)
     save_state(path, state, "complete")
     print(f"\nReady: {result['positions']} pucks, {len(result['controls'])} Hue controls.")
     print("Open Festavia Direct in Hue. Its preset scene is ready; Master is left OFF.")

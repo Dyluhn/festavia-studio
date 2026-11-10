@@ -7,7 +7,7 @@ below 20%; ordinary tests use 9%, with a hard installation ceiling of 19%.
 
 ## Software and build
 
-- Full repository check: **154 Python tests passed**, formatting/import checks,
+- Full repository check: **156 Python tests passed**, formatting/import checks,
   bytecode compilation, and the original HA package/firmware integrity checks.
 - Production C packet generation matches the existing host implementation across
   every count **1–48**, both directions, palette quantities, native modes,
@@ -96,6 +96,8 @@ images on Linux/Python 3.14. On the real C6, its wireless continuation is run
 twice: one saved controller, unchanged Hue scene/zone IDs, retained presets and
 installation ceiling, and the deliberately disabled Hue-takeover preference is
 preserved. Read-only diagnostics work and the identical-image update is skipped.
+The final readiness check also passes against the real C6. It waits for the
+controller's own Hue connection and refuses to report Ready when it is unavailable.
 The rebuilt image plays the existing saved scene at 9%; the fixture is restored
 exactly and the automation guard is removed. Fresh-device USB flashing and a
 fresh link-button pairing remain community hardware validation gaps below.

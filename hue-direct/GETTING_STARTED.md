@@ -74,7 +74,8 @@ The wizard:
 7. Flashes the verified image, privately prompts for the Wi-Fi password, and
    verifies the C6's network connection.
 8. Joins the selected bridge, reads the actual puck count, names the controls and
-   creates one **Festavia Direct** zone and a working preset scene.
+   creates one **Festavia Direct** zone and a working preset scene. It checks the
+   C6's own bridge connection before reporting that setup is ready.
 
 You do not copy API keys, enter device IDs, or configure Home Assistant. The
 initial real-output ceiling is **19%**. Setup leaves the **Master control off**.
@@ -169,6 +170,7 @@ not stored there. Extracting a newer release does not erase these saved files.
 | Python missing | Install Python from python.org. On Windows enable its launcher; reopen setup afterward. |
 | `venv` / `ensurepip` missing on Linux | Install the Python venv package for your distribution (for example `python3-venv` on Debian/Ubuntu), then reopen setup. |
 | Bridge not found | Enter its LAN IP. Multicast discovery may be blocked by guest Wi-Fi or VLANs. The C6 and computer must be able to reach the bridge. |
+| Controls exist but setup is not Ready | Give the C6's Wi-Fi access to the bridge over HTTPS. Guest Wi-Fi may block this even when your computer can reach it. Fix network access, then Continue; the saved controls/pairing can be reused. |
 | Link authorization denied | Press the button on the selected bridge and Continue setup. |
 | Wi-Fi fails | Check the exact SSID/password and 2.4 GHz coverage. Continue the saved first-install session; do not reflash just to correct Wi-Fi. |
 | No supported Festavia | Confirm the chosen bridge, model LCX030 and software 1.163.5. This candidate does not claim compatibility with all Festavia products. |

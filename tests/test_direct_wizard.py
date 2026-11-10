@@ -261,6 +261,26 @@ class WizardTests(unittest.TestCase):
             wizard.main(self.args())
         commission.assert_not_called()
 
+    def test_ready_waits_for_the_controllers_own_bridge_connection(self):
+        disconnected = dict(self.status, bridge_connected=False)
+        with (
+            patch.object(
+                wizard, "read_status", side_effect=[({}, disconnected), ({}, self.status)]
+            ) as read,
+            patch.object(wizard.time, "sleep"),
+        ):
+            wizard.verify_ready(self.credentials)
+        self.assertEqual(read.call_count, 2)
+
+    def test_unreachable_bridge_cannot_be_reported_as_ready(self):
+        disconnected = dict(self.status, bridge_connected=False)
+        with (
+            patch.object(wizard, "read_status", return_value=({}, disconnected)),
+            patch.object(wizard.time, "monotonic", side_effect=[0, 21]),
+            self.assertRaisesRegex(RuntimeError, "controls were saved"),
+        ):
+            wizard.verify_ready(self.credentials)
+
     def test_new_setup_cannot_overwrite_an_existing_credentials_file(self):
         original = self.credentials.read_bytes()
         with (
