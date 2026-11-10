@@ -33,8 +33,12 @@ and would offer the wrong product tag as an integration version.
 ## Build a combined release
 
 The manual **Prepare combined release draft** workflow requires a successful
-Validate package run on its exact commit. It builds Direct with ESP-IDF 5.3.2,
-verifies source/image identities, then packages both editions. Rerunning updates
+Validate package run on its exact commit. It reuses Direct images from the
+current draft or previous published project release only after checking every
+source/image hash. If Direct source changes or no baseline exists, explicitly
+select **rebuild_direct** to build with ESP-IDF 5.3.2, then qualify that new image
+on hardware before publication. Documentation and HA-only changes retain the
+already qualified firmware identity. Rerunning updates
 an existing draft and refuses to replace a published release. It never changes
 repository visibility or publishes by itself.
 

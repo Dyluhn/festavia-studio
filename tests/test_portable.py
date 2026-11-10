@@ -145,6 +145,31 @@ class PortableTests(unittest.TestCase):
 
 
 class ServiceTests(unittest.TestCase):
+    def test_bridge_rejects_unused_colors_before_any_light_write(self):
+        # Three gradient points and one white light provide four targets.
+        scene = {"effect": "static", "colors": ["#ff0000"] * 5, "brightness": 9}
+        with self.assertRaisesRegex(ValueError, "1–4"):
+            self.app.control("play", {"scene": scene})
+        self.assertFalse(self.app.bridge_journal.exists())
+        self.assertEqual(self.fake.calls, [])
+
+    def test_bridge_palette_capacity_tracks_reported_points_through_48(self):
+        for count in range(1, 49):
+            with self.subTest(count=count):
+                points = [min(9, count - start) for start in range(0, count, 9)]
+                self.fake = FakeBridge([light(i + 1, p) for i, p in enumerate(points)])
+                self.app.data["selected"] = [l["id"] for l in self.fake.lights]
+                self.app.inventory_at = float("-inf")
+                self.assertEqual(self.app.palette_limit(), count)
+                colors = ["#ff0000"] * count
+                self.app.control("save_palette", {"name": f"Size {count}", "colors": colors})
+                self.assertEqual(self.app.color_palettes()[f"Size {count}"], colors)
+                with self.assertRaisesRegex(ValueError, "Invalid palette size"):
+                    self.app.control(
+                        "save_palette", {"name": "Too large", "colors": colors + ["#00ff00"]}
+                    )
+                self.assertEqual(self.fake.calls, [])
+
     def test_bridge_start_from_above_limit_captures_and_restores_original(self):
         for fixture in self.fake.lights:
             fixture["state"].update(on={"on": True}, dimming={"brightness": 45})

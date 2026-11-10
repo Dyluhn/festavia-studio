@@ -166,17 +166,19 @@ class StudioCoordinator(DataUpdateCoordinator):
             self.scene = {**copy.deepcopy(DEFAULT_SCENE), **copy.deepcopy(remote)}
             self.preset = "Custom"
             self.palette = "Custom"
-        if (
-            result["mode"] == "native"
-            and not result["player"].get("playing")
-            and self.scene.get("positions") != result["positions"]
+        if not result["player"].get("playing") and (
+            self.scene.get("positions") != result["positions"]
+            or len(self.scene["colors"]) > result["palette_limit"]
+            or self.scene.get("effect") not in result["effects"]
         ):
-            # New and cut strings use their detected count, including lengths
-            # shorter than the default palette or a previously saved layout.
+            # Fit staged controls to actual pucks or Hue gradient points. Keep
+            # larger saved palettes/scenes in their library for other setups.
             positions = result["positions"]
             self.scene["positions"] = positions
             self.scene["layout"] = [[i, 1] for i in range(positions)]
-            self.scene["colors"] = self.scene["colors"][:positions]
+            self.scene["colors"] = self.scene["colors"][: result["palette_limit"]]
+            if self.scene.get("effect") not in result["effects"]:
+                self.scene["effect"] = "static"
             if self.scene.get("effect") == "snake":
                 period = snake_period(self.scene)
                 if period < 2:

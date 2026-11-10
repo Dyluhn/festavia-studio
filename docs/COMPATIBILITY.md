@@ -2,7 +2,7 @@
 
 The combined source contains both the HA edition (integration 0.13.0 / firmware
 0.4.0) and Hue-only Direct (firmware 0.5.0). The complete combined check passes
-**174 tests**, including production C for both editions, all-count rendering,
+**177 tests**, including production C for both editions, all-count rendering,
 mobile editing, both installers and extracted packaging. This catches shared
 Python imports and packaging dependencies that separate-branch checks miss.
 The images are unchanged; their source/image identities are verified when packed.
@@ -47,8 +47,8 @@ fresh private environment and passed its image dry run. Desktop CI runs the
 extracted launcher/package and installer tests on Windows, macOS and Linux;
 consult the matching release's linked CI results.
 
-The final extracted component passes **294 actual-HA checks** with network peers
-and Zigbee hardware simulated: **40 runtime + 9 lifecycle checks** for each pair
+The final extracted component passes **300 actual-HA checks** with network peers
+and Zigbee hardware simulated: **41 runtime + 9 lifecycle checks** for each pair
 of HA 2026.10.0 / 2026.10.1 / 2026.11.1 and bridge model BSB002 / BSB003. Networking
 is disabled on these test containers. Coverage includes the native file selector,
 invalid/oversized/expired/wrong-edition uploads, temporary-upload deletion,
@@ -61,8 +61,8 @@ that HA enrollment rejects that edition before storing credentials or taking
 playback. Controller settings/ownership remain unchanged. No firmware or lighting
 writes were made for that check. Existing HA configuration was not changed.
 
-Fresh-board USB flashing/provisioning through the new wizard and first physical
-pairing remain independent hardware validation gaps. The state/recovery paths
+Physical USB flashing/provisioning through the new wizard passed as recorded
+above; first physical pairing remains a separate hardware validation gap. The state/recovery paths
 have software tests; the unchanged firmware's earlier physical qualification is
 recorded below. This does not add qualification for other models/firmware, square
 bridge hardware, or additional physical string counts.

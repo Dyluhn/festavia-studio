@@ -144,7 +144,7 @@ Diagnostics are available from the integration's normal download menu.
 
 ### Optional visual palette card
 
-On your existing dashboard, choose **Edit → Add card**, search for **Festavia Studio**,
+On your existing dashboard, choose **Edit → Add card → By card**, search for **Festavia Studio**,
 and select the Studio playback entity in its visual editor. The integration installs
 the card resource automatically. No separate frontend download is needed.
 

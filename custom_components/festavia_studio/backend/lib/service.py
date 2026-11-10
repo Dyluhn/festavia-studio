@@ -187,12 +187,18 @@ class Installation:
             "recovery_pending": self.recovery_pending(),
         }
 
+    def palette_limit(self):
+        if self.data.get("mode") == "native":
+            return (self.data.get("native") or {}).get("positions", MAX_POSITIONS)
+        return min(MAX_POSITIONS, sum(light["gradient_points"] for light in self.selected()))
+
     def check_scene(self, scene):
         scene = copy.deepcopy(scene)
         bounded(scene.get("brightness", 10), 0, self.limit)
         colors = scene.get("colors", ["#ff2020", "#00ff00", "#9900ff"])
-        if not isinstance(colors, list) or not 1 <= len(colors) <= MAX_POSITIONS:
-            raise ValueError("Choose 1–255 colors")
+        limit = self.palette_limit()
+        if not isinstance(colors, list) or not 1 <= len(colors) <= limit:
+            raise ValueError(f"Choose 1–{limit} colors")
         for item in colors:
             color(item)
         return scene
@@ -208,11 +214,7 @@ class Installation:
                 palettes = self.color_palettes()
                 if op == "save_palette":
                     colors = data["colors"]
-                    limit = (
-                        self.data.get("native", {}).get("positions", 27)
-                        if self.data.get("mode") == "native"
-                        else 27
-                    )
+                    limit = self.palette_limit()
                     if not isinstance(colors, list) or not 1 <= len(colors) <= limit:
                         raise ValueError("Invalid palette size")
                     for item in colors:

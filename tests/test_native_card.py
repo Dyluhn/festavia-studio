@@ -10,6 +10,25 @@ CARD = (
 
 
 class NativeCardTests(unittest.TestCase):
+    def test_bridge_gradient_card_limits_colors_and_hides_motion(self):
+        page = self.page
+        page.evaluate("""()=>{
+            state={...state,attributes:{...state.attributes,mode:'bridge',positions:5,
+                palette_limit:5,animated_palette_limit:0,effects:['static']}};
+            hass={...hass,states:{'sensor.test':state}};
+            document.querySelector('festavia-studio-card').hass=hass;
+        }""")
+        self.assertIn("3 / 5", page.locator(".studio").inner_text())
+        self.assertIn("5 Hue gradient points", page.locator(".studio").inner_text())
+        self.assertEqual(page.locator("#effect option").inner_text(), "Static gradient")
+        self.assertFalse(page.locator("#speed").is_visible())
+        page.locator("#add").click()
+        page.locator("#add").click()
+        self.wait_saved()
+        self.assertTrue(page.locator("#add").is_disabled())
+        self.assertEqual(len(page.evaluate("state.attributes.scene.colors")), 5)
+        self.assertFalse(page.evaluate("document.documentElement.scrollWidth>innerWidth"))
+
     def test_snake_layers_edit_save_and_preview_independently_on_mobile(self):
         page = self.page
         page.locator("#effect").select_option("snake")

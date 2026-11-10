@@ -1350,6 +1350,32 @@ async def main():
             )
             await hass.config_entries.async_add(entry)
             assert entry.state.value == "loaded"
+            c = entry.runtime_data
+            assert c.data["positions"] == c.data["palette_limit"] == 5
+            assert c.data["animated_palette_limit"] == 0
+            assert "Rainbow" not in c.data["palettes"]
+            original_selected = list(c.api.app.data["selected"])
+            c.api.app.data["selected"] = ["fixture", "second"]
+            await c.async_refresh()
+            assert c.data["positions"] == c.data["palette_limit"] == 10
+            assert "Rainbow" in c.data["palettes"]
+            c.api.app.data["selected"] = original_selected
+            wire.lights["fixture"]["gradient"]["points_capable"] = 1
+            c.api.app.inventory_at = float("-inf")
+            await c.async_refresh()
+            assert c.data["positions"] == c.data["palette_limit"] == 1
+            assert len(c.scene["colors"]) == 1
+            before_writes = len([r for r in wire.calls if r[1] == "PUT"])
+            try:
+                await c.configure({"colors": ["#ff0000", "#00ff00"]})
+                raise AssertionError("Extra unused bridge color was accepted")
+            except ServiceValidationError:
+                pass
+            assert len([r for r in wire.calls if r[1] == "PUT"]) == before_writes
+            wire.lights["fixture"]["gradient"]["points_capable"] = 5
+            c.api.app.inventory_at = float("-inf")
+            await c.async_refresh()
+            checks.append("bridge_palettes_follow_actual_points_and_preserve_larger_library")
             await action("play", {"brightness": 10, "effect": "static"})
             assert wire.lights["fixture"]["on"]["on"]
             wire.key = "bridge-lease-renewed-key"

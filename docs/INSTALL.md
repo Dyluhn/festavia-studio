@@ -190,9 +190,11 @@ Studio playback. Each color occupies one puck, in order, and repeats. Stop and
 restore returns the pre-play appearance. Return control to Hue hands off without
 restoring an earlier scene.
 
-For visual editing, edit an existing dashboard, choose **Add card**, search for
+For visual editing, edit an existing dashboard, choose **Add card → By card**, search for
 **Festavia Studio**, and pick its playback entity in the visual editor. The
-integration registers the card resource automatically. No separate card repository,
+integration registers the card resource automatically. Use an editable dashboard;
+HA’s automatic Home dashboard has different editing controls. Native device
+controls work without adding any dashboard or card. No separate card repository,
 editor app or dashboard is installed.
 
 For a YAML-managed dashboard, use `type: custom:festavia-studio-card` and your

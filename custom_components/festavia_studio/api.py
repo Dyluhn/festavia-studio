@@ -20,6 +20,7 @@ from .backend.lib.errors import (
 from .backend.lib.net_client import save_credentials, PinnedHTTPS
 from .backend.lib.player import PUCK_EFFECTS, Player
 from .backend.lib.service import Installation, RELEASE
+from .backend.lib.sizing import MAX_POSITIONS
 from .const import DOMAIN, VERSION
 
 
@@ -293,6 +294,11 @@ class NativeClient:
         selected = self.targets if native else app.selected()
         state = app.control("status", {})
         limits = state.get("limits", {})
+        palette_limit = (
+            limits.get("puck_palette_max", 9)
+            if native
+            else min(MAX_POSITIONS, limits.get("logical_positions", 1))
+        )
         presets = {}
         for name, original in state.get("presets", {}).items():
             colors = original.get("colors", [])
@@ -307,7 +313,7 @@ class NativeClient:
                 if native and original.get("effect", "static") == "static"
                 else 9
                 if native
-                else 27
+                else palette_limit
             )
             if not 1 <= len(colors) <= count_limit or any(
                 not isinstance(c, str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", c) for c in colors
@@ -338,19 +344,23 @@ class NativeClient:
             "mode": "native" if native else "bridge",
             "brightness_limit": app.limit,
             "positions": limits.get("logical_positions", 1),
-            "palette_limit": limits.get("puck_palette_max", 9) if native else 27,
-            "animated_palette_limit": limits.get("puck_animated_palette_max", 9) if native else 27,
+            "palette_limit": palette_limit,
+            "animated_palette_limit": limits.get("puck_animated_palette_max", 9) if native else 0,
             "effects": limits.get("puck_effects", list(PUCK_EFFECTS)) if native else ["static"],
             "scene": copy.deepcopy(state.get("scene")),
             "presets": presets,
             "palettes": {
                 name: colors
                 for name, colors in app.color_palettes().items()
-                if not native
-                or (
-                    len(colors) <= limits.get("puck_palette_max", 9)
-                    and len({max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in colors}) == 1
-                    and max(int(colors[0][i : i + 2], 16) for i in (1, 3, 5)) > 0
+                if len(colors) <= palette_limit
+                and (
+                    not native
+                    or (
+                        len(colors) <= limits.get("puck_palette_max", 9)
+                        and len({max(int(c[i : i + 2], 16) for i in (1, 3, 5)) for c in colors})
+                        == 1
+                        and max(int(colors[0][i : i + 2], 16) for i in (1, 3, 5)) > 0
+                    )
                 )
             },
             "firmware": copy.deepcopy(self.firmware),

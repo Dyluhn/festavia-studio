@@ -26,9 +26,8 @@ class StudioEntity(CoordinatorEntity):
             bridge = next(
                 (
                     d
-                    for d in registry.devices.values()
-                    if hue_id in d.config_entries
-                    and any(domain == "hue" for domain, _ in d.identifiers)
+                    for d in dr.async_entries_for_config_entry(registry, hue_id)
+                    if any(domain == "hue" for domain, _ in d.identifiers)
                 ),
                 None,
             )

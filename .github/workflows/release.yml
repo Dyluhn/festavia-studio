@@ -6,6 +6,10 @@ on:
         description: Tag matching the integration version, for example v0.13.0
         required: true
         type: string
+      rebuild_direct:
+        description: Build a new Direct image (requires hardware qualification before publication)
+        type: boolean
+        default: false
 permissions:
   contents: write
   actions: read
@@ -34,11 +38,24 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write(f'value={version}\n')
           PY
-      - name: Build verified release artifacts
+      - name: Build new Direct firmware only when requested
+        if: ${{ inputs.rebuild_direct }}
         run: |
-          mkdir -p "$RUNNER_TEMP/release"
           docker run --rm -v "$PWD:/project" -w /project \
             espressif/idf:v5.3.2 bash -ec '. "$IDF_PATH/export.sh"; idf.py -C hue-direct/firmware-source -B build-direct -DIDF_TARGET=esp32c6 -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32c6" build; python hue-direct/package.py --build build-direct --output dist/festavia-direct.zip'
+      - name: Reuse source-bound firmware from the current draft or previous release
+        if: ${{ !inputs.rebuild_direct }}
+        run: |
+          mkdir -p dist/qualified
+          if ! gh release download "$RELEASE_TAG" --pattern 'festavia-direct-*.zip' --dir dist/qualified; then
+            BASE_TAG=$(gh release list --limit 20 --json tagName,isDraft --jq '[.[] | select(.isDraft == false)][0].tagName // empty')
+            test -n "$BASE_TAG" || { echo 'No baseline image. Rerun with rebuild_direct and qualify the new image.'; exit 1; }
+            gh release download "$BASE_TAG" --pattern 'festavia-direct-*.zip' --dir dist/qualified
+          fi
+          mv dist/qualified/*.zip dist/festavia-direct.zip
+      - name: Build verified combined release artifacts
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
           python3 tools/release.py --tag "$RELEASE_TAG" \
             --direct-archive dist/festavia-direct.zip --output "$RUNNER_TEMP/release"
       - name: Create or update reviewable draft
