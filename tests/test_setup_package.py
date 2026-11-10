@@ -26,8 +26,9 @@ class SetupPackageTests(unittest.TestCase):
                 ],
                 capture_output=True,
                 text=True,
-                check=True,
+                check=False,
             )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             report = json.loads(result.stdout)
             with zipfile.ZipFile(report["archive"]) as archive:
                 archive.extractall(root / "folder with spaces")
@@ -87,8 +88,9 @@ class SetupPackageTests(unittest.TestCase):
                 ],
                 capture_output=True,
                 text=True,
-                check=True,
+                check=False,
             )
+            self.assertEqual(rebuilt.returncode, 0, rebuilt.stdout + rebuilt.stderr)
             rebuilt = json.loads(rebuilt.stdout)
             self.assertEqual(rebuilt["sha256"], report["sha256"])
             self.assertEqual(rebuilt["integration_sha256"], report["integration_sha256"])

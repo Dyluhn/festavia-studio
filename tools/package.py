@@ -107,6 +107,7 @@ def main():
         "requirements-usb.txt",
         "requirements-dev.txt",
         ".gitignore",
+        ".gitattributes",
         "pyproject.toml",
     ):
         entries[name] = (ROOT / name).read_bytes()
