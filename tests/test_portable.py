@@ -309,7 +309,7 @@ class ServiceTests(unittest.TestCase):
 
     def test_replacing_an_armed_esp_does_not_overwrite_credentials(self):
         client = MagicMock()
-        client.call.side_effect = [{"target": "esp32c6"}, {"armed": True}]
+        client.call.side_effect = [{"target": "esp32c6"}, {"ok": False}, {"armed": True}]
         config = {
             "target": "esp32c6",
             "url": "https://192.168.1.20",

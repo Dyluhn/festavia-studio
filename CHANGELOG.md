@@ -1,3 +1,10 @@
+# 0.13.0 — guided Home Assistant installation
+
+- Add Windows/macOS/Linux launchers with automatic isolated dependency setup, named USB selection, first-flash confirmation, resumable provisioning and private connection-file export. Resume and Export use Wi-Fi once configured; routine updates stay in HA.
+- Import the connection file in the integration’s native setup flow. Validate its edition, local HTTPS address, token and certificate before connecting; remove the temporary upload on success and failure. Keep manual entry and legacy device files compatible.
+- Expand the installation guide with first-scene steps, visual dashboard card setup and recovery. Preserve automatic count detection, saved libraries and existing entries.
+- Integration version is 0.13.0; the qualified ESP32 firmware remains 0.4.0.
+
 # 0.12.1 — every installed count through 48
 
 - Prepare the community preview: desktop-specific first-install guide, Marketplace/HACS instructions, download checksums, hardware report forms and a validated draft-only release workflow. Expand actual HA compatibility to 2026.10.0/2026.10.1/2026.11.1 with square/Pro bridge responses. Runtime component and firmware are unchanged by this packaging pass.

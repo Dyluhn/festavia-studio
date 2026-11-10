@@ -1,5 +1,39 @@
 # Compatibility evidence
 
+## 0.13.0 guided setup — checked 2026-11-10
+
+Integration 0.13.0 uses the unchanged, qualified ESP32-C6 firmware 0.4.0.
+All **134 repository tests** pass, including 17 installer/bootstrap cases and an
+extracted-package check. The latter verifies every file checksum, runs the
+launchers/CLIs from a path with spaces, checks the image without opening USB,
+and rebuilds identical source/integration archives from the extracted source.
+A real extracted bootstrap on Linux/Python 3.14 installed the pinned tools in a
+fresh private environment and passed its image dry run. Desktop CI runs the
+extracted launcher/package and installer tests on Windows, macOS and Linux;
+consult the matching release's linked CI results.
+
+The final extracted component passes **294 actual-HA checks** with network peers
+and Zigbee hardware simulated: **40 runtime + 9 lifecycle checks** for each pair
+of HA 2026.10.0 / 2026.10.1 / 2026.11.1 and bridge model BSB002 / BSB003. Networking
+is disabled on these test containers. Coverage includes the native file selector,
+invalid/oversized/expired/wrong-edition uploads, temporary-upload deletion,
+connection retry without reupload, legacy device files, manual fallback, empty
+and ambiguous pairing scans, rescanning/joining one open network, and the existing
+all-count playback, palette, handoff and recovery cases.
+
+A separate read-only check against the real C6 running Hue-only Direct confirms
+that HA enrollment rejects that edition before storing credentials or taking
+playback. Controller settings/ownership remain unchanged. No firmware or lighting
+writes were made for that check. Existing HA configuration was not changed.
+
+Fresh-board USB flashing/provisioning through the new wizard and first physical
+pairing remain independent hardware validation gaps. The state/recovery paths
+have software tests; the unchanged firmware's earlier physical qualification is
+recorded below. This does not add qualification for other models/firmware, square
+bridge hardware, or additional physical string counts.
+
+## 0.12.1 baseline — checked 2026-11-09
+
 Candidate: integration 0.12.1 / ESP32-C6 firmware 0.4.0. Checked 2026-11-09
 (America/Chicago). This file records software and physical coverage separately.
 

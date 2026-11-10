@@ -12,7 +12,44 @@ ROOT = Path(__file__).resolve().parents[1]
 from wifi_setup import main as provision
 
 
-def main():
+def factory_image():
+    release = ROOT / "firmware-release"
+    manifest = json.loads((release / "manifest.json").read_text())
+    target = manifest["targets"]["esp32c6"]
+    image = release / target["factory"]
+    if hashlib.sha256(image.read_bytes()).hexdigest() != manifest["sha256"][target["factory"]]:
+        raise ValueError("Factory image checksum failed")
+    return image, target
+
+
+def flash_factory(port):
+    image, target = factory_image()
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "esptool",
+            "--chip",
+            "esp32c6",
+            "--port",
+            port,
+            "--baud",
+            "460800",
+            "write_flash",
+            "--flash_mode",
+            target["flash_mode"],
+            "--flash_freq",
+            target["flash_freq"],
+            "--flash_size",
+            target["flash_size"],
+            "0x0",
+            str(image),
+        ],
+        check=True,
+    )
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", required=True)
     parser.add_argument("--ssid", required=True)
@@ -25,13 +62,8 @@ def main():
     parser.add_argument(
         "--dry-run", action="store_true", help="verify factory image only; do not touch USB"
     )
-    args = parser.parse_args()
-    release = ROOT / "firmware-release"
-    manifest = json.loads((release / "manifest.json").read_text())
-    target = manifest["targets"]["esp32c6"]
-    image = release / target["factory"]
-    if hashlib.sha256(image.read_bytes()).hexdigest() != manifest["sha256"][target["factory"]]:
-        raise ValueError("Factory image checksum failed")
+    args = parser.parse_args(argv)
+    factory_image()
     if args.dry_run:
         print("ESP32-C6 factory checksum verified; no USB operations performed.")
         return
@@ -41,29 +73,7 @@ def main():
         )
         if input("Type ERASE ESP32 to install: ") != "ERASE ESP32":
             raise SystemExit("Cancelled")
-        subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "esptool",
-                "--chip",
-                "esp32c6",
-                "--port",
-                args.port,
-                "--baud",
-                "460800",
-                "write_flash",
-                "--flash_mode",
-                target["flash_mode"],
-                "--flash_freq",
-                target["flash_freq"],
-                "--flash_size",
-                target["flash_size"],
-                "0x0",
-                str(image),
-            ],
-            check=True,
-        )
+        flash_factory(args.port)
     provision(["--port", args.port, "--ssid", args.ssid, "--credentials", str(args.credentials)])
     print("Continue in HA: Settings → Devices & services → Add integration → Festavia Studio.")
 

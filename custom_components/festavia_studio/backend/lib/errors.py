@@ -17,6 +17,10 @@ class RecoveryPending(RuntimeError):
     """The captured installation must be restored before changing ownership."""
 
 
+class FirmwareEditionError(ValueError):
+    """A separate Hue-only controller cannot be enrolled into the HA edition."""
+
+
 class PlaybackBlocked(ValueError):
     """A known playback precondition, identified without remote response text."""
 

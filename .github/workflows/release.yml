@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag matching the integration version, for example v0.12.1
+        description: Tag matching the integration version, for example v0.13.0
         required: true
         type: string
 permissions:

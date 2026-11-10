@@ -170,6 +170,7 @@ async def main():
             await advance({"host": "192.168.1.2"})
             await advance({})
             await advance({"lights": ["fixture"], "mode": "native"})
+            await advance({"manual": True})
             result = await advance({k: data["device"][k] for k in ("url", "token", "tls_sha256")})
             assert result["step_id"] == "device_recover", result
             result = await advance({})

@@ -60,6 +60,9 @@ class Wire:
         self.device_auth = False
         self.ota_error = False
         self.next_paint_error = False
+        self.joined = True
+        self.networks = []
+        self.direct_edition = False
         self.calls = []
         self.connections = 0
         self.snapshot = copy.deepcopy(BEFORE)
@@ -164,7 +167,7 @@ class Wire:
             return 200, {
                 "target": "esp32c6",
                 "version": "0.3.8",
-                "approved_network": True,
+                "approved_network": self.joined,
                 "channel": 20,
                 "extpan": PAN,
             }
@@ -172,6 +175,8 @@ class Wire:
             return 500, {"secret": "must-not-leak"}
         if path == "/api/command":
             op = data["op"]
+            if op == "direct_status":
+                return 200, {"ok": self.direct_edition, "id": data.get("id")}
             if op == "player_prepare":
                 assert data["restore"] and data["verify"] and data["setup"]
                 self.captured = copy.deepcopy(self.snapshot)
@@ -227,12 +232,23 @@ class Wire:
                 if self.player["armed"]:
                     self.snapshot = copy.deepcopy(getattr(self, "captured", BEFORE))
                 self.player.update(state="restored", armed=False, playing=False)
+            elif op == "scan":
+                return 200, {
+                    "ok": True,
+                    "id": data.get("id"),
+                    "networks": copy.deepcopy(self.networks),
+                }
+            elif op == "join":
+                assert any(
+                    n["extpan"] == data["extpan"] and n.get("permit_join") for n in self.networks
+                )
+                self.joined = True
             elif op not in ("status", "player_status"):
                 raise AssertionError(op)
             return 200, {
                 **self.player,
                 "id": data.get("id"),
-                "approved_network": True,
+                "approved_network": self.joined,
                 "channel": 20,
             }
         raise AssertionError((method, path))
@@ -386,12 +402,89 @@ async def main():
             assert (await advance({}))["errors"]["base"] == "link_required"
             wire.link = True
             assert (await advance({}))["step_id"] == "fixtures"
-            assert (await advance({"lights": ["fixture"], "mode": "native"}))["step_id"] == "device"
+            assert (await advance({"lights": ["fixture"], "mode": "native"}))[
+                "step_id"
+            ] == "device_import"
             device = {"url": "https://192.168.1.3", "token": TOKEN, "tls_sha256": DEVICE_PIN}
-            assert (await advance({**device, "token": "bad"}))["errors"][
-                "base"
-            ] == "device_connection"
-            result = await advance(device)
+            assert (await advance({}))["errors"]["connection_file"] == "connection_file_required"
+            from homeassistant.components.file_upload import FileUploadData, _DATA
+            from uuid import uuid4
+
+            uploads = FileUploadData(Path(folder) / "uploads", {})
+            hass.data[_DATA] = uploads
+
+            def upload(raw):
+                identifier = uuid4().hex
+                uploads.files[identifier] = "connection.json"
+                path = uploads.file_path(identifier)
+                path.parent.mkdir(parents=True)
+                path.write_bytes(raw)
+                return identifier, path
+
+            handoff = {
+                "schema": 1,
+                "integration": "festavia_studio",
+                "edition": "home_assistant",
+                "device": {"target": "esp32c6", **device},
+            }
+            invalid = [
+                b'{"broken":',
+                b"x" * 16385,
+                b"[]",
+                json.dumps(dict(handoff, edition="hue_direct")).encode(),
+                json.dumps(
+                    dict(handoff, device=dict(handoff["device"], url="https://8.8.8.8"))
+                ).encode(),
+                json.dumps(
+                    dict(handoff, device=dict(handoff["device"], url="http://192.168.1.3"))
+                ).encode(),
+                json.dumps(dict(handoff, device=dict(handoff["device"], token="bad"))).encode(),
+            ]
+            for raw in invalid:
+                before_calls = len(wire.calls)
+                identifier, path = upload(raw)
+                rejected = await advance({"connection_file": identifier})
+                assert rejected["errors"]["connection_file"] == "invalid_connection_file", rejected
+                assert identifier not in uploads.files and not path.parent.exists()
+                assert len(wire.calls) == before_calls, "invalid upload reached network"
+                assert TOKEN not in json.dumps(rejected, default=str)
+            expired = await advance({"connection_file": uuid4().hex})
+            assert expired["errors"]["connection_file"] == "invalid_connection_file"
+            from custom_components.festavia_studio.config_flow import read_connection_upload
+
+            identifier, path = upload(json.dumps(handoff["device"]).encode())
+            legacy = await hass.async_add_executor_job(read_connection_upload, hass, identifier)
+            assert legacy == handoff["device"] and not path.parent.exists()
+            identifier, path = upload(json.dumps(handoff).encode())
+            wire.offline = True
+            failed = await advance({"connection_file": identifier})
+            assert failed["errors"]["base"] == "device_connection", failed
+            assert identifier not in uploads.files and not path.parent.exists()
+            assert TOKEN not in json.dumps(failed, default=str)
+            wire.offline = False
+            wire.direct_edition = True
+            rejected = await advance({})
+            assert rejected["errors"]["base"] == "wrong_firmware_edition", rejected
+            assert not wire.player["armed"] and wire.snapshot == BEFORE
+            wire.direct_edition = False
+            wire.joined = False
+            result = await advance(
+                {}
+            )  # Retry the privately retained candidate; no reupload needed.
+            assert result["step_id"] == "network", result
+            result = await advance({"legacy": False})
+            assert result["errors"]["base"] == "network_not_open", result
+            wire.networks = [
+                {"extpan": PAN, "channel": 20, "permit_join": True},
+                {"extpan": "0102030405060709", "channel": 15, "permit_join": True},
+            ]
+            result = await advance({"legacy": False})
+            assert result["errors"]["base"] == "multiple_networks", result
+            assert not any(c[3] and c[3].get("op") == "join" for c in wire.calls)
+            wire.networks = wire.networks[:1]
+            result = await advance({"legacy": False})
+            assert result["step_id"] == "joined", result
+            result = await advance({})
             assert result["type"] == "create_entry", result
             entry = result["result"]
             await hass.async_block_till_done()
@@ -400,6 +493,12 @@ async def main():
             names = [s.entity_id for s in hass.states.async_all() if "_studio_" in s.entity_id]
             assert len(names) == 17, names
             checks.append("real_commission_and_17_entities")
+            checks.append("native_upload_validation_cleanup_and_connection_retry")
+            checks.append("legacy_connection_file_import_without_secret_copying")
+            checks.append("hue_only_firmware_is_rejected_before_enrollment_or_playback")
+            checks.append(
+                "native_join_rescans_empty_and_ambiguous_windows_then_joins_one_open_network"
+            )
 
             original_snapshot = copy.deepcopy(wire.snapshot)
             for size in range(1, 49):
@@ -1168,7 +1267,13 @@ async def main():
             )
             before_pair = sum(c[2] == "/api" for c in wire.calls)
             assert (await advance({"bridge": hue.entry_id}))["step_id"] == "fixtures"
-            assert (await advance({"lights": ["fixture"], "mode": "native"}))["step_id"] == "device"
+            assert (await advance({"lights": ["fixture"], "mode": "native"}))[
+                "step_id"
+            ] == "device_import"
+            assert (await advance({"manual": True}))["step_id"] == "device"
+            assert (await advance({**device, "token": "bad"}))["errors"][
+                "base"
+            ] == "device_connection"
             result = await advance({**device, "token": wire.token})
             assert result["step_id"] == "device_recover", result
             assert wire.player["armed"], "setup stopped an armed player before confirmation"

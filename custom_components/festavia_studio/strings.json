@@ -29,8 +29,8 @@
         }
       },
       "device": {
-        "title": "Connect your ESP32-C6",
-        "description": "Enter the HTTPS address and credentials from its first USB installation. Updates after that use Wi-Fi. Leave an existing token or fingerprint empty to keep it.",
+        "title": "Manual ESP32 connection",
+        "description": "Advanced fallback for an existing private device file. Enter its HTTPS address, token and fingerprint. Leave an existing token or fingerprint empty to keep it. Routine firmware updates use the device’s Firmware entity.",
         "data": {
           "url": "ESP32 HTTPS address",
           "token": "Device token",
@@ -39,9 +39,8 @@
       },
       "network": {
         "title": "Join the Hue Zigbee network",
-        "description": "In the Hue app, open Settings → Lights → Add lights → Search. Choose its network here. The bridge remains the Zigbee coordinator.",
+        "description": "In the selected Hue bridge’s app, open Settings → Lights → Add lights → Search, then Submit here. Studio rescans and joins when exactly one pairing network is open; close other Zigbee pairing windows first. No network ID is needed. {network_state}",
         "data": {
-          "network": "Zigbee network",
           "legacy": "Use legacy ZLL joining"
         }
       },
@@ -88,6 +87,14 @@
         "data": {
           "confirm": "I confirm missing Hue lights were permanently removed or replaced"
         }
+      },
+      "device_import": {
+        "title": "Connect your ESP32-C6",
+        "description": "Upload festavia-ha-connection.json from the Home Assistant setup launcher. Home Assistant verifies its certificate and connection before saving it. Keep this file private. {connection_state}",
+        "data": {
+          "connection_file": "Private connection file (.json)",
+          "manual": "Enter connection details manually instead"
+        }
       }
     },
     "error": {
@@ -100,7 +107,12 @@
       "invalid_auth": "Authorization was rejected. Check the key or token.",
       "certificate_changed": "The certificate changed. Verify the device identity in Reconfigure.",
       "recovery_failed": "Restoration could not be confirmed. Check connections and authorization, then retry; recovery data has been retained.",
-      "confirm_required": "Confirm that the missing lights were permanently removed or replaced."
+      "confirm_required": "Confirm that the missing lights were permanently removed or replaced.",
+      "invalid_connection_file": "This is not a valid Festavia Studio HA connection file. Choose the JSON produced by the HA setup launcher, or an older device-credentials JSON. The uploaded copy was removed.",
+      "connection_file_required": "Choose the private connection JSON from the setup launcher, or select manual entry.",
+      "network_not_open": "No open Zigbee pairing window was found. Start Add lights → Search on the selected Hue bridge, then Submit to scan again.",
+      "multiple_networks": "More than one Zigbee pairing network is open. Close pairing on other hubs, then Submit to scan again. Studio has not chosen a network.",
+      "wrong_firmware_edition": "This ESP32 runs the separate Hue-only Direct edition. This integration needs the Home Assistant firmware package. Nothing was enrolled or reflashed."
     },
     "abort": {
       "already_configured": "These Festavia lights are already configured.",
