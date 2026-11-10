@@ -20,9 +20,12 @@ need independent physical evidence. Preserve those distinctions in release notes
    This runs actual HA in isolated containers, with network peers and Zigbee
    simulated, on the minimum/current/regression versions and both bridge models.
    A zero exit status requires explicit success reports from every suite.
-5. Require the three desktop USB-tool jobs, HA matrix, hassfest and HACS metadata
-   validation to pass. The USB jobs never open hardware. Record new physical
-   results separately; no physical capability is inferred from a simulator.
+5. Require the three desktop USB-tool jobs, HA matrix and hassfest to pass.
+   The HACS action refuses private repositories, so its job is explicitly skipped
+   while private. Once public it runs automatically and must pass, without ignored
+   checks, before a public release/catalog submission. This private draft is not
+   HACS-validated. The USB jobs never open hardware. Record new physical results
+   separately; no physical capability is inferred from a simulator.
 
 ## Build and draft
 
@@ -42,7 +45,9 @@ The **Prepare release draft** workflow is manual. Run it on the reviewed commit
 with a tag matching the integration version. It refuses a commit whose Validate
 package workflow has not passed, builds the artifacts, and creates a **draft
 prerelease** with the commit pinned. It never changes repository visibility or
-publishes the draft. Attach a concise human-reviewed note with the compatibility
+publishes the draft. A successful private run does not establish HACS acceptance;
+run Validate package again after making the repository public. Attach a concise
+human-reviewed note with the compatibility
 scope, limitations and link to the install guide before publishing.
 
 ## Public beta and catalog

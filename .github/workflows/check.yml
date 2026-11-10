@@ -47,6 +47,9 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
       - uses: home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361
   hacs:
+    # The upstream validator rejects private repositories before inspecting files.
+    # It becomes mandatory automatically when the repository is made public.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-24.04
     steps:
       - uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa

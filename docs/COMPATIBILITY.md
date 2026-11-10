@@ -31,11 +31,16 @@ Production C tests cover finite retained paint and recovery for every size 10–
 the mobile editor covers every size 1–48 without horizontal overflow.
 
 USB-tool dependency installation, help, factory-image dry run and `pip check`
-pass in the clean Linux environment without opening USB. CI also runs the
-dependency/help/dry-run checks on Windows and macOS; consult the
+pass in the clean Linux environment without opening USB. The three CI
+dependency/help/dry-run jobs also pass on Windows, macOS and Linux; consult the
 [validation workflow](https://github.com/Dyluhn/festavia-studio/actions/workflows/check.yml)
 for their result on a particular commit. This is software compatibility, not
 physical flash validation on those platforms.
+
+Official hassfest passes. The upstream HACS validator refuses private repositories
+before examining their files. Its CI job is explicitly skipped while private and
+becomes mandatory when public. Public HACS/catalog validation is therefore still
+outstanding; the private draft does not claim it.
 
 The tracked Git history also passes a redacted Gitleaks scan. This is an automated
 credential-pattern check, not a complete security audit. Archive SHA-256 values
