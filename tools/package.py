@@ -79,9 +79,12 @@ def main():
 
     def add(folder, target):
         for path in sorted(folder.rglob("*")):
+            relative_parts = path.relative_to(folder).parts
+            if set(relative_parts) & excluded:
+                continue
             if path.is_symlink():
                 raise ValueError("Symlink in release source")
-            if not path.is_file() or set(path.parts) & excluded or path.suffix in (".pyc", ".zip"):
+            if not path.is_file() or path.suffix in (".pyc", ".zip"):
                 continue
             if path.name in ("sdkconfig", "sdkconfig.old"):
                 continue
@@ -94,7 +97,8 @@ def main():
                     or path.name.endswith((".owner.lock", ".active.json"))
                 )
                 or any(
-                    part in (".storage", "uniform-commits", ".setup-data") for part in path.parts
+                    part in (".storage", "uniform-commits", ".setup-data")
+                    for part in relative_parts
                 )
             ):
                 raise ValueError("Private runtime file in release source")

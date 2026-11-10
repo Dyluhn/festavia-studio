@@ -31,12 +31,12 @@ class SetupPackageTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             report = json.loads(result.stdout)
             with zipfile.ZipFile(report["archive"]) as archive:
-                archive.extractall(root / "folder with spaces")
+                archive.extractall(root / "build/folder with spaces")
                 for name in ("Setup Home Assistant Linux.sh", "Setup Home Assistant macOS.command"):
                     self.assertTrue(
                         archive.getinfo("festavia-studio/" + name).external_attr >> 16 & 0o111
                     )
-            source = root / "folder with spaces/festavia-studio"
+            source = root / "build/folder with spaces/festavia-studio"
             for line in (source / "SHA256SUMS").read_text().splitlines():
                 digest, name = line.split("  ", 1)
                 self.assertEqual(hashlib.sha256((source / name).read_bytes()).hexdigest(), digest)
