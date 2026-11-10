@@ -5,7 +5,7 @@
 #include "../hue-direct/firmware-source/main/direct.c"
 static int64_t clock_ms;
 static hm_player_view_t view;
-static unsigned stops,releases,blob_writes,loads,fixture_writes,report_endpoint,resolves;
+static unsigned stops,releases,blob_writes,loads,fixture_writes,report_endpoint,resolves,keepalives;
 static bool release_ok=true;
 static const char *mock_reason="none";
 const char *hm_player_reason(void) {return mock_reason;}
@@ -20,6 +20,7 @@ cJSON *hm_player_command(const cJSON *q,bool approved) {
  if(!strcmp(op,"player_stop"))stops++;
  if(!strcmp(op,"player_release")) {releases++;ok=release_ok;}
  if(!strcmp(op,"player_load"))loads++;
+ if(!strcmp(op,"player_keepalive"))keepalives++;
  cJSON *r=cJSON_CreateObject();cJSON_AddBoolToObject(r,"ok",ok);return r;
 }
 void esp_zb_get_extended_pan_id(uint8_t *out) {memset(out,0,8);}
@@ -39,7 +40,7 @@ static void reset(void) {
  cJSON_Delete(handoff_patch);handoff_patch=NULL;handoff_inflight=handoff_off=false;handoff_attempts=0;mock_reason="none";
  memset(selector_wire_until,0,sizeof(selector_wire_until));memset(color_modes,0,sizeof(color_modes));sdk_snapshot=false;clock_ms=20000;allow_hue_takeover=1;enabled=configured=bridge_connected=true;entertainment=master=owns=dirty=explicit_apply=updating=group_command=controls_started=scene_pending=scene_has_preset=scene_has_level=false;
  positions=27;position=preset=1;layer=shape_parameter=0;change_due=action_due=recall_until=report_due=master_wire_until=scene_due=scene_deadline=0;hue_trace_sequence=0;started=1000;bridge_seen=clock_ms;installation_cap=19;
- state="idle";error="none";view=(hm_player_view_t){.state="idle"};stops=releases=blob_writes=loads=fixture_writes=resolves=0;release_ok=true;
+ state="idle";error="none";view=(hm_player_view_t){.state="idle"};stops=releases=blob_writes=loads=fixture_writes=resolves=keepalives=0;keepalive_due=0;release_ok=true;
  before.x=30121;before.y=26905;before.level=25;bridge_before_x=before.x/65535.0;bridge_before_y=before.y/65535.0;bridge_before_brightness=25*100.0/254;
 }
 static void slider(unsigned endpoint,unsigned percent) {
@@ -47,6 +48,21 @@ static void slider(unsigned endpoint,unsigned percent) {
  esp_zb_zcl_set_attr_value_message_t m={.info={.status=0,.dst_endpoint=endpoint,.cluster=8},.attribute={.id=0,.data={.size=1,.value=&level}}};hd_action(&m);
 }
 int main(void) {
+ reset();owns=master=true;state="playing";view=(hm_player_view_t){"playing",true,true,false};
+ hd_tick(true);assert(keepalives==1);
+ hd_bridge_observation(false,false,NULL);clock_ms+=3000;hd_tick(true);
+ assert(master && owns && keepalives==1 && !stops && !releases);
+ hd_bridge_observation(true,false,NULL);hd_tick(true);
+ assert(master && owns && keepalives==2 && !stops && !releases);
+ puts("PASS a brief bridge poll failure withholds keepalive and reconnects without stopping playback");
+ reset();owns=master=true;state="playing";view=(hm_player_view_t){"playing",true,true,false};
+ hd_tick(true);hd_bridge_observation(false,false,NULL);clock_ms+=12000;hd_tick(true);
+ assert(keepalives==1 && !stops && !releases);
+ mock_reason="hue_watchdog_expired";view=(hm_player_view_t){"released",false,false,false};hd_tick(true);
+ assert(!master && !owns && !loads);
+ hd_bridge_observation(true,false,NULL);clock_ms+=2000;hd_tick(true);
+ assert(!master && !owns && !loads && keepalives==1);
+ puts("PASS an expired ownership lease ends the scene and later bridge recovery never restarts it");
  reset();owns=master=true;state="preparing";view.armed=true;
  cJSON *light=cJSON_Parse("{\"color\":{\"xy\":{\"x\":0.1,\"y\":0.1}},\"dimming\":{\"brightness\":9}}");
  hd_bridge_observation(true,false,light);assert(master && releases==0);puts("PASS no handoff during preparation");

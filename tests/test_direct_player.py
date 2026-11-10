@@ -74,7 +74,7 @@ class DirectPlayerTests(unittest.TestCase):
             self.assertEqual(build.returncode, 0, build.stderr)
             run = subprocess.run([binary], check=False, capture_output=True, text=True, timeout=10)
             self.assertEqual(run.returncode, 0, run.stderr)
-            self.assertEqual(run.stdout.count("PASS "), 47, run.stdout)
+            self.assertEqual(run.stdout.count("PASS "), 49, run.stdout)
 
     def test_failed_prepare_cannot_leave_an_unowned_recovery_journal(self):
         with tempfile.TemporaryDirectory() as directory:

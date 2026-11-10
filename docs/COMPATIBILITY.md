@@ -78,6 +78,14 @@ its original staged scene and automation states. The final Direct 0.5.1 app
 was subsequently restored by verified OTA; settings and presets were retained.
 No USB reconnection or re-pairing was needed for these updates.
 
+A first final-image run reached 2,604 seconds with playback active before the
+harness stopped on one failed Hue poll. Exact restoration passed. The observer
+intentionally reconnects after a failed poll; the harness had incorrectly required
+its connected flag at every sample. The corrected test allows bounded reconnects
+while retaining the existing ownership deadline and fails on any stopped player.
+Two added coordinator cases verify keepalive pause/resume and no restart after
+lease expiry, bringing that harness to 49 cases. The full run restarts from zero.
+
 The final Direct saved-scene reliability run is pending. No claim of resolved
 long-run delivery or stable release is made until that bounded check finishes.
 The final factory images have matching layouts and hashes, but were not physically

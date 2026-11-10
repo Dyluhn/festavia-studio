@@ -50,6 +50,13 @@ verified; physical factory flashing/fresh joining were not repeated. The earlier
 USB result applies specifically to 0.5.0. Preserving the only connected board's
 pairing is intentional; another household's fresh-install evidence remains needed.
 
+A first run on these bytes reached 2,604 seconds with playback active; the test
+then aborted on a single false bridge-connected sample. Exact restoration passed.
+The test now permits bounded poll reconnection within the existing ownership
+deadline, checks continued playback, and starts the full duration again. Two new
+coordinator regressions cover brief poll failure/reconnection and expiry without
+automatic restart (49 current coordinator cases). No app bytes changed.
+
 The following detailed results retain the earlier test scope and dates.
 
 ## Software and build

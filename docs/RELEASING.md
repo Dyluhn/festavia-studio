@@ -15,7 +15,9 @@ and would offer the wrong product tag as an integration version.
    contains the Hue-only source/tests too; the small integration ZIP contains only
    HA runtime files and installation documentation.
 3. Extract the full source archive into a fresh folder and run its checks using a
-   clean environment. Repackaged archives must match byte for byte. Run the
+   clean environment. Repackaged archives must match byte for byte with the same Python/zlib toolchain.
+   Different compression implementations can change ZIP bytes; extracted contents
+   and metadata must still match. Run the
    standalone ZIP's launchers and CLI dry runs from an extracted folder too.
 4. Run `python tools/compatibility.py --source <extracted-source> --output <evidence>`.
    These real-HA containers simulate the network and Zigbee peers; they do not
