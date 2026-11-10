@@ -120,10 +120,22 @@ def create_zone(bridge, controls):
     return result["data"][0]["rid"]
 
 
-def create_scene(bridge, zone, controls, slot=1):
+def create_scene(bridge, zone, controls, slot=1, identifier=None):
     name = f"Festavia preset {slot}"
     existing = None
-    for scene in bridge.resources("scene"):
+    scenes = bridge.resources("scene")
+    if identifier:
+        existing = next(
+            (
+                scene
+                for scene in scenes
+                if scene["id"] == identifier and scene.get("group", {}).get("rid") == zone
+            ),
+            None,
+        )
+    for scene in scenes:
+        if existing:
+            break
         if (
             scene.get("group", {}).get("rid") == zone
             and scene.get("metadata", {}).get("name") == name
@@ -162,7 +174,7 @@ def create_scene(bridge, zone, controls, slot=1):
     return result["data"][0]["rid"]
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device-credentials", type=Path, required=True)
     parser.add_argument("--bridge", help="bridge LAN address")
@@ -189,7 +201,7 @@ def main():
         help="stop/disable standalone mode without erasing presets or pairing",
     )
     parser.add_argument("--output", type=Path, default=Path("festavia-direct-setup.json"))
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     device = net.PinnedHTTPS(net.credentials(args.device_credentials))
 
     def command(op, **values):
@@ -307,7 +319,8 @@ def main():
         # Keep the renderer disabled until that Zigbee traffic has settled.
         command("direct_enable", enabled=False)
         zone = create_zone(bridge, controls)
-        scene = create_scene(bridge, zone, controls, slot)
+        previous = json.loads(args.output.read_text()) if args.output.is_file() else {}
+        scene = create_scene(bridge, zone, controls, slot, previous.get("scene"))
         started = time.monotonic()
         while True:
             state = command("direct_status")

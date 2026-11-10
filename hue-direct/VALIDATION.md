@@ -7,16 +7,17 @@ below 20%; ordinary tests use 9%, with a hard installation ceiling of 19%.
 
 ## Software and build
 
-- Full repository check: **136 Python tests passed**, formatting/import checks,
+- Full repository check: **154 Python tests passed**, formatting/import checks,
   bytecode compilation, and the original HA package/firmware integrity checks.
 - Production C packet generation matches the existing host implementation across
   every count **1–48**, both directions, palette quantities, native modes,
   individual retained layouts, recovery programs, snake width/phase/speed and caps.
-- Production coordinator: 46 cases cover capture, scene callbacks, the SDK's
+- Production coordinator: 47 cases cover capture, scene callbacks, the SDK's
   intermediate zero level during ON, repeated ON, group isolation, selector
   readback, debouncing, queued Hue handoff, OFF preservation, and failure bounds.
   The actual compact-scene/fallback sequence is covered, including unchanged
   preset values that produce no SDK callback and replacement by a newer scene.
+  Reconfiguration preserves the device-wide Hue-takeover preference.
 - Shared production player: 10 liveness/recovery cases; five persistence fault
   cases; 13 settings-store reservation/migration fault cases; seven current-radio
   transfer cases, including missing callbacks, expiration and synchronous confirms.
@@ -81,6 +82,23 @@ Additional completed checks:
   is restored exactly and the temporary automation guard is removed.
 - The final archive's per-file hashes, extracted CLI help/dry runs and credential
   exclusion scan pass. The shipped app matches the image confirmed on the C6.
+
+## Guided installer update
+
+The standalone ZIP now includes OS launchers, dependency bootstrap, a guided
+wizard and GETTING_STARTED.md. Software checks cover cancelled/partial installs,
+Wi-Fi-only recovery, named fixture choices, unsupported fixtures, credential
+reuse, preserved installation ceilings, read-only status and wireless updates.
+Saved scene IDs allow setup to reuse a scene even after its name is changed.
+
+The extracted bootstrap creates its dependency environment and verifies the
+images on Linux/Python 3.14. On the real C6, its wireless continuation is run
+twice: one saved controller, unchanged Hue scene/zone IDs, retained presets and
+installation ceiling, and the deliberately disabled Hue-takeover preference is
+preserved. Read-only diagnostics work and the identical-image update is skipped.
+The rebuilt image plays the existing saved scene at 9%; the fixture is restored
+exactly and the automation guard is removed. Fresh-device USB flashing and a
+fresh link-button pairing remain community hardware validation gaps below.
 
 ## Qualification boundaries
 

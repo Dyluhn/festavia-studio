@@ -14,12 +14,12 @@ from transport import module
 net, ota = [module(n) for n in ("net_client", "ota")]
 
 
-def main():
+def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--device-credentials", type=Path, required=True)
     p.add_argument("--release", type=Path, default=Path(__file__).resolve().parent / "release")
     p.add_argument("--dry-run", action="store_true")
-    args = p.parse_args()
+    args = p.parse_args(argv)
     manifest = json.loads((args.release / "manifest.json").read_text())
     image = (args.release / manifest["app"]).read_bytes()
     if hashlib.sha256(image).hexdigest() != manifest["sha256"][manifest["app"]]:

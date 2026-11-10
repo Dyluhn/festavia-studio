@@ -49,7 +49,7 @@ def check_build(build):
     ):
         raise ValueError("Build is not this standalone source/version/target")
     files = source_files()
-    current = {str(f.relative_to(ROOT)): sha(f.read_bytes()) for f in files}
+    current = {f.relative_to(ROOT).as_posix(): sha(f.read_bytes()) for f in files}
     built = {
         "hue-direct/firmware-source/" + name: digest
         for name, digest in json.loads((build / "hue-direct-source.json").read_text()).items()
@@ -122,9 +122,10 @@ def main():
     }
     manifest_path = release / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-    entries = {str(f.relative_to(ROOT)): f.read_bytes() for f in files}
+    entries = {f.relative_to(ROOT).as_posix(): f.read_bytes() for f in files}
     public_files = [
         "hue-direct/README.md",
+        "hue-direct/GETTING_STARTED.md",
         "hue-direct/THIRD_PARTY.md",
         "hue-direct/VALIDATION.md",
         "hue-direct/commission.py",
@@ -132,15 +133,23 @@ def main():
         "hue-direct/install.py",
         "hue-direct/update.py",
         "hue-direct/package.py",
+        "hue-direct/setup.py",
+        "hue-direct/bootstrap.py",
+        "hue-direct/requirements.txt",
         "tools/transport.py",
         "tools/usb_link.py",
         "tools/wifi_setup.py",
     ]
     for relative in public_files:
         entries[relative] = (ROOT / relative).read_bytes()
+    for name in ("Setup Windows.cmd", "Setup macOS.command", "Setup Linux.sh"):
+        entries[name] = (ROOT / "hue-direct/launchers" / name).read_bytes()
     entries["README.md"] = (
         b"# Festavia Direct 0.5.0\n\n"
-        b"Start with [the installation and Hue control guide](hue-direct/README.md).\n\n"
+        b"Start with [GETTING_STARTED.md](hue-direct/GETTING_STARTED.md).\n\n"
+        b"Extract the ZIP, then open the Setup launcher for Windows, macOS or Linux.\n"
+        b"It prepares the tools and walks through USB, Wi-Fi, Hue pairing and light selection.\n\n"
+        b"The [full Hue control reference](hue-direct/README.md) explains everyday editing.\n\n"
         b"This is the standalone ESP32-C6 + Hue edition. Home Assistant is not required.\n"
         b"Qualification and current limits are in [VALIDATION.md](hue-direct/VALIDATION.md).\n"
     )
@@ -184,10 +193,10 @@ def main():
             ]
         for f in candidates:
             if f.is_file():
-                entries["hue-direct/licenses/" + label + "/" + str(f.relative_to(base))] = (
+                entries["hue-direct/licenses/" + label + "/" + f.relative_to(base).as_posix()] = (
                     f.read_bytes()
                 )
-    entries["requirements.txt"] = b"pyserial>=3.5,<4\nesptool>=4.8,<5\n"
+    entries["requirements.txt"] = (ROOT / "hue-direct/requirements.txt").read_bytes()
     for f in (app, factory, manifest_path):
         entries["hue-direct/release/" + f.name] = f.read_bytes()
     entries["SHA256SUMS"] = "".join(
@@ -198,7 +207,10 @@ def main():
             info = zipfile.ZipInfo(
                 "festavia-direct-" + VERSION + "/" + name, date_time=(2026, 11, 9, 0, 0, 0)
             )
-            info.external_attr = 0o100644 << 16
+            info.create_system = 3
+            info.external_attr = (
+                0o100755 if name.endswith((".sh", ".command")) else 0o100644
+            ) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             z.writestr(info, raw)
     with zipfile.ZipFile(args.output) as z:

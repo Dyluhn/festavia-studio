@@ -34,7 +34,16 @@ Hue. This is a separate firmware edition; it does not replace the HA integration
 
 ## Install once
 
-Unzip the standalone release, install Python 3.10+ and run from its root:
+**Start with [the first-time setup guide](GETTING_STARTED.md).** Extract the
+standalone ZIP and open **Setup Windows.cmd**, **Setup macOS.command**, or
+**Setup Linux.sh**. The guided installer prepares dependencies, discovers ports
+and bridges, offers compatible Festavias by name and creates the Hue controls.
+It saves progress outside the downloaded package for wireless continuation and
+updates. Python 3.10+ is required; the guide includes drivers and recovery steps.
+
+For a terminal, run `python hue-direct/bootstrap.py` from the extracted folder.
+Choose **New** only for a C6 you intend to flash; **Continue**, **Update** and
+**Check** work with the saved controller. For the original manual CLI workflow:
 
 ```sh
 python -m venv .venv

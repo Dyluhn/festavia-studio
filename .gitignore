@@ -26,3 +26,6 @@ hue-direct/firmware-source/managed_components/
 hue-direct/firmware-source/sdkconfig
 hue-direct/firmware-source/sdkconfig.old
 festavia-direct-setup.json
+/controllers/
+/hue-direct/controllers/
+/hue-direct/release/

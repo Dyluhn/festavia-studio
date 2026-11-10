@@ -3,6 +3,7 @@
 import hashlib
 import importlib.util
 import json
+import os
 import struct
 import subprocess
 import sys
@@ -43,7 +44,9 @@ class PackageTests(unittest.TestCase):
         }
         (build / "project_description.json").write_text(json.dumps(description))
         source = {
-            str(f.relative_to(ROOT / "hue-direct/firmware-source")): package.sha(f.read_bytes())
+            f.relative_to(ROOT / "hue-direct/firmware-source").as_posix(): package.sha(
+                f.read_bytes()
+            )
             for f in package.source_files()
         }
         (build / "hue-direct-source.json").write_text(json.dumps(source))
@@ -111,14 +114,19 @@ class PackageTests(unittest.TestCase):
                 self.assertFalse(
                     any(n.endswith(("/service.py", "/studio.py")) for n in archive.namelist())
                 )
-                archive.extractall(root / "extract")
-            extracted = next((root / "extract").iterdir())
+                for name in ("Setup macOS.command", "Setup Linux.sh"):
+                    self.assertTrue(
+                        archive.getinfo("festavia-direct-0.5.0/" + name).external_attr >> 16 & 0o111
+                    )
+                archive.extractall(root / "extract with spaces")
+            extracted = next((root / "extract with spaces").iterdir())
+            self.assertTrue((extracted / "hue-direct/GETTING_STARTED.md").is_file())
             for line in (extracted / "SHA256SUMS").read_text().splitlines():
                 digest, name = line.split("  ", 1)
                 self.assertEqual(
                     hashlib.sha256((extracted / name).read_bytes()).hexdigest(), digest
                 )
-            for cli in ("commission.py", "install.py", "update.py"):
+            for cli in ("commission.py", "install.py", "update.py", "setup.py", "bootstrap.py"):
                 result = subprocess.run(
                     [sys.executable, str(extracted / "hue-direct" / cli), "--help"],
                     check=False,
@@ -127,6 +135,20 @@ class PackageTests(unittest.TestCase):
                     timeout=10,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
+            launcher = (
+                ["cmd", "/c", str(extracted / "Setup Windows.cmd"), "--help"]
+                if os.name == "nt"
+                else ["sh", str(extracted / "Setup Linux.sh"), "--help"]
+            )
+            result = subprocess.run(launcher, capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run(
+                [sys.executable, str(extracted / "hue-direct/setup.py"), "--dry-run"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":

@@ -671,7 +671,9 @@ cJSON *hd_command(const cJSON *q,bool approved) {
         if(cJSON_IsNumber(cJSON_GetObjectItemCaseSensitive(q,"cap"))) {installation_cap=clip(cJSON_GetObjectItemCaseSensitive(q,"cap")->valueint,1,100);scene.cap=min(scene.cap,installation_cap);scene.brightness=min(scene.brightness,scene.cap);nvs_set_u8(storage,"limit",installation_cap);}
         const cJSON *count=cJSON_GetObjectItemCaseSensitive(q,"positions");
         if(cJSON_IsNumber(count) && count->valueint>=1 && count->valueint<=48) {positions=count->valueint;nvs_set_u8(storage,"count",positions);}
-        allow_hue_takeover=1;nvs_set_u8(storage,"takeover",1);nvs_set_blob(storage,"scene",&scene,sizeof(scene));nvs_commit(storage);
+        // Hue priority is a device-wide user preference, including on repair.
+        // hd_init supplies the enabled default for a new settings store.
+        nvs_set_blob(storage,"scene",&scene,sizeof(scene));nvs_commit(storage);
         error="none";return status(true);
     }
     if(!strcmp(op,"direct_clear_preset")) {

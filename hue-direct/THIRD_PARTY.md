@@ -11,6 +11,7 @@ Builds fetch the locked SDK components from Espressif. No extracted Signify code
 or firmware is distributed. Gradient-Light-Bridge was researched as evidence for
 Hue-facing controls; its implementation was not copied into this edition.
 
-The optional desktop installation tools use pyserial (BSD) and esptool (GPL-2.0
-or later). They are installed separately through pip and are not linked into or
+The desktop installation tools use pyserial (BSD), esptool (GPL-2.0 or later)
+and python-zeroconf (LGPL-2.1 or later) for local bridge discovery. They are
+installed separately through pip and are not linked into or
 bundled inside the firmware. Their own distributions contain their licenses.

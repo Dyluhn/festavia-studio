@@ -136,6 +136,31 @@ class SetupTests(unittest.TestCase):
             commission.join(d, Bridge())
         self.assertEqual(d.last["op"], "scan")
 
+    def test_saved_scene_id_is_reused_after_user_renames_it(self):
+        controls = {ep: {"v2": str(ep)} for ep in range(11, 19)}
+
+        class Bridge:
+            def resources(self, kind):
+                return [
+                    {
+                        "id": "owned-scene",
+                        "group": {"rid": "zone"},
+                        "metadata": {"name": "My porch snake"},
+                        "actions": [
+                            {"target": {"rid": str(ep)}, "action": {"on": {"on": True}}}
+                            for ep in range(11, 19)
+                        ],
+                    }
+                ]
+
+            def request(self, *args):
+                raise AssertionError("Rerunning setup must not recreate or overwrite this scene")
+
+        self.assertEqual(
+            commission.create_scene(Bridge(), "zone", controls, identifier="owned-scene"),
+            "owned-scene",
+        )
+
     def test_existing_foreign_pairing_is_preserved(self):
         class Device:
             def call(self, method, path):

@@ -44,6 +44,9 @@ jobs:
       - run: python hue-direct/install.py --help
       - run: python hue-direct/update.py --help
       - run: python hue-direct/commission.py --help
+      - run: python hue-direct/setup.py --help
+      - run: python hue-direct/bootstrap.py --help
+      - run: python -m unittest discover -s tests -p test_direct_package.py -v
       - run: python tools/first-install.py --port UNUSED --ssid Test --dry-run
   hassfest:
     runs-on: ubuntu-24.04

@@ -99,5 +99,6 @@ int main(void) {
  reset();begin_scene(11,1,1);scene_has_level=true;scene_level=12;clock_ms+=1000;hd_tick(true);assert(scene.brightness==12);puts("PASS a Master-only scene retains brightness control");
  reset();saved[0]=true;presets[0]=scene;begin_scene(18,1,1);scene_slot=2;begin_scene(18,1,2);assert(scene_slot==1);clock_ms+=1000;hd_tick(true);assert(preset==1);puts("PASS a newer scene replaces the pending scene selection");
  reset();for(unsigned n=0;n<70;n++)trace_hue(0,11,8,0xffff,0,NULL,0);cJSON *trace_request=cJSON_Parse("{\"op\":\"direct_trace\",\"after\":1}");cJSON *trace_response=hd_command(trace_request,true);assert(cJSON_IsTrue(cJSON_GetObjectItem(trace_response,"lost")) && cJSON_GetArraySize(cJSON_GetObjectItem(trace_response,"commands"))==32);cJSON_Delete(trace_response);cJSON_Delete(trace_request);puts("PASS bounded Hue trace reports lost commands and paginates");
+ reset();allow_hue_takeover=0;cJSON *configure_request=cJSON_Parse("{\"op\":\"direct_configure\",\"ieee\":\"1122334455667788\",\"cap\":13,\"positions\":27}");cJSON *configure_response=hd_command(configure_request,true);assert(cJSON_IsTrue(cJSON_GetObjectItem(configure_response,"ok")) && !allow_hue_takeover && installation_cap==13);cJSON_Delete(configure_response);cJSON_Delete(configure_request);puts("PASS reconfiguration preserves device-wide Hue priority");
  return 0;
 }

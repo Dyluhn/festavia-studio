@@ -13,7 +13,42 @@ sys.path.insert(0, str(ROOT / "tools"))
 from wifi_setup import main as provision
 
 
-def main():
+def factory_image(release):
+    manifest = json.loads((release / "manifest.json").read_text())
+    image = release / manifest["factory"]
+    if hashlib.sha256(image.read_bytes()).hexdigest() != manifest["sha256"][image.name]:
+        raise ValueError("Factory image checksum failed")
+    return image
+
+
+def flash_factory(port, release):
+    image = factory_image(release)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "esptool",
+            "--chip",
+            "esp32c6",
+            "--port",
+            port,
+            "--baud",
+            "460800",
+            "write_flash",
+            "--flash_mode",
+            "dio",
+            "--flash_freq",
+            "80m",
+            "--flash_size",
+            "4MB",
+            "0x0",
+            str(image),
+        ],
+        check=True,
+    )
+
+
+def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--port", required=True)
     p.add_argument("--ssid", required=True)
@@ -21,11 +56,8 @@ def main():
     p.add_argument("--release", type=Path, default=Path(__file__).resolve().parent / "release")
     p.add_argument("--skip-flash", action="store_true")
     p.add_argument("--dry-run", action="store_true")
-    args = p.parse_args()
-    manifest = json.loads((args.release / "manifest.json").read_text())
-    image = args.release / manifest["factory"]
-    if hashlib.sha256(image.read_bytes()).hexdigest() != manifest["sha256"][image.name]:
-        raise ValueError("Factory image checksum failed")
+    args = p.parse_args(argv)
+    factory_image(args.release)
     if args.dry_run:
         print("Factory image checksum verified; no USB operations performed.")
         return
@@ -35,29 +67,7 @@ def main():
         )
         if input("Type INSTALL FESTAVIA DIRECT to continue: ") != "INSTALL FESTAVIA DIRECT":
             raise SystemExit("Cancelled")
-        subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "esptool",
-                "--chip",
-                "esp32c6",
-                "--port",
-                args.port,
-                "--baud",
-                "460800",
-                "write_flash",
-                "--flash_mode",
-                "dio",
-                "--flash_freq",
-                "80m",
-                "--flash_size",
-                "4MB",
-                "0x0",
-                str(image),
-            ],
-            check=True,
-        )
+        flash_factory(args.port, args.release)
     provision(["--port", args.port, "--ssid", args.ssid, "--credentials", str(args.credentials)])
     print(
         "Next: python hue-direct/commission.py --device-credentials "
