@@ -1,9 +1,12 @@
-# 0.13.0 — guided Home Assistant installation
+# 0.13.0 — combined community beta
 
 - Add Windows/macOS/Linux launchers with automatic isolated dependency setup, named USB selection, first-flash confirmation, resumable provisioning and private connection-file export. Resume and Export use Wi-Fi once configured; routine updates stay in HA.
 - Import the connection file in the integration’s native setup flow. Validate its edition, local HTTPS address, token and certificate before connecting; remove the temporary upload on success and failure. Keep manual entry and legacy device files compatible.
 - Expand the installation guide with first-scene steps, visual dashboard card setup and recovery. Preserve automatic count detection, saved libraries and existing entries.
-- Integration version is 0.13.0; the qualified ESP32 firmware remains 0.4.0.
+- Integration version is 0.13.0; the qualified HA ESP32 firmware remains 0.4.0.
+- Include the separate Hue-only Direct 0.5.0 edition, guided setup, native Hue controls and 16 full presets. Use one project release stream so HACS cannot confuse firmware-edition tags with integration updates.
+- Combine both source/test trees, isolate installer bootstrap imports, and verify deterministic extracted packaging with unchanged qualified firmware reuse. Both editions pass the 174-test combined suite.
+- Record actual factory USB flash/provisioning checks for both images, HA import-file export and restoration of the original paired controller. Fresh authorization/joining and independent hardware combinations remain beta tasks.
 
 # 0.12.1 — every installed count through 48
 

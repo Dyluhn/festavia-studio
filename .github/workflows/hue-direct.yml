@@ -9,12 +9,16 @@ permissions:
   contents: read
 jobs:
   model-and-setup:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.14"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python }}
       - run: sudo apt-get update && sudo apt-get install -y libcjson-dev
       - run: python -m unittest discover -s tests -p 'test_direct*.py' -v
   firmware:
