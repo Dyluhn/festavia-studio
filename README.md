@@ -31,6 +31,11 @@ HA actions accept `effect: snake`, `colors: [...]` for the background and
 `snake_colors: [...]` for the moving block; palette actions accept
 `layer: background` or `layer: snake`.
 
+For control through the stock Hue app without Home Assistant, see the separate
+experimental [Festavia Direct guided setup](hue-direct/GETTING_STARTED.md). Its
+standalone ZIP includes setup launchers, firmware and a Hue control guide. It
+uses Hue light controls and scenes, with its own qualification limits.
+
 ## Install and connect
 
 Start with the [installation guide](docs/INSTALL.md) for the Home Assistant

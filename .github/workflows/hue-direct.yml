@@ -1,0 +1,36 @@
+name: Hue Direct
+on:
+  workflow_dispatch:
+  push:
+    paths: ['hue-direct/**', 'tests/test_direct*.py', 'tests/direct*', 'tests/direct_stubs/**', 'tests/storage_stubs/**', '.github/workflows/hue-direct.yml']
+  pull_request:
+    paths: ['hue-direct/**', 'tests/test_direct*.py', 'tests/direct*', 'tests/direct_stubs/**', 'tests/storage_stubs/**', '.github/workflows/hue-direct.yml']
+permissions:
+  contents: read
+jobs:
+  model-and-setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y libcjson-dev
+      - run: python -m unittest discover -s tests -p 'test_direct*.py' -v
+  firmware:
+    runs-on: ubuntu-latest
+    container: espressif/idf:v5.3.2
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Build locked C6 firmware
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py -C hue-direct/firmware-source -B build-direct -DIDF_TARGET=esp32c6 -DSDKCONFIG_DEFAULTS='sdkconfig.defaults;sdkconfig.defaults.esp32c6' build
+          python hue-direct/package.py --build build-direct --output dist/festavia-direct-0.5.0.zip
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: festavia-direct-0.5.0
+          path: |
+            dist/*.zip
+            dist/*.sha256
