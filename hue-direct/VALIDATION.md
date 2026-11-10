@@ -1,6 +1,6 @@
 # Validation record — 2026-11-09–10
 
-The combined community beta passes 174 repository tests across both editions.
+The combined community beta passes 178 repository tests across both editions.
 The historical 156-test Direct-branch result below predates their combination.
 Both are software results; hardware scope is stated separately.
 
@@ -16,6 +16,13 @@ Festavia Direct 0.5.0 is an experimental standalone edition. Hardware qualificat
 uses an ESP32-C6 with 4 MB flash, Hue Bridge Pro BSB003 (API 1.78.0), and an LCX030
 on firmware 1.163.5 with 27 logical pucks. All controlled physical output stays
 below 20%; ordinary tests use 9%, with a hard installation ceiling of 19%.
+
+The exact public-beta CI image was subsequently installed and confirmed by the
+wireless updater on 2026-11-10. Image-sized SSL writes timed out on two attempts;
+the previous image remained selected. Bounded 4 KiB writes completed, including
+a second upload using the production library on a slower link with USB closed.
+Presets/settings and the OFF fixture were preserved. See the combined
+compatibility record for the qualified image identity and scope.
 
 ## Software and build
 
@@ -111,14 +118,15 @@ preserved. Read-only diagnostics work and the identical-image update is skipped.
 The final readiness check also passes against the real C6. It waits for the
 controller's own Hue connection and refuses to report Ready when it is unavailable.
 The rebuilt image plays the existing saved scene at 9%; the fixture is restored
-exactly and the automation guard is removed. Fresh-device USB flashing and a
-fresh link-button pairing remain community hardware validation gaps below.
+exactly and the automation guard is removed. Physical factory USB flashing and
+provisioning subsequently passed on 2026-11-10 as recorded above. Fresh joining
+and new link-button authorization remain community hardware validation gaps below.
 
 ## Qualification boundaries
 
 Only the hardware combination above has been physically exercised. Other physical
-counts, square BSB002 bridges, new-device USB flashing and a fresh link-button
-pairing remain community validation gaps. The installer and joining paths have
+counts, square BSB002 bridges and a fresh link-button pairing remain community
+validation gaps. The installer and joining paths have
 software tests; this paired installation uses OTA to preserve its credentials.
 A stock phone Hue UI was not automated: the hardware tests send its ordinary
 light/scene API operations and verify both bridge and device readback.

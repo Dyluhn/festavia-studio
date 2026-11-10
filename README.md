@@ -73,12 +73,11 @@ original round bridge lacks the required local API v2 and is unsupported.
    The integration guides Zigbee joining and verifies fixture identity, firmware
    and logical count.
 
-A public repository is not yet published. The release is structured for a HACS
-custom integration; it is not in HACS' default catalog or Home Assistant Core.
-On HA 2026.11+, Marketplace replaces HACS. Once the repository is public,
-**Settings → Marketplace → Add from link** is the intended installation path;
-HA 2026.10 users can add it as a HACS custom repository. The integration and its
-optional card are installed together. Manual ZIP installation works now.
+Add this public repository through **Settings → Marketplace → Add from link** on
+HA 2026.11+, or as a HACS custom repository on HA 2026.10. Choose the Integration
+category and enable prereleases to select **v0.13.0**. The integration and its
+optional card install together. Manual ZIP installation also works. This project
+is not in the default catalog or Home Assistant Core.
 
 ## Use it in Home Assistant
 

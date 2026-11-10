@@ -2,7 +2,7 @@
 
 The combined source contains both the HA edition (integration 0.13.0 / firmware
 0.4.0) and Hue-only Direct (firmware 0.5.0). The complete combined check passes
-**177 tests**, including production C for both editions, all-count rendering,
+**178 tests**, including production C for both editions, all-count rendering,
 mobile editing, both installers and extracted packaging. This catches shared
 Python imports and packaging dependencies that separate-branch checks miss.
 The images are unchanged; their source/image identities are verified when packed.
@@ -27,6 +27,22 @@ new link-button authorization still need separate hardware evidence.
 Both editions share one project GitHub release stream. HACS downloads the HA
 component from that project tag; the Direct ZIP and images have explicit edition
 names. Do not treat separate firmware versions as separate integration updates.
+
+## Release-image wireless update
+
+The exact CI-built Direct 0.5.0 app (ELF SHA-256
+`fef4698f3e3f8b9c4a182463a562cdd05e69f36d3bfe44653eb7333e689b8ed5`)
+was uploaded and confirmed on the paired controller. Two image-sized SSL writes
+had timed out; both retained the existing selected firmware. Sending 4 KiB writes
+completed the upload, and the packaged transport then passed another real upload
+on a slower connection without opening USB. The protocol retains Content-Length,
+certificate pinning, the complete-image checksum and explicit trial confirmation.
+It never automatically retries an uncertain POST. This establishes the tested
+transport correction, not a claim about the SDK's underlying cause.
+
+Saved presets, palette, brightness ceilings and Hue takeover settings survived.
+The fixture stayed OFF. Its original appearance, map and aliases were restored
+and checked separately from the controller's image identity.
 
 The sections below retain dated evidence. Current-commit CI and public download
 checks are linked from the release. A software pass never qualifies unavailable

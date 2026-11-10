@@ -7,7 +7,8 @@
 - Use the current HA device-registry lookup helper without deprecated device mappings.
 - Integration version is 0.13.0; the qualified HA ESP32 firmware remains 0.4.0.
 - Include the separate Hue-only Direct 0.5.0 edition, guided setup, native Hue controls and 16 full presets. Use one project release stream so HACS cannot confuse firmware-edition tags with integration updates.
-- Combine both source/test trees, isolate installer bootstrap imports, and verify deterministic extracted packaging with unchanged qualified firmware reuse. Both editions pass the 174-test combined suite.
+- Combine both source/test trees, isolate installer bootstrap imports, and verify deterministic extracted packaging with unchanged qualified firmware reuse. Both editions pass the 178-test combined suite.
+- Stream firmware uploads in 4 KiB writes with an exact Content-Length. Preserve certificate/checksum verification and never automatically repeat an uncertain POST. Add a private security-reporting policy to both source packages.
 - Record actual factory USB flash/provisioning checks for both images, HA import-file export and restoration of the original paired controller. Fresh authorization/joining and independent hardware combinations remain beta tasks.
 
 # 0.12.1 — every installed count through 48

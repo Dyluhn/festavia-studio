@@ -1,6 +1,7 @@
 """Regression coverage for the independent review's production-library defects."""
 
 import hashlib
+import http.client
 import json
 from pathlib import Path
 import sys
@@ -100,6 +101,49 @@ class RecoveryTests(unittest.TestCase):
 
 
 class TransportTests(unittest.TestCase):
+    def test_large_upload_uses_bounded_writes_with_exact_length_and_no_post_retry(self):
+        class Socket:
+            def __init__(self):
+                self.parts = []
+                self.fail_after = None
+
+            def sendall(self, data):
+                if self.fail_after is not None and len(self.parts) >= self.fail_after:
+                    raise TimeoutError("blocked upload")
+                self.parts.append(bytes(data))
+
+            def settimeout(self, timeout):
+                pass
+
+            def close(self):
+                pass
+
+        socket = Socket()
+        connection = http.client.HTTPConnection("device", blocksize=4096)
+        connection.sock = socket
+        response = MagicMock(status=200, will_close=False)
+        response.read.return_value = b'{"ok":true}'
+        payload = bytes(range(256)) * 6000
+        api = net_client.PinnedHTTPS(
+            {"url": "https://device", "token": "a" * 64, "tls_sha256": "b" * 64}
+        )
+        api.connection = connection
+        with patch.object(connection, "getresponse", return_value=response):
+            self.assertTrue(api.call("POST", "/api/ota", data=payload)["ok"])
+        self.assertIn(f"Content-Length: {len(payload)}\r\n".encode(), socket.parts[0])
+        self.assertNotIn(b"Transfer-Encoding:", socket.parts[0])
+        self.assertEqual(b"".join(socket.parts[1:]), payload)
+        self.assertLessEqual(max(map(len, socket.parts[1:])), 4096)
+        socket = Socket()
+        socket.fail_after = 2
+        api.connection = http.client.HTTPConnection("device", blocksize=4096)
+        api.connection.sock = socket
+        with patch("http.client.HTTPSConnection") as retry, self.assertRaises(TimeoutError):
+            api.call("POST", "/api/ota", data=payload)
+        retry.assert_not_called()
+        self.assertEqual(len(socket.parts), 2)
+        self.assertIsNone(api.connection)
+
     def connection(self, status):
         connection = MagicMock()
         connection.sock.getpeercert.return_value = b"certificate"

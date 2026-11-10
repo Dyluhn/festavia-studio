@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import http.client
+import io
 import json
 import os
 import ssl
@@ -71,7 +72,7 @@ class PinnedHTTPS:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
             connection = http.client.HTTPSConnection(
-                self.host, self.port, context=context, timeout=timeout
+                self.host, self.port, context=context, timeout=timeout, blocksize=4096
             )
             try:
                 connection.connect()
@@ -92,8 +93,12 @@ class PinnedHTTPS:
             outgoing["Content-Type"] = "application/json"
         if data is not None:
             outgoing["Content-Length"] = str(len(data))
+        # File-like bodies make http.client send bounded TLS writes. A single
+        # image-sized SSL send stalled on the C6; 4 KiB writes completed the
+        # same upload. Keep Content-Length, rather than HTTP chunked encoding.
+        body = io.BytesIO(data) if data is not None and len(data) > 4096 else data
         try:
-            self.connection.request(method, path, body=data, headers=outgoing)
+            self.connection.request(method, path, body=body, headers=outgoing)
             response = self.connection.getresponse()
             payload = response.read(1_048_577)
             if len(payload) > 1_048_576:

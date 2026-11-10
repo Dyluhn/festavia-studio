@@ -107,6 +107,7 @@ def main():
     for name in (
         "README.md",
         "CONTRIBUTING.md",
+        "SECURITY.md",
         "CHANGELOG.md",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",

@@ -237,6 +237,7 @@ def main():
                 pending.add(node.module.split(".")[0])
     entries["hue-direct/device_lib/__init__.py"] = (library / "__init__.py").read_bytes()
     entries["LICENSE"] = (ROOT / "LICENSE").read_bytes()
+    entries["SECURITY.md"] = (ROOT / "SECURITY.md").read_bytes()
     # Carry SDK/library notices with downloadable images, including the
     # separately licensed ZBOSS binary. Only license files enter the archive.
     entries.update(licenses)
