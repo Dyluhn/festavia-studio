@@ -4,6 +4,14 @@ The combined community beta passes 174 repository tests across both editions.
 The historical 156-test Direct-branch result below predates their combination.
 Both are software results; hardware scope is stated separately.
 
+Physical USB qualification on 2026-11-10: after a full recovery backup, a clean
+Direct factory image was flashed on the attached C6 and passed USB Wi-Fi
+provisioning plus pinned HTTPS verification in an unconfigured/unjoined state.
+The original paired image/settings/presets were restored and HA recovered without
+a reload. This qualifies flash/provisioning on this UART0 board; it does not
+qualify the entire new-controller wizard, new link-button authorization or fresh
+pairing in another household. Historical first-install gaps below predate this run.
+
 Festavia Direct 0.5.0 is an experimental standalone edition. Hardware qualification
 uses an ESP32-C6 with 4 MB flash, Hue Bridge Pro BSB003 (API 1.78.0), and an LCX030
 on firmware 1.163.5 with 27 logical pucks. All controlled physical output stays

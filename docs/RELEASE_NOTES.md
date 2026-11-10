@@ -38,9 +38,11 @@ Hue-only uses eight virtual controls and supports 16 full presets. No 48-channel
 independent animation, lossless frame rate, official Hue certification, default
 catalog listing or Home Assistant Core acceptance is claimed.
 
-Fresh-device USB installation and link-button authorization, independent households,
-additional physical quantities and longer reliability runs must be distinguished
-from automated coverage. See [HA compatibility](https://github.com/Dyluhn/festavia-studio/blob/main/docs/COMPATIBILITY.md)
+Both images passed physical factory USB flashing, Wi-Fi provisioning and pinned
+HTTPS checks on the attached C6, with original pairing/settings restored afterward.
+The HA guided installer also exported its connection file. Complete fresh joining
+and new link-button authorization, independent households, additional physical
+quantities and longer reliability runs remain separate from automated coverage. See [HA compatibility](https://github.com/Dyluhn/festavia-studio/blob/main/docs/COMPATIBILITY.md)
 and [Direct validation](https://github.com/Dyluhn/festavia-studio/blob/main/hue-direct/VALIDATION.md)
 for dated evidence and remaining hardware gaps.
 

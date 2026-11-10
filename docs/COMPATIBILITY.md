@@ -7,6 +7,23 @@ mobile editing, both installers and extracted packaging. This catches shared
 Python imports and packaging dependencies that separate-branch checks miss.
 The images are unchanged; their source/image identities are verified when packed.
 
+## Physical USB qualification
+
+The existing C6 was fully backed up, then factory-flashed with each clean image.
+HA firmware 0.4.0 passed the actual guided New path, USB Wi-Fi provisioning,
+pinned HTTPS identity check and private HA import-file export. Direct 0.5.0
+passed its actual first-install flash/provisioning tool and HTTPS check while
+unconfigured. These are real writes on the attached UART0 board, not mocks.
+Neither blank image automatically joined Zigbee or lit the fixture.
+
+The original 4 MB controller image was restored. Its Wi-Fi/TLS identity, Hue
+connection, saved preset bank, palette, installation cap and takeover preference
+matched the captured settings. HA recovered to idle without reload; the staged
+scene, fixture OFF state and temporary automation guard all verified unchanged.
+The first guard completion check ran before HA's sensor recovered; a later
+readback passed without changing HA. Complete fresh-device Zigbee joining and
+new link-button authorization still need separate hardware evidence.
+
 Both editions share one project GitHub release stream. HACS downloads the HA
 component from that project tag; the Direct ZIP and images have explicit edition
 names. Do not treat separate firmware versions as separate integration updates.
