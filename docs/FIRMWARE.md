@@ -1,6 +1,6 @@
 # Firmware
 
-Bundled hardware-tested image: Hue Mesh Lab 0.4.0, ESP32-C6, UART0 115200,
+Bundled hardware-tested app: Hue Mesh Lab 0.4.1, ESP32-C6, UART0 115200,
 4 MB flash, two 1.875 MiB application slots, HTTPS certificate pinning and
 authenticated OTA. A USB-to-UART bridge is required for this console build.
 
@@ -15,8 +15,8 @@ It joins an existing selected Hue PAN as an additional Zigbee router; it does no
 replace or modify bridge firmware. No network-key export, light reset, touchlink
 takeover or Zigbee-network merging is used.
 
-App SHA-256: `8d7521613aab61fa6761a12a5b890c85ecf24e2a7cd85606fce2ee883fecff9f`.
-Factory SHA-256: `56811ba5c689e2b80005b27b074cd8598e31ded9b7d8de6ad87b1894dea8608c`.
+App SHA-256: `81efc0a14e7276c5b7f89453e6c2d2e45c01b9715b92d97488265eb5d7e37d00`.
+Factory SHA-256: `c007fa4b7dac4f1c0c349077ff8c376ff2e24ebedfef463f730a2380f10a03cc`.
 The factory image covers the entire 4 MB flash, including blank Zigbee/NVS storage
 for a new installation. Use the app image for updates that preserve pairing.
 The USB installation tool verifies the manifest before first flashing. The Wi-Fi
@@ -24,6 +24,11 @@ updater verifies hash, chip/project, trial partition, running image and selected
 PAN before confirming the boot. A normal update preserves Wi-Fi, TLS identity,
 authorization and pairing. USB recovery may still be needed after configuration
 loss or hardware/bootloader failures.
+
+The exact 0.4.1 app passed paired-network OTA, native playback at 9%, Hue Off
+and exact fixture restoration. The preceding 0.4.0 factory image passed physical
+USB flashing/provisioning. The 0.4.1 factory image has verified layout and hashes;
+it was not factory-flashed or freshly paired. See [compatibility](COMPATIBILITY.md).
 
 ## Build from source
 
@@ -50,11 +55,19 @@ paced at up to 10 requested fps.
 Acknowledged power queries monitor reachability independently of animation
 frames. Successful APS acknowledgements or valid power responses keep playback
 alive through missed status replies; losing both for 15 seconds ends playback. With Hue takeover enabled it yields without restoration; otherwise it restores the recovery capsule.
+After five seconds without end-to-end contact, firmware 0.4.1 pauses failed
+traffic and resolves the same IEEE address again on the approved network.
+A lookup response alone does not extend the original 15-second deadline; actual
+fixture acknowledgements or power responses must recover. Stale lookup callbacks
+cannot restart released playback.
 Starting or replacing a scene grants a fresh 15-second contact window.
 Unacknowledged animation confirmations cannot extend that deadline. A valid
 external-off reply immediately preserves off. With Hue takeover enabled it yields without restoration; otherwise it starts recovery. Native palette
 frames contain no power-on command. Status reports expose power-response/target
-ACK ages, uptime, accepted/confirmed sends and SDK buffer counts.
+ACK ages, route refreshes, uptime, accepted/confirmed sends and SDK buffer counts.
+Diagnostics also include the last NWK status code and related network address,
+frame counter, and Wi-Fi channel/RSSI without revealing the SSID. The event ring
+holds 32 events to tolerate short bursts during connection and recovery.
 
 The persistent recovery capsule is committed before
 fixture changes and survives reboot. Native startup sets the selected low level

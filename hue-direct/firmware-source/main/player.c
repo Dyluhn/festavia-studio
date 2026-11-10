@@ -19,6 +19,8 @@
 #define MAX_FRAMES 64
 #define MAX_VERIFY 8
 #define TARGET_TIMEOUT_MS 15000
+#define ROUTE_REFRESH_MS 5000
+#define ROUTE_RETRY_MS 4000
 typedef struct {
     uint16_t cluster, length, expected_length;
     int manufacturer;
@@ -50,7 +52,9 @@ static bool color_probe_queued, pending_color_probe;
 static unsigned color_probe_count;
 static const char *failure_cause="none", *failure_stage="none";
 static size_t failure_step;
-static unsigned animation_timeouts;
+static unsigned animation_timeouts, route_refreshes;
+static int64_t route_retry_due;
+static uintptr_t resolve_generation;
 // A retained scene is a finite, acknowledged paint burst. The lamp holds its
 // colors after its original geometry has been verified; there is no map loop.
 static packet_t *paint;
@@ -105,6 +109,7 @@ static cJSON *result(bool ok, const char *error)
     cJSON_AddStringToObject(r, "failure_stage", failure_stage);
     cJSON_AddNumberToObject(r, "failure_step", failure_step);
     cJSON_AddNumberToObject(r, "animation_timeouts", animation_timeouts);
+    cJSON_AddNumberToObject(r, "route_refreshes", route_refreshes);
     cJSON_AddNumberToObject(r, "power_response_age_ms", started ? now()-last_power_reply : -1);
     cJSON_AddNumberToObject(r, "target_ack_age_ms", started ? now()-last_target_ack : -1);
     cJSON_AddNumberToObject(r, "fps", fps);
@@ -254,7 +259,7 @@ static bool geometry_only(void)
 static bool release_begin(const char *why)
 {
     if (playing) ended=now();
-    playing=restoring=configuring=checking=false;
+    playing=restoring=configuring=checking=resolving=false;
     sync_requested=pending_sync=waiting_reply=power_pending=false;
     color_probe_queued=pending_color_probe=false;
     release_due=now()+2000;
@@ -336,12 +341,12 @@ void hm_player_init(void)
 bool hm_player_busy(void) { return durable; }
 static void resolved_cb(esp_zb_zdp_status_t status, esp_zb_zdo_nwk_addr_rsp_t *rsp, void *ctx)
 {
-    (void)ctx;
-    if (!resolving) return;
+    if (!resolving || (uintptr_t)ctx!=resolve_generation) return;
     resolving=false;
     if (status==ESP_ZB_ZDP_STATUS_SUCCESS && rsp && memcmp(rsp->ieee_addr,ieee,8)==0 &&
         hm_unicast(rsp->nwk_addr,endpoint)) {
         address=rsp->nwk_addr; resolved=true; retries=0;
+        route_retry_due=now()+ROUTE_RETRY_MS;
     } else { next_due=now()+1000; retries++; }
 }
 static esp_err_t send_packet(packet_t *p, bool quiet, uint8_t *tsn)
@@ -485,7 +490,7 @@ void hm_player_tick(bool approved)
     if (playing && hue_takeover && t>=hue_deadline) {release_begin("hue_watchdog_expired");return;}
     if (!approved || (!playing && !restoring && !durable)) return;
     uint8_t pan[8]; esp_zb_get_extended_pan_id(pan);
-    if (durable && memcmp(pan,plan_pan,8)!=0) { playing=false; restoring=false; state="recovery_required"; reason="network_changed"; return; }
+    if (durable && memcmp(pan,plan_pan,8)!=0) { playing=restoring=resolving=resolved=false; state="recovery_required"; reason="network_changed"; return; }
     if (durable && !playing && !restoring && strcmp(state,"armed")==0 && t>=armed_until)
         restore_begin("prepare_expired",false);
     if (playing && expires && t>=expires) {
@@ -498,13 +503,28 @@ void hm_player_tick(bool approved)
         {if (hue_takeover) release_begin("target_unresponsive");else restore_begin("target_unresponsive",false);}
     if (releasing) {release_tick();return;}
     if (!playing && !restoring) return;
+    // Briefly pause failed traffic and refresh the exact IEEE binding before
+    // abandoning an otherwise healthy session. A ZDO response does not extend
+    // liveness: the normal target ACK/power checks must recover within the
+    // original 15-second deadline. Never interrupt an in-flight paint packet.
+    if (playing && ((palette_mode && sample_count>1) || retained_mode) &&
+        resolved && !pending && t-last_contact>ROUTE_REFRESH_MS && t>=route_retry_due) {
+        resolved=false; resolving=false; retries=0; next_due=t;
+        route_retry_due=t+ROUTE_RETRY_MS; route_refreshes++;
+    }
     if (!resolved) {
         if (resolving && t>resolve_until) { resolving=false; retries++; next_due=t+1000; }
         if (!resolving && t>=next_due) {
-            if (retries>=3) { playing=false; restoring=false; state="recovery_required"; reason="target_unreachable"; return; }
+            if (retries>=3) {
+                // A refresh failure alone must not shorten the existing
+                // playback liveness deadline or restart a released scene.
+                if (playing && route_refreshes) {next_due=t+1000;return;}
+                playing=false; restoring=false; state="recovery_required"; reason="target_unreachable"; return;
+            }
             esp_zb_zdo_nwk_addr_req_param_t req={.dst_nwk_addr=0xfffd,.request_type=0};
             memcpy(req.ieee_addr_of_interest,ieee,8); resolving=true; resolve_until=t+6000;
-            esp_zb_zdo_nwk_addr_req(&req,resolved_cb,NULL);
+            resolve_generation++; if (!resolve_generation) resolve_generation++;
+            esp_zb_zdo_nwk_addr_req(&req,resolved_cb,(void *)resolve_generation);
         }
         return;
     }
@@ -748,7 +768,8 @@ cJSON *hm_player_command(const cJSON *obj, bool approved)
         if (!was_playing) {pending=false; pending_sync=false; counter=0;}
         sync_requested=!palette_mode && !retained_mode; bank_acked=false; pending_current_bank=false;
         frames_sent=pending ? 1 : 0; frames_acked=failures=skipped=0; last_power=0; last_power_reply=last_target_ack=started;
-        animation_timeouts=0;failure_cause=failure_stage="none";failure_step=0;
+        animation_timeouts=route_refreshes=0;route_retry_due=started+ROUTE_REFRESH_MS;
+        failure_cause=failure_stage="none";failure_step=0;
         return result(true,NULL);
     }
     return result(false,"unknown player operation");

@@ -27,7 +27,7 @@ class PackageTests(unittest.TestCase):
         image[0] = 0xE9
         struct.pack_into("<H", image, 12, 13)
         struct.pack_into("<I", image, 32, 0xABCD5432)
-        image[48:53] = b"0.5.0"
+        image[48 : 48 + len(package.VERSION)] = package.VERSION.encode()
         image[80:92] = b"hue_mesh_lab"
         (build / "hue_mesh_lab.bin").write_bytes(image)
         config = build / "sdkconfig"
@@ -93,7 +93,7 @@ class PackageTests(unittest.TestCase):
             root = Path(folder)
             build = self.fixture(root)
             target = root / "release/festavia-direct.zip"
-            image_folder = target.parent / "festavia-direct-0.5.0-images"
+            image_folder = target.parent / f"festavia-direct-{package.VERSION}-images"
             image_folder.mkdir(parents=True)
             (image_folder / "private-unrelated.json").write_text('{"key":"private"}')
 
@@ -116,7 +116,9 @@ class PackageTests(unittest.TestCase):
                 )
                 for name in ("Setup macOS.command", "Setup Linux.sh"):
                     self.assertTrue(
-                        archive.getinfo("festavia-direct-0.5.0/" + name).external_attr >> 16 & 0o111
+                        archive.getinfo(f"festavia-direct-{package.VERSION}/" + name).external_attr
+                        >> 16
+                        & 0o111
                     )
                 archive.extractall(root / "extract with spaces")
             extracted = next((root / "extract with spaces").iterdir())

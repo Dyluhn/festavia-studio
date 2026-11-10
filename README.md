@@ -15,7 +15,7 @@ palette editing visual. This is independent community software.
 | Where you want to adjust your lights | Download | Start here |
 |---|---|---|
 | Home Assistant devices, automations and optional palette card | `festavia-studio-0.13.0.zip` for a new C6; integration ZIP for an existing controller | [Home Assistant installation](docs/INSTALL.md) |
-| Stock Hue app controls and scenes, with no HA required | `festavia-direct-0.5.0.zip` | [Hue-only installation](hue-direct/GETTING_STARTED.md) |
+| Stock Hue app controls and scenes, with no HA required | `festavia-direct-0.5.1.zip` | [Hue-only installation](hue-direct/GETTING_STARTED.md) |
 
 Get both editions from the [v0.13.0 public beta release](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
 They use different ESP32 firmware; install one edition on a controller at a time.

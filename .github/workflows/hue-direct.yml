@@ -31,10 +31,10 @@ jobs:
         run: |
           . "$IDF_PATH/export.sh"
           idf.py -C hue-direct/firmware-source -B build-direct -DIDF_TARGET=esp32c6 -DSDKCONFIG_DEFAULTS='sdkconfig.defaults;sdkconfig.defaults.esp32c6' build
-          python hue-direct/package.py --build build-direct --output dist/festavia-direct-0.5.0.zip
+          python hue-direct/package.py --build build-direct --output dist/festavia-direct-0.5.1.zip
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: festavia-direct-0.5.0
+          name: festavia-direct-0.5.1
           path: |
             dist/*.zip
             dist/*.sha256

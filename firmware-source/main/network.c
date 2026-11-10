@@ -30,7 +30,7 @@
 #include "mbedtls/x509_crt.h"
 #include "wire.h"
 
-#define EVENTS 8
+#define EVENTS 32
 #define VERIFY_SECONDS 90
 typedef struct { uint32_t sequence; char *json; } event_item_t;
 typedef struct { int id; char *json; } reply_item_t;
@@ -156,6 +156,11 @@ void hm_net_info(cJSON *object)
     cJSON_AddStringToObject(net, "elf_sha256", elf);
     const esp_partition_t *running = esp_ota_get_running_partition();
     if (running) cJSON_AddStringToObject(net, "running_partition", running->label);
+    wifi_ap_record_t ap;
+    if (esp_wifi_sta_get_ap_info(&ap)==ESP_OK) {
+        cJSON_AddNumberToObject(net,"wifi_rssi_dbm",ap.rssi);
+        cJSON_AddNumberToObject(net,"wifi_channel",ap.primary);
+    }
     if (station) {
         esp_netif_ip_info_t ip;
         if (esp_netif_get_ip_info(station, &ip) == ESP_OK && ip.ip.addr) {

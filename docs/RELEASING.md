@@ -20,7 +20,8 @@ and would offer the wrong product tag as an integration version.
 4. Run `python tools/compatibility.py --source <extracted-source> --output <evidence>`.
    These real-HA containers simulate the network and Zigbee peers; they do not
    establish physical hardware compatibility. Keep physical test records separate.
-5. Require desktop USB-tool jobs, both editions' tests, the HA matrix and hassfest
+5. Require desktop USB-tool jobs, both firmware SDK builds, both editions' tests,
+   the HA matrix and hassfest
    on the final commit. HACS validation must pass when public. Never suppress a
    validator failure to qualify a release.
 6. Review intended Git history and all download assets for private information.
@@ -38,7 +39,8 @@ current draft or previous published project release only after checking every
 source/image hash. If Direct source changes or no baseline exists, explicitly
 select **rebuild_direct** to build with ESP-IDF 5.3.2, then qualify that new image
 on hardware before publication. Documentation and HA-only changes retain the
-already qualified firmware identity. Rerunning updates
+already qualified firmware identity. The exact expected Direct version is selected,
+and obsolete assets are removed only from an existing draft. Rerunning updates
 an existing draft and refuses to replace a published release. It never changes
 repository visibility or publishes by itself.
 

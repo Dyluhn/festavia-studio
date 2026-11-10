@@ -61,6 +61,9 @@ static uint32_t tx_accepted, tx_confirmations;
 static bool send_active;
 static uint32_t confirms_during_send, confirms_without_header;
 static uint32_t sdk_no_mem, rx_control_frames;
+static int last_nwk_status=-1;
+static uint32_t nwk_status_events;
+static uint16_t nwk_status_address=0xffff;
 
 static unsigned sdk_free_buffers(void)
 {
@@ -205,6 +208,14 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal)
     cJSON *obj = event("network_signal");
     cJSON_AddStringToObject(obj, "signal", esp_zb_zdo_signal_to_string(type));
     cJSON_AddNumberToObject(obj, "status", status);
+    if (type==ESP_ZB_NLME_STATUS_INDICATION) {
+        const esp_zb_zdo_signal_nwk_status_indication_params_t *detail=esp_zb_app_signal_get_params(signal->p_app_signal);
+        if (detail) {
+            last_nwk_status=detail->status; nwk_status_address=detail->network_addr; nwk_status_events++;
+            cJSON_AddNumberToObject(obj,"network_status_code",last_nwk_status);
+            cJSON_AddNumberToObject(obj,"related_address",nwk_status_address);
+        }
+    }
     add_network(obj);
     emit(obj);
 }
@@ -443,6 +454,10 @@ static void handle_request(cJSON *request)
         cJSON_AddNumberToObject(obj, "sdk_buffers_free", sdk_free_buffers());
         cJSON_AddNumberToObject(obj, "sdk_buffer_probe_limit", 128);
         cJSON_AddNumberToObject(obj, "sdk_no_mem", sdk_no_mem);
+        cJSON_AddNumberToObject(obj, "network_status_events", nwk_status_events);
+        cJSON_AddNumberToObject(obj, "last_network_status", last_nwk_status);
+        cJSON_AddNumberToObject(obj, "related_network_status_address", nwk_status_address);
+        cJSON_AddNumberToObject(obj, "network_frame_counter", esp_zb_nwk_get_frame_counter());
         cJSON_AddNumberToObject(obj, "serial_dropped", serial_dropped);
         cJSON_AddNumberToObject(obj, "app_tx_pool_full", 0);
         cJSON_AddNumberToObject(obj, "tx_accepted", tx_accepted);

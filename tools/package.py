@@ -38,13 +38,27 @@ def main():
     args = parser.parse_args()
     release = ROOT / "firmware-release"
     manifest = json.loads((release / "manifest.json").read_text())
-    for name, digest in manifest["sha256"].items():
-        assert sha((release / name).read_bytes()) == digest, name
-    for name, digest in manifest["firmware_source_sha256"].items():
-        assert (
-            sha((ROOT / "firmware-source" / name.removeprefix("firmware/")).read_bytes()) == digest
-        ), name
     app = manifest["targets"]["esp32c6"]["app"]
+    for bundle in (release, COMPONENT / "backend/release"):
+        if json.loads((bundle / "manifest.json").read_text()) != manifest:
+            raise ValueError("Source and integration firmware manifests disagree")
+        checksums = {
+            name: digest
+            for digest, name in (
+                line.split("  ", 1) for line in (bundle / "SHA256SUMS").read_text().splitlines()
+            )
+        }
+        # HA performs app-only wireless updates. Factory images belong to the
+        # desktop installation bundle, not the installed integration.
+        required = manifest["sha256"] if bundle == release else {app: manifest["sha256"][app]}
+        if checksums != required:
+            raise ValueError("Firmware SHA256SUMS does not match its manifest")
+        for name, digest in required.items():
+            if sha((bundle / name).read_bytes()) != digest:
+                raise ValueError("Firmware image checksum failed: " + name)
+    for name, digest in manifest["firmware_source_sha256"].items():
+        if sha((ROOT / "firmware-source" / name.removeprefix("firmware/")).read_bytes()) != digest:
+            raise ValueError("Firmware source checksum failed: " + name)
     assert sha((COMPONENT / "backend/release" / app).read_bytes()) == manifest["sha256"][app]
     entries = {}
     excluded = {

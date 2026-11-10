@@ -181,4 +181,4 @@ class DirectPlayerTests(unittest.TestCase):
             self.assertEqual(build.returncode, 0, build.stderr)
             run = subprocess.run([binary], check=False, capture_output=True, text=True, timeout=10)
             self.assertEqual(run.returncode, 0, run.stderr)
-            self.assertEqual(run.stdout.count("PASS "), 10, run.stdout)
+            self.assertEqual(run.stdout.count("PASS "), 14, run.stdout)

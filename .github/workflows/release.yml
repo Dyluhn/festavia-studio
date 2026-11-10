@@ -47,12 +47,14 @@ jobs:
         if: ${{ !inputs.rebuild_direct }}
         run: |
           mkdir -p dist/qualified
-          if ! gh release download "$RELEASE_TAG" --pattern 'festavia-direct-*.zip' --dir dist/qualified; then
+          DIRECT_VERSION=$(python3 -c "import runpy; print(runpy.run_path('hue-direct/package.py')['VERSION'])")
+          DIRECT_ASSET="festavia-direct-$DIRECT_VERSION.zip"
+          if ! gh release download "$RELEASE_TAG" --pattern "$DIRECT_ASSET" --dir dist/qualified; then
             BASE_TAG=$(gh release list --limit 20 --json tagName,isDraft --jq '[.[] | select(.isDraft == false)][0].tagName // empty')
             test -n "$BASE_TAG" || { echo 'No baseline image. Rerun with rebuild_direct and qualify the new image.'; exit 1; }
-            gh release download "$BASE_TAG" --pattern 'festavia-direct-*.zip' --dir dist/qualified
+            gh release download "$BASE_TAG" --pattern "$DIRECT_ASSET" --dir dist/qualified
           fi
-          mv dist/qualified/*.zip dist/festavia-direct.zip
+          mv "dist/qualified/$DIRECT_ASSET" dist/festavia-direct.zip
       - name: Build verified combined release artifacts
         run: |
           mkdir -p "$RUNNER_TEMP/release"
@@ -64,6 +66,17 @@ jobs:
             python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))["isDraft"] else "Refusing to replace a published release")' "$RUNNER_TEMP/existing-release.json"
             gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA" --draft --prerelease \
               --title "Festavia Studio $RELEASE_TAG — public beta" --notes-file docs/RELEASE_NOTES.md
+            python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          tag = os.environ['RELEASE_TAG']
+          expected = {p.name for p in (pathlib.Path(os.environ['RUNNER_TEMP']) / 'release').iterdir() if p.is_file()}
+          existing = json.loads(subprocess.check_output(['gh', 'release', 'view', tag, '--json', 'assets,isDraft']))
+          if not existing['isDraft']:
+              raise SystemExit('Refusing to remove assets from a published release')
+          for asset in existing['assets']:
+              if asset['name'] not in expected:
+                  subprocess.run(['gh', 'release', 'delete-asset', tag, asset['name'], '--yes'], check=True)
+          PY
             gh release upload "$RELEASE_TAG" "$RUNNER_TEMP"/release/* --clobber
           else
             gh release create "$RELEASE_TAG" "$RUNNER_TEMP"/release/* \

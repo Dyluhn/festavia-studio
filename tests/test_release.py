@@ -21,7 +21,17 @@ class ReleaseTests(unittest.TestCase):
         shutil.copytree(
             ROOT,
             self.root,
-            ignore=shutil.ignore_patterns(".venv", ".git", "__pycache__", "test-results", "*.pyc"),
+            ignore=shutil.ignore_patterns(
+                ".venv",
+                ".git",
+                "__pycache__",
+                "test-results",
+                "*.pyc",
+                "managed_components",
+                "build",
+                "sdkconfig",
+                "sdkconfig.old",
+            ),
         )
         self.output = Path(self.temp.name) / "release.zip"
 
@@ -43,6 +53,7 @@ class ReleaseTests(unittest.TestCase):
         ):
             names = archive.namelist()
             self.assertIn("custom_components/festavia_studio/config_flow.py", names)
+            self.assertFalse(any(name.endswith(".factory.bin") for name in names))
             self.assertFalse(
                 any(
                     "/web/" in n or n.endswith("config.yaml") or "hue_mesh_studio" in n
@@ -96,3 +107,17 @@ class ReleaseTests(unittest.TestCase):
         app.write_bytes(app.read_bytes() + b"corrupt")
         self.assertNotEqual(self.run_package().returncode, 0)
         self.assertFalse(self.output.exists())
+
+    def test_stale_firmware_checksum_lists_cannot_be_released(self):
+        for folder in ("firmware-release", "custom_components/festavia_studio/backend/release"):
+            with self.subTest(folder=folder):
+                path = self.root / folder / "SHA256SUMS"
+                before = path.read_bytes()
+                try:
+                    path.write_text("0" * 64 + "  esp32c6/hue-mesh-lab.app.bin\n")
+                    result = self.run_package()
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("SHA256SUMS", result.stderr)
+                    self.assertFalse(self.output.exists())
+                finally:
+                    path.write_bytes(before)

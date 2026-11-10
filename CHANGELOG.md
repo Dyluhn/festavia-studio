@@ -5,12 +5,15 @@
 - Expand the installation guide with first-scene steps, visual dashboard card setup and recovery. Preserve automatic count detection, saved libraries and existing entries.
 - In bridge-gradient mode, derive the palette capacity from the selected lights’ actual Hue points, reject unused extra colors before writes, and fit staged controls after a size/mode change. Preserve larger saved libraries. Label gradients accurately and hide animation speed in that mode.
 - Use the current HA device-registry lookup helper without deprecated device mappings.
-- Integration version is 0.13.0; the qualified HA ESP32 firmware remains 0.4.0.
-- Include the separate Hue-only Direct 0.5.0 edition, guided setup, native Hue controls and 16 full presets. Use one project release stream so HACS cannot confuse firmware-edition tags with integration updates.
-- Combine both source/test trees, isolate installer bootstrap imports, and verify deterministic extracted packaging with unchanged qualified firmware reuse. Both editions pass the 179-test combined suite.
+- Integration version is 0.13.0; HA ESP32 firmware advances to 0.4.1.
+- Include the separate Hue-only Direct 0.5.1 edition, guided setup, native Hue controls and 16 full presets. Use one project release stream so HACS cannot confuse firmware-edition tags with integration updates.
+- Combine both source/test trees, isolate installer bootstrap imports, and verify deterministic extracted packaging with unchanged qualified firmware reuse. Both editions pass the 180-test combined suite.
 - Stream firmware uploads in 4 KiB writes with an exact Content-Length. Preserve certificate/checksum verification and never automatically repeat an uncertain POST. Add a private security-reporting policy to both source packages.
 - Record actual factory USB flash/provisioning checks for both images, HA import-file export and restoration of the original paired controller. Fresh authorization/joining and independent hardware combinations remain beta tasks.
 - Show the last underlying playback stop in Hue-only diagnostics after Master returns to idle, including delivery/liveness failures. Normal deliberate stops do not produce that warning.
+
+- Refresh the same IEEE binding after five seconds without end-to-end contact, retaining the original 15-second failure deadline. Reject stale lookup callbacks and preserve external Off. Expose route refresh, NWK status/address, frame-counter and Wi-Fi radio diagnostics; expand the bounded event ring to tolerate startup bursts. Both editions share 14 production-C liveness cases.
+- Reject stale firmware checksum lists and require identical source/runtime firmware manifests and images. Compile both firmware editions in CI; release drafts select the exact Direct version and remove obsolete draft assets.
 
 # 0.12.1 — every installed count through 48
 

@@ -341,7 +341,7 @@ def main(argv=None):
                 "Master did not remain off after commissioning; standalone mode left disabled"
             )
         report = {
-            "firmware": "0.5.0",
+            "firmware": identity["esp32"]["version"],
             "positions": before["logical_count"],
             "installation_cap": args.cap,
             "controls": {str(ep): {"name": NAMES[ep], **row} for ep, row in controls.items()},

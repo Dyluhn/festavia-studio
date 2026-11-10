@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(hue_mesh_lab VERSION 0.5.0)
+project(hue_mesh_lab VERSION 0.5.1)
 
 if(NOT IDF_TARGET STREQUAL "esp32c6")
     message(FATAL_ERROR "Festavia Direct requires an ESP32-C6 with 4 MB flash")

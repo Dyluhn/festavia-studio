@@ -11,7 +11,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 
 
 def sha(data):
@@ -209,7 +209,7 @@ def main():
             launcher = ROOT / name
         entries[name] = launcher.read_bytes()
     entries["README.md"] = (
-        b"# Festavia Direct 0.5.0\n\n"
+        b"# Festavia Direct 0.5.1\n\n"
         b"Start with [GETTING_STARTED.md](hue-direct/GETTING_STARTED.md).\n\n"
         b"Extract the ZIP, then open the Setup launcher for Windows, macOS or Linux.\n"
         b"It prepares the tools and walks through USB, Wi-Fi, Hue pairing and light selection.\n\n"

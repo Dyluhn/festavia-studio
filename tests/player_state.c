@@ -15,6 +15,10 @@ static bool fail_commit;
 static unsigned pending_transfers;
 unsigned hm_pending_transfers(void) {return pending_transfers;}
 static uint8_t sequence;
+static unsigned resolutions;
+static void (*resolution_callback)(esp_zb_zdp_status_t,esp_zb_zdo_nwk_addr_rsp_t *,void *);
+static void *resolution_context;
+static uint16_t last_query_address;
 int64_t esp_timer_get_time(void) { return clock_ms*1000; }
 void esp_zb_get_extended_pan_id(uint8_t *out) { memcpy(out,plan_pan,8); }
 esp_err_t nvs_set_u8(nvs_handle_t handle, const char *key, uint8_t value)
@@ -24,7 +28,10 @@ esp_err_t nvs_erase_key(nvs_handle_t handle, const char *key)
 { (void)handle; if (!strcmp(key,"journal")) erased_journals++; return ESP_OK; }
 void esp_zb_zdo_nwk_addr_req(esp_zb_zdo_nwk_addr_req_param_t *req,
     void (*cb)(esp_zb_zdp_status_t, esp_zb_zdo_nwk_addr_rsp_t *, void *), void *ctx)
-{ (void)req; (void)cb; (void)ctx; assert(!"unexpected address resolution"); }
+{
+    assert(req->dst_nwk_addr==0xfffd && !memcmp(req->ieee_addr_of_interest,ieee,8));
+    resolutions++;resolution_callback=cb;resolution_context=ctx;
+}
 static void confirm(uint16_t dst, uint8_t ep, uint8_t *frame, size_t length, int status)
 {
     esp_zb_apsde_data_confirm_t c={.dst_addr.addr_short=dst,
@@ -39,7 +46,7 @@ esp_err_t hm_send(uint16_t dst, uint8_t ep, uint16_t cluster,
     *tsn=++sequence;
     uint8_t frame[HM_MAX_FRAME];
     size_t n=hm_frame(frame,specific,manufacturer,*tsn,command,payload,length);
-    assert(cluster==6 && command==0 && length==2); power_queries++;
+    assert(cluster==6 && command==0 && length==2); power_queries++;last_query_address=dst;
     confirm(dst,ep,frame,n,power_ack ? 0 : 1);
     return ESP_OK;
 }
@@ -64,6 +71,8 @@ static void reset(void)
     address=0x1234;endpoint=11;power_queries=persisted_off=0;
     hue_takeover=releasing=fail_commit=playback_persisted=false;pending_transfers=0;persisted_yield=erased_journals=0;
     power_ack=true;frames_sent=frames_acked=failures=skipped=0;
+    route_refreshes=resolutions=0;route_retry_due=0;
+    retained_mode=pending_paint=pending_paint_check=geometry_dirty=false;
 }
 int main(void)
 {
@@ -148,6 +157,51 @@ int main(void)
     off[1]=power_tsn;ind.src_short_addr=address;ind.src_endpoint=endpoint;
     accepted=hm_player_receive(ind);assert(accepted && releasing && !playing && !restoring && persisted_yield);
     puts("PASS Hue-priority external off releases without replaying the old scene");
+
+    reset();power_ack=false;clock_ms=7000;hm_player_tick(true);
+    assert(playing && durable && !resolved && resolving && resolutions==1 && route_refreshes==1);
+    assert(!frames_sent && last_target_ack==1000 && last_power_reply==1000);
+    esp_zb_zdo_nwk_addr_rsp_t response={.nwk_addr=0x2345};memcpy(response.ieee_addr,ieee,8);
+    resolution_callback(ESP_ZB_ZDP_STATUS_SUCCESS,&response,resolution_context);
+    assert(resolved && !resolving && address==0x2345 && last_target_ack==1000);
+    power_ack=true;clock_ms+=10;hm_player_tick(true);
+    assert(last_query_address==0x2345 && last_target_ack==clock_ms);
+    clock_ms+=30;hm_player_tick(true);assert(playing && frames_sent==1);
+    puts("PASS lost-contact lookup pauses failed traffic and resumes only the verified IEEE at its new address");
+
+    reset();power_ack=false;clock_ms=7000;hm_player_tick(true);
+    void *stale=resolution_context;
+    resolving=false;next_due=clock_ms;hm_player_tick(true);assert(resolutions==2 && resolving);
+    resolution_callback(ESP_ZB_ZDP_STATUS_SUCCESS,&response,stale);
+    assert(resolving && !resolved && address==0x1234 && last_target_ack==1000);
+    response.ieee_addr[0]^=1;
+    resolution_callback(ESP_ZB_ZDP_STATUS_SUCCESS,&response,resolution_context);
+    assert(!resolving && !resolved && address==0x1234 && last_target_ack==1000);
+    for(clock_ms=8000;clock_ms<=16000;clock_ms+=100) {
+        hm_player_tick(true);
+        if(resolving)resolution_callback(1,NULL,resolution_context);
+        assert(playing && !resolved && last_target_ack==1000);
+    }
+    assert(resolutions<=4);
+    clock_ms=16001;next_due=clock_ms+1;hm_player_tick(true);
+    assert(!playing && restoring && !strcmp(reason,"target_unresponsive"));
+    puts("PASS stale or wrong-identity lookups cannot extend liveness or shorten the original lost-contact deadline");
+
+    reset();power_ack=false;hue_takeover=true;hue_deadline=30000;
+    clock_ms=2000;hm_player_tick(true);assert(power_pending);
+    clock_ms=7000;hm_player_tick(true);assert(resolving && playing);
+    off[1]=power_tsn;ind.src_short_addr=address;ind.src_endpoint=endpoint;
+    accepted=hm_player_receive(ind);assert(accepted && releasing && !playing && !resolving);
+    memcpy(response.ieee_addr,ieee,8);
+    resolution_callback(ESP_ZB_ZDP_STATUS_SUCCESS,&response,resolution_context);
+    assert(!resolved && !playing && address==0x1234 && !frames_sent);
+    clock_ms=9000;hm_player_tick(true);assert(!durable && !playing && !frames_sent);
+    puts("PASS external off cancels a route refresh and a late callback never restarts playback");
+
+    reset();retained_mode=true;palette_mode=false;pending=pending_paint=true;
+    clock_ms=7000;pending_until=8000;hm_player_tick(true);
+    assert(playing && resolved && pending_paint && !resolutions && !route_refreshes);
+    puts("PASS address refresh never interrupts an in-flight retained paint transaction");
     free(samples);samples=NULL;
     return 0;
 }

@@ -1,4 +1,4 @@
-# Festavia Direct — Hue-only edition (experimental 0.5.0)
+# Festavia Direct — Hue-only edition (experimental 0.5.1)
 
 An ESP32-C6 runs the Festavia renderer and exposes ordinary color lights on your
 existing Hue bridge. Edit their sliders/color pickers and recall Hue scenes. No
@@ -235,7 +235,7 @@ Example build:
 ```sh
 idf.py -C hue-direct/firmware-source -B build-direct -DIDF_TARGET=esp32c6 \
   -DSDKCONFIG_DEFAULTS='sdkconfig.defaults;sdkconfig.defaults.esp32c6' build
-python hue-direct/package.py --build build-direct --output festavia-direct-0.5.0.zip
+python hue-direct/package.py --build build-direct --output festavia-direct-0.5.1.zip
 ```
 
 The production C renderer and retained/recovery packet programs are cross-checked

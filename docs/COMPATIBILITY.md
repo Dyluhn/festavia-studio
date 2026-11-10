@@ -1,15 +1,17 @@
 # Combined community beta — 2026-11-10
 
 The combined source contains both the HA edition (integration 0.13.0 / firmware
-0.4.0) and Hue-only Direct (firmware 0.5.0). The complete combined check passes
-**179 tests**, including production C for both editions, all-count rendering,
+0.4.1) and Hue-only Direct (firmware 0.5.1). The complete combined check passes
+**180 tests**, including production C for both editions, all-count rendering,
 mobile editing, both installers and extracted packaging. This catches shared
 Python imports and packaging dependencies that separate-branch checks miss.
-The images are unchanged; their source/image identities are verified when packed.
+The final app identities and qualification scope are recorded below. Source,
+image and checksum-list agreement are checked in both firmware bundles when packed.
 
 ## Physical USB qualification
 
-The existing C6 was fully backed up, then factory-flashed with each clean image.
+The existing C6 was fully backed up, then factory-flashed with each preceding
+clean image (HA 0.4.0 and Direct 0.5.0).
 HA firmware 0.4.0 passed the actual guided New path, USB Wi-Fi provisioning,
 pinned HTTPS identity check and private HA import-file export. Direct 0.5.0
 passed its actual first-install flash/provisioning tool and HTTPS check while
@@ -44,6 +46,45 @@ Saved presets, palette, brightness ceilings and Hue takeover settings survived.
 The fixture stayed OFF. Its original appearance, map and aliases were restored
 and checked separately from the controller's image identity.
 
+## Final firmware candidates and reliability correction
+
+The preceding Direct 0.5.0 image stopped safely with `target_unresponsive` in two
+longer runs, after approximately 349 and 1,532 seconds. The C6 remained online;
+accepted sends received callbacks, SDK buffers remained available, and neither
+heap exhaustion nor a reboot was observed. The last target acknowledgement and
+power reply exceeded the existing 15-second deadline. APS status 49 is retained
+as an opaque SDK failure value; it does not establish a particular radio cause.
+Bridge connectivity and cached light state cannot prove physical reachability.
+Both runs restored the fixture and temporary HA automation guard.
+
+Firmware HA 0.4.1 / Direct 0.5.1 now pauses failed traffic after five seconds and
+refreshes the exact fixture IEEE binding on the approved PAN. The original
+15-second deadline remains: resolving an address alone never proves delivery or
+restarts a released scene. Four added production-C cases exercise successful
+refresh, unsuccessful/stale lookup, external Off and in-flight paint protection;
+both editions share all 14 liveness/recovery cases. Added NWK status/address,
+frame-counter and Wi-Fi radio diagnostics help distinguish future failures.
+The bounded event ring grows from eight to 32 entries after an eight-entry ring
+overflow was observed during test preparation.
+
+The final HA 0.4.1 app (ELF SHA-256
+`94f2329ac017355d78a70c8036738703116217edb842c73461524f43e8ee6dac`)
+passed verified OTA on the paired network, a native flow at 9%, actual lamp-level
+readback, ordinary Hue Off and exact fixture restoration. The existing HA entry
+was temporarily paused with a lease-bound recovery watchdog, then restored with
+its original staged scene and automation states. The final Direct 0.5.1 app
+(ELF SHA-256
+`7b3c520b1dbe8e32f504fdc42d13bab954f730fa1807c0f5d9793819bf1d2072`)
+was subsequently restored by verified OTA; settings and presets were retained.
+No USB reconnection or re-pairing was needed for these updates.
+
+The final Direct saved-scene reliability run is pending. No claim of resolved
+long-run delivery or stable release is made until that bounded check finishes.
+The final factory images have matching layouts and hashes, but were not physically
+factory-flashed or freshly joined. Only the connected production C6 is available;
+its existing pairing is preserved. The physical factory test above applies to
+the preceding images, not automatically to these rebuilt apps.
+
 ## Actual Home Assistant UI and upgrade
 
 A disposable HA Core 2026.10.1 installation completed the native config flow,
@@ -67,7 +108,8 @@ household evidence remain distinct beta tasks.
 
 ## 0.13.0 guided setup — checked 2026-11-10
 
-Integration 0.13.0 uses the unchanged, qualified ESP32-C6 firmware 0.4.0.
+The earlier guided-setup check used integration 0.13.0 with ESP32-C6 firmware
+0.4.0, before the final firmware correction recorded above.
 All **134 repository tests** pass, including 17 installer/bootstrap cases and an
 extracted-package check. The latter verifies every file checksum, runs the
 launchers/CLIs from a path with spaces, checks the image without opening USB,
