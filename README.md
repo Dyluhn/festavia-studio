@@ -6,7 +6,7 @@ A Home Assistant custom integration for Philips Hue Festavia lights. Create an
 ordered palette, repeat one color per puck, animate it, and use it in ordinary
 Home Assistant automations. Your lights remain on their Hue bridge.
 
-Version **0.12.1** runs directly inside Home Assistant. **No add-on, web app, iframe,
+Version **0.13.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
 
@@ -34,7 +34,7 @@ HA actions accept `effect: snake`, `colors: [...]` for the background and
 ## Install and connect
 
 Start with the [installation guide](docs/INSTALL.md) for the Home Assistant
-download, first USB setup on Windows/macOS/Linux, and ordinary wireless updates.
+download, guided USB setup on Windows/macOS/Linux, private connection-file import, and ordinary wireless updates.
 
 Requires Home Assistant **2026.10 or newer**, a square Hue Bridge or Bridge Pro,
 and Festavia lights already paired to that bridge. HA Container and HAOS are
@@ -48,9 +48,9 @@ original round bridge lacks the required local API v2 and is unsupported.
    authorize it with its physical link button.
 4. Select only the Festavia lights you want. Choose bridge gradients for static
    colors, or individual puck effects with an ESP32-C6.
-5. For puck effects, enter the ESP32's HTTPS address, device token and certificate
-   fingerprint from its first USB setup. The integration guides Zigbee joining
-   and verifies fixture identity, firmware and logical count.
+5. For puck effects, upload the private connection file from the setup launcher.
+   The integration guides Zigbee joining and verifies fixture identity, firmware
+   and logical count.
 
 A public repository is not yet published. The release is structured for a HACS
 custom integration; it is not in HACS' default catalog or Home Assistant Core.
@@ -123,7 +123,11 @@ Diagnostics are available from the integration's normal download menu.
 
 ### Optional visual palette card
 
-Add a manual card to **your own existing dashboard**:
+On your existing dashboard, choose **Edit → Add card**, search for **Festavia Studio**,
+and select the Studio playback entity in its visual editor. The integration installs
+the card resource automatically. No separate frontend download is needed.
+
+For a YAML-managed dashboard, the equivalent card is:
 
 ```yaml
 type: custom:festavia-studio-card

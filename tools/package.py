@@ -19,7 +19,10 @@ def write_zip(path, entries, prefix=""):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, raw in sorted(entries.items()):
             info = zipfile.ZipInfo(prefix + name, date_time=(2026, 11, 8, 0, 0, 0))
-            info.external_attr = 0o100644 << 16
+            info.create_system = 3
+            info.external_attr = (
+                0o100755 if name.endswith((".sh", ".command")) else 0o100644
+            ) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, raw)
     with zipfile.ZipFile(path) as archive:
@@ -60,6 +63,8 @@ def main():
         "bridge-session.json",
         "player-session.json",
         "ha-connection.json",
+        "festavia-ha-connection.json",
+        "setup.json",
         "studio-presets.json",
         "bridge-presets.json",
         "color-palettes.json",
@@ -90,7 +95,7 @@ def main():
                 )
             ):
                 raise ValueError("Private runtime file in release source")
-            entries[str(Path(target) / path.relative_to(folder))] = path.read_bytes()
+            entries[(Path(target) / path.relative_to(folder)).as_posix()] = path.read_bytes()
 
     for name in (
         "README.md",
@@ -127,8 +132,22 @@ def main():
         "package.py",
         "check.sh",
         "compatibility.py",
+        "bootstrap.py",
+        "ha_setup.py",
     ):
         entries["tools/" + name] = (ROOT / "tools" / name).read_bytes()
+    launcher_folder = ROOT / "tools/launchers"
+    if not launcher_folder.is_dir():
+        launcher_folder = ROOT  # The extracted source ZIP places launchers at its root.
+    for name in (
+        "Setup Home Assistant Windows.cmd",
+        "Setup Home Assistant macOS.command",
+        "Setup Home Assistant Linux.sh",
+    ):
+        path = launcher_folder / name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("Unexpected setup launcher")
+        entries[path.name] = path.read_bytes()
     add(release, "firmware-release")
     sums = "".join(f"{sha(raw)}  {name}\n" for name, raw in sorted(entries.items()))
     entries["SHA256SUMS"] = sums.encode()
@@ -138,7 +157,8 @@ def main():
     native = {
         name: raw
         for name, raw in entries.items()
-        if name.startswith("custom_components/") or name in ("README.md", "LICENSE", "hacs.json")
+        if name.startswith("custom_components/")
+        or name in ("README.md", "LICENSE", "hacs.json", "docs/INSTALL.md", "docs/COMPATIBILITY.md")
     }
     write_zip(integration, native)
     assert not any("config.yaml" in name or "/web/" in name for name in native)

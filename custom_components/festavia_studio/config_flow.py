@@ -7,6 +7,7 @@ import probatio as vol
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.components.file_upload import process_uploaded_file
 from .api import (
     commission,
     has_recovery,
@@ -15,12 +16,25 @@ from .api import (
     remove_private_folder,
     StudioError,
 )
-from .backend.lib.errors import AuthenticationError, CertificateError, RecoveryPending
+from .backend.lib.errors import (
+    AuthenticationError,
+    CertificateError,
+    RecoveryPending,
+    FirmwareEditionError,
+)
 from .backend.lib.net_client import save_credentials
 from homeassistant.helpers import issue_registry as ir
 import json
 from .backend.lib.bridge import probe
 from .const import DOMAIN
+from .connection import MAX_CONNECTION_BYTES, parse_connection
+
+
+def read_connection_upload(hass, file_id):
+    """Consume and delete HA's temporary upload on both success and failure."""
+    with process_uploaded_file(hass, file_id) as path:
+        with path.open("rb") as source:
+            return parse_connection(source.read(MAX_CONNECTION_BYTES + 1))
 
 
 def choices(options):
@@ -51,6 +65,7 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
         self.connection_only = False
         self.hue_entry_id = None
         self.orphans_confirmed = False
+        self.imported_device = None
 
     @staticmethod
     @callback
@@ -170,7 +185,7 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unique_id_mismatch")
         if self.connection_only:
             if self.device:
-                return await self.async_step_device()
+                return await self.async_step_device_import()
             return await self.finish()
         return await self.async_step_fixtures()
 
@@ -212,7 +227,7 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
             if self.busy():
                 errors["base"] = "stop_first"
             elif user_input["mode"] == "native":
-                return await self.async_step_device()
+                return await self.async_step_device_import()
             else:
                 try:
                     await self.run("select", self.selection)
@@ -245,6 +260,71 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def async_step_device_import(self, user_input=None):
+        errors = {}
+        if user_input is not None:
+            if user_input.get("manual") and not user_input.get("connection_file"):
+                return await self.async_step_device()
+            if user_input.get("connection_file"):
+                self.imported_device = None
+                try:
+                    self.imported_device = await self.hass.async_add_executor_job(
+                        read_connection_upload, self.hass, user_input["connection_file"]
+                    )
+                except (OSError, ValueError, KeyError, TypeError, RecursionError):
+                    errors["connection_file"] = "invalid_connection_file"
+            candidate = self.imported_device or self.device
+            if not errors:
+                if candidate is None:
+                    errors["connection_file"] = "connection_file_required"
+                else:
+                    try:
+                        return await self.connect_device(candidate)
+                    except FirmwareEditionError:
+                        errors["base"] = "wrong_firmware_edition"
+                    except (OSError, http.client.HTTPException, RuntimeError, ValueError, KeyError):
+                        errors["base"] = "device_connection"
+        return self.async_show_form(
+            step_id="device_import",
+            errors=errors,
+            description_placeholders={
+                "connection_state": (
+                    "A connection is already saved. Submit without another file to check it again."
+                    if self.imported_device or self.device
+                    else "Run the Home Assistant setup launcher from the full release ZIP to create the file."
+                )
+            },
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("connection_file"): selector.FileSelector(
+                        selector.FileSelectorConfig(accept=".json,application/json")
+                    ),
+                    vol.Optional("manual", default=False): selector.BooleanSelector(),
+                }
+            ),
+        )
+
+    async def connect_device(self, candidate):
+        if self.conflict(device=candidate):
+            return self.async_abort(reason="already_configured")
+        if (
+            self.saved_entry
+            and await self.pending()
+            and candidate["tls_sha256"]
+            != (self.saved_entry.data.get("device") or {}).get("tls_sha256")
+        ):
+            return self.async_abort(reason="stop_first")
+        result = await self.run("device", {"credentials": candidate, "inspect_only": True})
+        self.device = candidate
+        if self.connection_only:
+            status = await self.run("esp-status")
+            if status.get("approved_network"):
+                return await self.finish()
+            return await self.async_step_network()
+        if result.get("armed"):
+            return await self.async_step_device_recover()
+        return await self.async_step_network()
+
     async def async_step_device(self, user_input=None):
         errors = {}
         if user_input is not None:
@@ -256,25 +336,9 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
                 or (self.device or {}).get("tls_sha256", ""),
             }
             try:
-                if self.conflict(device=candidate):
-                    return self.async_abort(reason="already_configured")
-                if (
-                    self.saved_entry
-                    and await self.pending()
-                    and candidate["tls_sha256"]
-                    != (self.saved_entry.data.get("device") or {}).get("tls_sha256")
-                ):
-                    return self.async_abort(reason="stop_first")
-                result = await self.run("device", {"credentials": candidate, "inspect_only": True})
-                self.device = candidate
-                if self.connection_only:
-                    status = await self.run("esp-status")
-                    if status.get("approved_network"):
-                        return await self.finish()
-                    return await self.async_step_network()
-                if result.get("armed"):
-                    return await self.async_step_device_recover()
-                return await self.async_step_network()
+                return await self.connect_device(candidate)
+            except FirmwareEditionError:
+                errors["base"] = "wrong_firmware_edition"
             except (OSError, http.client.HTTPException, RuntimeError, ValueError, KeyError):
                 errors["base"] = "device_connection"
         return self.async_show_form(
@@ -389,11 +453,17 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
                     return await self.finish()
                 await self.run("select", self.selection)
                 return await self.finish()
-            if user_input is not None:
-                network = next(n for n in self.networks if n["extpan"] == user_input["network"])
-                await self.run("join", {**network, "legacy": user_input["legacy"]})
-                return self.async_show_form(step_id="joined", data_schema=vol.Schema({}))
             self.networks = (await self.run("scan"))["networks"]
+            open_networks = {n["extpan"]: n for n in self.networks if n.get("permit_join")}
+            if user_input is not None:
+                if not open_networks:
+                    errors["base"] = "network_not_open"
+                elif len(open_networks) > 1:
+                    errors["base"] = "multiple_networks"
+                else:
+                    network = next(iter(open_networks.values()))
+                    await self.run("join", {**network, "legacy": user_input.get("legacy", False)})
+                    return self.async_show_form(step_id="joined", data_schema=vol.Schema({}))
         except (
             OSError,
             http.client.HTTPException,
@@ -406,16 +476,11 @@ class FestaviaFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="network",
             errors=errors,
+            description_placeholders={
+                "network_state": f"{len({n['extpan'] for n in self.networks if n.get('permit_join')})} open pairing networks detected."
+            },
             data_schema=vol.Schema(
                 {
-                    vol.Required("network"): choices(
-                        {
-                            n[
-                                "extpan"
-                            ]: f"{n['extpan']} · channel {n['channel']} · joining {'open' if n.get('permit_join') else 'closed'}"
-                            for n in self.networks
-                        }
-                    ),
                     vol.Required("legacy", default=False): bool,
                 }
             ),

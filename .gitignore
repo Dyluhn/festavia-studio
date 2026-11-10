@@ -15,6 +15,8 @@ player-session.json
 build*/
 unload-pending.json
 removal-pending.json
+festavia-ha-connection.json
+controllers/
 
 # ESP-IDF generated dependencies/configuration; regenerate from locked inputs.
 firmware-source/managed_components/

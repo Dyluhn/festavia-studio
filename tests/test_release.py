@@ -76,6 +76,8 @@ class ReleaseTests(unittest.TestCase):
             "removal-pending.json",
             "unload-pending.json",
             "color-palettes.json",
+            "festavia-ha-connection.json",
+            "setup.json",
         ):
             with self.subTest(name=name):
                 path = folder / name

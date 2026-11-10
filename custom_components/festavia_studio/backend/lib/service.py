@@ -18,7 +18,7 @@ from .player import color, compile_scene
 from .studio import Studio
 from .sizing import MAX_POSITIONS, discovered_size
 from .festavia import is_festavia
-from .errors import RecoveryPending
+from .errors import RecoveryPending, FirmwareEditionError
 
 ROOT = Path(__file__).resolve().parent
 RELEASE = ROOT.parent / "release"
@@ -509,6 +509,11 @@ class Installation:
                     status = client.call("GET", "/api/status")
                     if status.get("target") != "esp32c6":
                         raise ValueError("This package needs an ESP32-C6")
+                    edition = client.call("POST", "/api/command", obj={"op": "direct_status"})
+                    if edition.get("ok"):
+                        raise FirmwareEditionError(
+                            "Use the HA firmware package for this integration"
+                        )
                     player = client.call("POST", "/api/command", obj={"op": "player_status"})
                     if player.get("armed") and not data.get("inspect_only"):
                         raise RuntimeError("Stop the existing player before importing this ESP32")
