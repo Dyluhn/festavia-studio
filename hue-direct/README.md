@@ -177,11 +177,18 @@ radio writes and then replays the observed Hue request through the bridge. This
 prevents a final native frame from overwriting the requested state. The replay
 never sends ON and keeps brightness within the installation ceiling.
 Indexed playback temporarily changes internal geometry; geometry is restored
-before relinquishing its durable recovery record. Power loss/restart follows the
-existing player's journaled recovery/yield rules. Master stays off after boot.
+before relinquishing its durable recovery record. Master stays off after boot.
+With Hue priority enabled, a restart yields and leaves the last appearance;
+it does not replay an older scene over a Hue command that may have arrived during
+the outage. A normal Hue command can then set the lights. With priority disabled,
+the player uses its saved recovery plan. A control-task stall triggers an automatic
+watchdog reboot after about 60 seconds. This is separate from the unchanged
+15-second lost-contact limit, and does not automatically restart playback.
 
 To return entirely to the HA edition, turn Master off, run commissioning with
-`--disable`, then install that edition's app image over the verified OTA path.
+`--disable`, and follow [Remove Direct or switch to Home Assistant](GETTING_STARTED.md#remove-direct-or-switch-to-home-assistant).
+Switching editions uses a deliberate new USB installation; ordinary same-edition
+updates are wireless. Back up the private setup folder before switching.
 Do not let two players claim the same fixture. The legacy HA player-status view
 marks a Direct session as externally owned; it cannot adopt Direct's heartbeat.
 

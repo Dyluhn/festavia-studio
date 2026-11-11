@@ -219,6 +219,13 @@ Wi-Fi and TLS identity and need no USB reconnection. Keep the board powered duri
 the update. A lost configuration, inaccessible network or bootloader/hardware
 failure can still require USB recovery; wireless updates cannot fix every fault.
 
+A stalled control task triggers an automatic watchdog reboot after about 60
+seconds. Playback stays stopped after reboot. With **Allow Hue takeover** enabled,
+recovery yields rather than replaying an older appearance over a possible Hue
+command during the outage. The lights can hold their last frame until you send
+an ordinary Hue command. This does not extend the separate 15-second target
+contact deadline or automatically resume a stopped scene.
+
 After cutting or extending a string, use the integration's **Reconfigure** flow
 to discover its new count. Saved palettes are preserved; the staged palette fits
 the new length. Existing recovery must finish before changing the fixture.

@@ -7,6 +7,7 @@
 #include "cJSON.h"
 #include "esp_app_desc.h"
 #include "esp_system.h"
+#include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -16,7 +17,6 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "esp_zigbee_core.h"
-#include "zboss_api.h"
 #include "esp_zigbee_cluster.h"
 #include "esp_zigbee_endpoint.h"
 #include "esp_zigbee_attribute.h"
@@ -66,15 +66,6 @@ static uint32_t sdk_no_mem, rx_control_frames;
 static int last_nwk_status=-1;
 static uint32_t nwk_status_events;
 static uint16_t nwk_status_address=0xffff;
-
-static unsigned sdk_free_buffers(void)
-{
-    zb_bufid_t held[128];
-    unsigned count=0;
-    while (count<128 && (held[count]=zb_buf_get_out())!=ZB_BUF_INVALID) count++;
-    for (unsigned i=0;i<count;i++) zb_buf_free(held[i]);
-    return count;
-}
 
 static void emit(cJSON *obj)
 {
@@ -481,8 +472,12 @@ static void handle_request(cJSON *request)
         cJSON_AddNumberToObject(obj, "protocol", 1);
         cJSON_AddNumberToObject(obj, "free_heap", esp_get_free_heap_size());
         cJSON_AddNumberToObject(obj, "uptime_ms", esp_timer_get_time()/1000);
-        cJSON_AddNumberToObject(obj, "sdk_buffers_free", sdk_free_buffers());
-        cJSON_AddNumberToObject(obj, "sdk_buffer_probe_limit", 128);
+        cJSON_AddNumberToObject(obj, "reset_reason", esp_reset_reason());
+        // Status must not consume the packet pool to estimate its capacity.
+        // Report unknown instead of temporarily exhausting SDK resources.
+        cJSON_AddNullToObject(obj, "sdk_buffers_free");
+        cJSON_AddNumberToObject(obj, "sdk_buffer_probe_limit", 0);
+        cJSON_AddBoolToObject(obj, "sdk_buffer_probe_disabled", true);
         cJSON_AddNumberToObject(obj, "sdk_no_mem", sdk_no_mem);
         cJSON_AddNumberToObject(obj, "network_status_events", nwk_status_events);
         cJSON_AddNumberToObject(obj, "last_network_status", last_nwk_status);
@@ -502,6 +497,33 @@ static void handle_request(cJSON *request)
         hm_net_info(obj);
         emit(obj);
         return;
+    }
+    if (strcmp(op, "radio_status") == 0) {
+        // Read-only, bounded radio tables. Never include network keys or EUI64s.
+        cJSON *obj=reply(id,true),*neighbors=cJSON_AddArrayToObject(obj,"neighbors"),*routes=cJSON_AddArrayToObject(obj,"routes");
+        int8_t power=0;esp_zb_get_tx_power(&power);cJSON_AddNumberToObject(obj,"tx_power_dbm",power);
+        esp_zb_nwk_info_iterator_t iterator=ESP_ZB_NWK_INFO_ITERATOR_INIT;
+        esp_zb_nwk_neighbor_info_t neighbor;unsigned count=0;
+        while(count<16 && esp_zb_nwk_get_next_neighbor(&iterator,&neighbor)==ESP_OK) {
+            cJSON *item=cJSON_CreateObject();cJSON_AddItemToArray(neighbors,item);
+            cJSON_AddNumberToObject(item,"address",neighbor.short_addr);
+            cJSON_AddNumberToObject(item,"relationship",neighbor.relationship);
+            cJSON_AddNumberToObject(item,"lqi",neighbor.lqi);
+            cJSON_AddNumberToObject(item,"rssi_dbm",neighbor.rssi);
+            cJSON_AddNumberToObject(item,"outgoing_cost",neighbor.outgoing_cost);
+            cJSON_AddNumberToObject(item,"age",neighbor.age);count++;
+        }
+        cJSON_AddBoolToObject(obj,"neighbors_truncated",count==16);
+        iterator=ESP_ZB_NWK_INFO_ITERATOR_INIT;esp_zb_nwk_route_info_t route;count=0;
+        while(count<16 && esp_zb_nwk_get_next_route(&iterator,&route)==ESP_OK) {
+            cJSON *item=cJSON_CreateObject();cJSON_AddItemToArray(routes,item);
+            cJSON_AddNumberToObject(item,"destination",route.dest_addr);
+            cJSON_AddNumberToObject(item,"next_hop",route.next_hop_addr);
+            cJSON_AddNumberToObject(item,"status",route.flags.status);
+            cJSON_AddNumberToObject(item,"expiry",route.expiry);count++;
+        }
+        cJSON_AddBoolToObject(obj,"routes_truncated",count==16);
+        emit(obj);return;
     }
     if (strcmp(op, "net_info") == 0) {
         cJSON *obj = reply(id, true);
@@ -717,11 +739,13 @@ static void player_task(void *unused)
 {
     (void)unused;
     xEventGroupWaitBits(ready,READY_BIT,pdFALSE,pdTRUE,portMAX_DELAY);
+    ESP_ERROR_CHECK(esp_task_wdt_add(NULL));
     for (;;) {
         esp_zb_lock_acquire(portMAX_DELAY);
         hm_player_tick(approved_network());
         hd_tick(approved_network());
         esp_zb_lock_release();
+        ESP_ERROR_CHECK(esp_task_wdt_reset());
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

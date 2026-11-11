@@ -1,4 +1,4 @@
-# Combined community beta — 2026-11-10
+# Combined community beta — 2026-11-11
 
 The combined source contains both the HA edition (integration 0.13.0 / firmware
 0.4.1) and Hue-only Direct (firmware 0.5.1). The complete combined check passes
@@ -50,8 +50,9 @@ and checked separately from the controller's image identity.
 
 The preceding Direct 0.5.0 image stopped safely with `target_unresponsive` in two
 longer runs, after approximately 349 and 1,532 seconds. The C6 remained online;
-accepted sends received callbacks, SDK buffers remained available, and neither
-heap exhaustion nor a reboot was observed. The last target acknowledgement and
+accepted sends received callbacks, and neither heap exhaustion nor a reboot was
+observed. The packet-buffer estimate used an intrusive probe, so it cannot rule
+out diagnostic interference with the radio. The last target acknowledgement and
 power reply exceeded the existing 15-second deadline. APS status 49 is retained
 as an opaque SDK failure value; it does not establish a particular radio cause.
 Bridge connectivity and cached light state cannot prove physical reachability.
@@ -67,12 +68,12 @@ frame-counter and Wi-Fi radio diagnostics help distinguish future failures.
 The bounded event ring grows from eight to 32 entries after an eight-entry ring
 overflow was observed during test preparation.
 
-The final HA 0.4.1 app (ELF SHA-256
+The preceding HA 0.4.1 candidate (ELF SHA-256
 `94f2329ac017355d78a70c8036738703116217edb842c73461524f43e8ee6dac`)
 passed verified OTA on the paired network, a native flow at 9%, actual lamp-level
 readback, ordinary Hue Off and exact fixture restoration. The existing HA entry
 was temporarily paused with a lease-bound recovery watchdog, then restored with
-its original staged scene and automation states. The final Direct 0.5.1 app
+its original staged scene and automation states. The preceding Direct 0.5.1 candidate
 (ELF SHA-256
 `7b3c520b1dbe8e32f504fdc42d13bab954f730fa1807c0f5d9793819bf1d2072`)
 was subsequently restored by verified OTA; settings and presets were retained.
@@ -85,6 +86,53 @@ its connected flag at every sample. The corrected test allows bounded reconnects
 while retaining the existing ownership deadline and fails on any stopped player.
 Two added coordinator cases verify keepalive pause/resume and no restart after
 lease expiry, bringing that harness to 49 cases. The full run restarts from zero.
+
+That Direct candidate also stopped with `target_unresponsive` after 153 seconds
+in a subsequent run. Address refresh alone did not resolve the delivery issue.
+An isolated IDF 5.5.1 comparison ran for 1,023 seconds before yielding to the
+existing HA sunset automation's brightness command. This was a valid Hue
+handoff, not a lost-contact failure or a completed reliability qualification.
+The comparison later required a controller reset after its API became
+unresponsive. It does not establish that changing IDF fixes the problem; the
+release candidate retains IDF 5.3.2.
+
+The current candidates remove the packet-buffer status probe entirely. That
+probe temporarily allocated every available SDK output buffer on each status
+request. Status now reports `sdk_buffers_free: null` and
+`sdk_buffer_probe_disabled: true`; it never drains the packet pool. Bounded,
+read-only neighbor/route tables and reset-reason telemetry support further
+diagnosis. Removing the probe corrects a real diagnostic defect; it does not by
+itself prove the cause of every earlier radio failure.
+
+Both editions also subscribe the control/player task to a 60-second task
+watchdog with automatic reboot. A test-only private image intentionally stalled
+while holding the SDK lock. The idle hardware test confirmed a task-watchdog
+reset and exact preservation of pairing, presets and the existing light state.
+The playback fault test also confirmed a real watchdog reboot, the same paired
+network, unchanged geometry and no animation restart. With Hue priority enabled,
+the existing durable recovery policy deliberately yields (`restart_yield`): it
+leaves the last frame at the tested 9% rather than replaying an old appearance
+over a possible Hue command during the outage. The test originally expected a
+full appearance rollback; UART and direct Zigbee evidence established that this
+expectation contradicted the configured policy. Explicit test teardown restored
+the exact pre-test fixture state, HA entry and automations.
+
+The private fault command is absent from the production sources and images.
+The separate 15-second target contact deadline remains unchanged.
+
+The current production HA 0.4.1 app has ELF SHA-256
+`9f9f935686f449f291a6b5fae378a048b6ed37d0d746f268c30b14b4eec1a80e`
+and app SHA-256
+`a693ea7d9682f96e9dcd72e72ef5fadc605aeb959f86f81d01d0330afe2ecf9f`.
+It passed confirmed wireless installation, actual native flow at 9% (119
+successful delivery callbacks), physical level readback of 23/254, ordinary Hue
+Off and exact restoration. The existing HA entry, staged scene and automation
+states were restored. The current production Direct 0.5.1 app has ELF SHA-256
+`661d6320a09abb8a77c3e1256f1cd2d34ab8832aa4253cd918203ff65e5a8ab4`
+and app SHA-256
+`5f88d35d2ff734e23f38c354cfbfdfca227bd9482fa0244279df8c4fbdbea317`.
+It passed confirmed wireless installation and the return trip from HA, preserving
+its settings, preset bank and the exact original normal fixture state.
 
 The final Direct saved-scene reliability run is pending. No claim of resolved
 long-run delivery or stable release is made until that bounded check finishes.

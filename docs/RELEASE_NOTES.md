@@ -21,9 +21,17 @@ It creates the Hue controls, zone and starter scene. Check all downloads against
 `SHA256SUMS`; the release manifest records the edition/image versions separately.
 
 Existing HA entries, saved palettes and scenes remain in HA storage. Update HA
-controllers wirelessly to firmware 0.4.1 for the routing and diagnostics changes. The update preserves pairing and private settings.
+controllers wirelessly to firmware 0.4.1 for bounded route refresh, passive radio
+diagnostics and automatic recovery from a stalled control task. The update
+preserves pairing and private settings.
 Same-edition firmware updates are wireless. Switching editions is a deliberate
 new USB installation; back up private setup data first.
+
+A control-task stall triggers a watchdog reboot after about 60 seconds, without
+restarting playback. With Hue priority enabled, reboot recovery yields rather
+than replaying an old appearance over a possible Hue command. The lights may
+hold their last frame until an ordinary Hue command changes them. The separate
+15-second target-contact deadline is unchanged.
 
 ## Scope and limitations
 

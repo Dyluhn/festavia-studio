@@ -3,7 +3,7 @@
   "version": "0.4.1",
   "package_revision": 1,
   "protocol": 1,
-  "built_at": "2026-11-10T20:57:25.660964+00:00",
+  "built_at": "2026-11-11T08:08:51.973223+00:00",
   "esp_idf": "5.3.2",
   "esp_zigbee_lib": "1.6.8",
   "esp_zboss_lib": "1.6.4",
@@ -11,7 +11,7 @@
     "esp32c6": {
       "factory": "esp32c6/hue-mesh-lab.factory.bin",
       "app": "esp32c6/hue-mesh-lab.app.bin",
-      "app_size": 1419248,
+      "app_size": 1421040,
       "app_offset": 131072,
       "flash_size": "4MB",
       "ota": true,
@@ -23,8 +23,8 @@
     }
   },
   "sha256": {
-    "esp32c6/hue-mesh-lab.factory.bin": "c007fa4b7dac4f1c0c349077ff8c376ff2e24ebedfef463f730a2380f10a03cc",
-    "esp32c6/hue-mesh-lab.app.bin": "81efc0a14e7276c5b7f89453e6c2d2e45c01b9715b92d97488265eb5d7e37d00"
+    "esp32c6/hue-mesh-lab.factory.bin": "d12dfac5bc2dc4cd4e9a8a093d124f45f6e39ea344f5938ccf35a76720701daf",
+    "esp32c6/hue-mesh-lab.app.bin": "a693ea7d9682f96e9dcd72e72ef5fadc605aeb959f86f81d01d0330afe2ecf9f"
   },
   "hardware_verified": true,
   "hue_join_verified": false,
@@ -34,7 +34,7 @@
     "firmware/dependencies.lock": "89fc96d0c70c94e914f4c96f92531533b9326d34f8f35ab784d0f44725041404",
     "firmware/main/CMakeLists.txt": "ce5418071c69a0ca3f2e33451001b0017dbe372f41b8140ee9ea029ff19e1aea",
     "firmware/main/idf_component.yml": "f76d5ed50b643808e5e669513fa14a32eadc568d54aa504c52fc64e24646b7d2",
-    "firmware/main/main.c": "da3eadde6f2467668bb37c2d18c13ea3344ee180988cf499d6ebc173d659e44c",
+    "firmware/main/main.c": "54560b2f705d0223dbd280b108b8d6d487789924e424824422ad1dbaf7b5c7c1",
     "firmware/main/network.c": "c8d701bf82d53ad93aa800ccd57a5c663675a005ba513739ebe689a04d78949d",
     "firmware/main/network.h": "ea1156e22e9860c51bf2c1c3c144b8bc8b1a092322fc5fdce2073383baeb0241",
     "firmware/main/player.c": "cbd34e0ae97ce0f77aed1a6ec53114e5bd5fd757f30919c8d8033e2c49906598",
@@ -43,7 +43,7 @@
     "firmware/main/wire.h": "7590d2f4e947c71f3f65a2e1a6c1382938302837996e7ecdcd060ad7df31e1c2",
     "firmware/partitions.csv": "d5a5a86d5f93052002dbd10c369a15a339d687edf5e4132642d1e0dba702983a",
     "firmware/partitions.usb.csv": "3b47927cd6cf753c6a262d0bcaba1faa6933e559256e9767f2012eabb7e0569e",
-    "firmware/sdkconfig.defaults": "7ed0b0436ee3f981be582ed24ee4765709d266bbe8b433e03458be1e0d79f595",
+    "firmware/sdkconfig.defaults": "22a82dd2217a1862ff7a0d2a70f99394f5a5184399440748a24793117cb85782",
     "firmware/sdkconfig.defaults.esp32c6": "342c123686bfb803b64b34362a4bf52563a2dc6d38d432e1e3883f3fd7437f16",
     "firmware/sdkconfig.defaults.esp32h2": "09d1f7578890bd2eb34a29031c40acccf542154d5b72f1f025661779a2ba798f"
   },
@@ -64,9 +64,9 @@
       255
     ]
   },
-  "elf_sha256": "94f2329ac017355d78a70c8036738703116217edb842c73461524f43e8ee6dac",
+  "elf_sha256": "9f9f935686f449f291a6b5fae378a048b6ed37d0d746f268c30b14b4eec1a80e",
   "qualification": {
-    "date": "2026-11-10",
+    "date": "2026-11-11",
     "physical": "LCX030 / 1.163.5, 27 pucks, Hue Bridge Pro BSB003",
     "current_image": [
       "paired-network wireless update and confirmation",

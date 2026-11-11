@@ -1,4 +1,4 @@
-# Validation record — 2026-11-09–10
+# Validation record — 2026-11-09–11
 
 The combined community beta passes 180 repository tests across both editions.
 The historical 156-test Direct-branch result below predates their combination.
@@ -24,11 +24,34 @@ a second upload using the production library on a slower link with USB closed.
 Presets/settings and the OFF fixture were preserved. See the combined
 compatibility record for the qualified image identity and scope.
 
-## Final 0.5.1 candidate
+## Current production candidate
+
+The current 0.5.1 source also removes the intrusive SDK packet-buffer status
+probe and adds a 60-second task watchdog with automatic reboot. The existing
+15-second target-contact bound is unchanged. Both idle and active lock-stall
+faults were exercised on a private test build: the controller rebooted, retained
+its paired network and did not restart playback. With Hue priority enabled, the
+active test yielded without replaying an old appearance; the held frame measured
+9%. Explicit teardown restored the exact fixture and HA state. See the
+[combined qualification record](../docs/COMPATIBILITY.md) for the corrected test
+expectation and earlier failure history. The private fault hook is absent from
+the production image.
+
+Current ELF SHA-256:
+`661d6320a09abb8a77c3e1256f1cd2d34ab8832aa4253cd918203ff65e5a8ab4`.
+Current app SHA-256:
+`5f88d35d2ff734e23f38c354cfbfdfca227bd9482fa0244279df8c4fbdbea317`.
+These bytes passed a confirmed wireless update while preserving the exact
+existing fixture state and controller settings. The final saved-scene endurance
+run is pending. Removal of the diagnostic defect does not yet establish that
+all earlier delivery failures are resolved.
+
+## Preceding 0.5.1 qualification history
 
 Two longer runs on 0.5.0 stopped at the unchanged 15-second lost-contact bound,
-after approximately 349 and 1,532 seconds. There was no observed reboot, SDK
-buffer exhaustion or unreturned accepted-send callback. The underlying radio
+after approximately 349 and 1,532 seconds. There was no observed reboot or
+unreturned accepted-send callback. The former packet-buffer estimate was
+intrusive and cannot rule out diagnostic interference. The underlying radio
 cause remains unproved. Both runs restored the original fixture and HA guard.
 
 The final 0.5.1 app adds a bounded same-IEEE address refresh after five seconds
@@ -43,9 +66,8 @@ ELF SHA-256:
 `7b3c520b1dbe8e32f504fdc42d13bab954f730fa1807c0f5d9793819bf1d2072`.
 App SHA-256:
 `98d4bb2ad749d5edb31d83184575bbbda474412140e2787f20f1a66cf208d630`.
-This exact image passed verified paired-network OTA after the HA 0.4.1 physical
-flow/Off test, preserving the Direct settings and preset bank. Its final two-hour
-saved-Hue-scene reliability run is pending. Its factory layout and hashes are
+This preceding image passed verified paired-network OTA after the HA 0.4.1 physical
+flow/Off test, preserving the Direct settings and preset bank. Its factory layout and hashes are
 verified; physical factory flashing/fresh joining were not repeated. The earlier
 USB result applies specifically to 0.5.0. Preserving the only connected board's
 pairing is intentional; another household's fresh-install evidence remains needed.
@@ -56,6 +78,11 @@ The test now permits bounded poll reconnection within the existing ownership
 deadline, checks continued playback, and starts the full duration again. Two new
 coordinator regressions cover brief poll failure/reconnection and expiry without
 automatic restart (49 current coordinator cases). No app bytes changed.
+
+A later run on those preceding bytes stopped with `target_unresponsive` after
+153 seconds. Address refresh alone did not resolve the fault. The current
+production candidate above changes the diagnostic probe and watchdog; it needs
+its own endurance result.
 
 The following detailed results retain the earlier test scope and dates.
 
