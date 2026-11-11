@@ -134,8 +134,7 @@ and app SHA-256
 It passed confirmed wireless installation and the return trip from HA, preserving
 its settings, preset bank and the exact original normal fixture state.
 
-The final Direct saved-scene reliability run is pending. No claim of resolved
-long-run delivery or stable release is made until that bounded check finishes.
+The current production Direct image completed 7,216.6 seconds of saved-Hue-scene playback at 9% without a controller reboot or playback stop. It recorded 66,402 successful delivery callbacks (9.20/second), 2,277 unsuccessful callbacks, 5,760 skipped sample times and 23 route-refresh attempts. Actual global level remained within the test bound. Exact original fixture/normal state, the HA staged scene and automation states were restored. These are controller and direct Zigbee measurements, not calibrated optical frame-rate measurements. Intermittent delivery loss occurred: this is a bounded experimental beta qualification, not proof of lossless output or a resolved underlying radio cause.
 The final factory images have matching layouts and hashes, but were not physically
 factory-flashed or freshly joined. Only the connected production C6 is available;
 its existing pairing is preserved. The physical factory test above applies to

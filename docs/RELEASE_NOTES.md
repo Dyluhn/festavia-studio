@@ -47,7 +47,7 @@ independent animation, lossless frame rate, official Hue certification, default
 catalog listing or Home Assistant Core acceptance is claimed.
 
 Both final apps passed verified wireless updates on the paired C6; the HA app
-also passed native flow, Hue Off and exact restoration. The preceding HA 0.4.0 /
+also passed native flow, Hue Off and exact restoration. The production Direct image also completed a two-hour saved-scene run at 9% without rebooting or stopping, with exact restoration afterward. Delivery retries and brief contact loss still occurred; this remains an experimental beta. The detailed callback and route-refresh counts are in the compatibility record. The preceding HA 0.4.0 /
 Direct 0.5.0 factory images passed physical USB flashing, Wi-Fi provisioning and
 pinned HTTPS checks. New factory layouts and hashes are verified; these final
 factory images have not been flashed or freshly paired. Complete fresh joining,

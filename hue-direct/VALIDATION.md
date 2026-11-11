@@ -42,9 +42,11 @@ Current ELF SHA-256:
 Current app SHA-256:
 `5f88d35d2ff734e23f38c354cfbfdfca227bd9482fa0244279df8c4fbdbea317`.
 These bytes passed a confirmed wireless update while preserving the exact
-existing fixture state and controller settings. The final saved-scene endurance
-run is pending. Removal of the diagnostic defect does not yet establish that
-all earlier delivery failures are resolved.
+existing fixture state and controller settings.
+
+The current production Direct image completed 7,216.6 seconds of saved-Hue-scene playback at 9% without a controller reboot or playback stop. It recorded 66,402 successful delivery callbacks (9.20/second), 2,277 unsuccessful callbacks, 5,760 skipped sample times and 23 route-refresh attempts. Actual global level remained within the test bound. Exact original fixture/normal state, the HA staged scene and automation states were restored. These are controller and direct Zigbee measurements, not calibrated optical frame-rate measurements. Intermittent delivery loss occurred: this is a bounded experimental beta qualification, not proof of lossless output or a resolved underlying radio cause.
+
+Removal of the diagnostic defect does not establish that all earlier delivery failures are resolved.
 
 ## Preceding 0.5.1 qualification history
 

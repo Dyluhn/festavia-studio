@@ -1,4 +1,6 @@
 {
+  "record_scope": "Top-level baseline fields below retain historical 0.3.9 evidence. Read the latest_qualification section for the current release; historical optical and exploratory caveats remain applicable to their stated tests.",
+  "latest_qualification": "community_beta_0130",
   "checked_at": "2026-11-09T09:50:14.043502+00:00",
   "result": "passed within the stated hardware and optical scope",
   "firmware": {
@@ -303,5 +305,121 @@
     "shrink_test": "48 down to1, one point at a time, playback at each length, saved Size48 palette preserved",
     "physical_scope_unchanged": "installed27-point LCX030/1.163.5",
     "fix": "Short strings no longer inherit an oversized default palette; staged palette/layout follow detected quantity"
+  },
+  "community_beta_0130": {
+    "checked_at": "2026-11-11T10:11:14.681345+00:00",
+    "integration": "0.13.0",
+    "status": "Bounded production-image beta qualification passed with the stated gaps",
+    "firmware": {
+      "home_assistant": {
+        "version": "0.4.1",
+        "elf_sha256": "9f9f935686f449f291a6b5fae378a048b6ed37d0d746f268c30b14b4eec1a80e",
+        "app_sha256": "a693ea7d9682f96e9dcd72e72ef5fadc605aeb959f86f81d01d0330afe2ecf9f"
+      },
+      "hue_direct": {
+        "version": "0.5.1",
+        "elf_sha256": "661d6320a09abb8a77c3e1256f1cd2d34ab8832aa4253cd918203ff65e5a8ab4",
+        "app_sha256": "5f88d35d2ff734e23f38c354cfbfdfca227bd9482fa0244279df8c4fbdbea317"
+      },
+      "idf": "5.3.2",
+      "zigbee_sdk": "1.6.8",
+      "zboss": "1.6.4",
+      "private_fault_hook_in_production_images": false
+    },
+    "physical_scope": {
+      "fixture_model": "LCX030",
+      "fixture_firmware": "1.163.5",
+      "positions": 27,
+      "bridge_model": "BSB003",
+      "controller": "ESP32-C6 UART0 / 4 MB",
+      "new_full_string_optical_survey": false
+    },
+    "software": {
+      "repository_tests": 180,
+      "fresh_extracted_source_tests": 180,
+      "source_and_integration_identical_repack": true,
+      "standalone_identical_repack": true,
+      "actual_HA_matrix_checks": 300,
+      "HA_versions": [
+        "2026.10.0",
+        "2026.10.1",
+        "2026.11.1"
+      ],
+      "simulated_bridge_models": [
+        "BSB002",
+        "BSB003"
+      ],
+      "quantity_range": "Every integer 1 through 48",
+      "hardware_and_network_peers_simulated_in_HA_matrix": true,
+      "desktop_installer_jobs": [
+        "Windows",
+        "macOS",
+        "Linux"
+      ],
+      "hassfest": "passed",
+      "HACS_validation": "passed",
+      "clean_firmware_builds_both_editions": "passed",
+      "validation_commit": "19dd08900d1967a174fafdcd6ac4c22bac5e112e"
+    },
+    "physical_current_apps": {
+      "both_wireless_updates_confirmed": true,
+      "pairing_and_Direct_settings_preserved": true,
+      "HA_native_flow_percent": 9,
+      "HA_physical_level": 23,
+      "level_full_scale": 254,
+      "HA_successful_delivery_callbacks": 119,
+      "ordinary_Hue_Off_preserved": true,
+      "exact_fixture_restoration": true,
+      "original_HA_entry_and_staged_scene_and_automations_restored": true,
+      "flow_test_path": "Production Python renderer and pinned HTTPS controller API; the original HA entry was paused with lease-bound automatic recovery. Current service/card lifecycle coverage is the separate real-HA simulated-peer matrix. Historical live-HA native playback evidence is retained below."
+    },
+    "watchdog_fault_tests": {
+      "private_test_image": "0.5.99; same watchdog/control logic, additional intentional SDK-lock stall hook",
+      "timeout_seconds": 60,
+      "idle": "Automatic task-watchdog reboot, pairing/presets/exact existing light state preserved",
+      "active": "Automatic task-watchdog reboot, same PAN, unchanged geometry, last frame at 9%, no animation restart",
+      "active_Hue_priority_policy": "restart_yield; avoid replaying old appearance over a Hue command during an outage",
+      "active_test_corrections": [
+        "First attempt did not inject a fault because its old HTTPS connection was stale; no recovery pass claimed for that attempt.",
+        "A subsequent valid injection rebooted correctly; its full-appearance-rollback assertion was incorrect with Hue priority enabled. UART reset-reason and direct Zigbee evidence verified the intended yield policy."
+      ],
+      "explicit_teardown_restored_exact_original_normal_fixture": true,
+      "target_contact_timeout_seconds_unchanged": 15
+    },
+    "endurance": {
+      "status": "passed bounded experimental qualification; intermittent delivery loss remains",
+      "requested_seconds": 7200,
+      "measured_seconds": 7216.6,
+      "brightness_percent": 9,
+      "installation_cap_percent": 19,
+      "physical_global_level": 23,
+      "global_level_full_scale": 254,
+      "successful_delivery_callbacks": 66402,
+      "unsuccessful_delivery_callbacks": 2277,
+      "skipped_sample_times": 5760,
+      "successful_callback_rate_per_second": 9.2,
+      "route_refresh_attempts": 23,
+      "bridge_reconnect_observations": 1,
+      "controller_reboots": 0,
+      "playback_stops": 0,
+      "exact_fixture_and_original_normal_state_restored": true,
+      "original_HA_automations_and_staged_scene_restored": true,
+      "underlying_radio_cause_proven": false,
+      "scope": "Callback throughput is not calibrated optical frame rate. Refresh attempts are not a count of distinct outages. Sampled diagnostics cannot establish every pause duration.",
+      "max_sampled_contact_age_ms": 8467
+    },
+    "factory_install_scope": {
+      "preceding_HA_0_4_0_and_Direct_0_5_0": "Physical factory flashing, USB Wi-Fi provisioning and pinned HTTPS verified on attached UART0 C6; original complete image restored",
+      "current_factory_images": "Layout, hashes and blank private partitions verified; not factory-flashed",
+      "fresh_join_and_new_link_button_authorization_verified": false,
+      "reason": "Only the paired production board is available; its existing pairing is preserved",
+      "other_physical_counts_and_households_verified": false
+    },
+    "draft_artifact_verification": {
+      "draft_assets": 9,
+      "draft_checksums_and_app_identity": "passed",
+      "downloaded_asset_privacy_files_scanned": 508,
+      "private_marker_hits": 0
+    }
   }
 }

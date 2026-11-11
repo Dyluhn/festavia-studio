@@ -178,6 +178,7 @@ not stored there. Extracting a newer release does not erase these saved files.
 | No supported Festavia | Confirm the chosen bridge, model LCX030 and software 1.163.5. This candidate does not claim compatibility with all Festavia products. |
 | Preset scene does not start | Choose a single plain color on the real Festavia, stop Hue Sync/native effects, then try again. Use Check a controller for the reported error. |
 | Playback stops with `target_unresponsive` / `delivery_failed` | Check the Festavia's power and radio coverage. Check a controller shows the last playback stop even after Master returns to off/idle. The controller leaves playback stopped; after fixing the connection, deliberately recall your scene or turn Master on. |
+| Hue shows an older controller version | This candidate retains the legacy `0.5.0` Basic-cluster build label. Use **Check a controller** for the actual app version (`0.5.1`) and ELF identity; the guided wireless updater verifies that app identity. |
 | Address changed | Reserve DHCP addresses. For a moved C6, update `url` in its private `device.json`; for a moved bridge, Continue with `--bridge NEW_IP` and authorize it again. |
 
 Advanced command-line options remain in [README.md](README.md). Discovery and
