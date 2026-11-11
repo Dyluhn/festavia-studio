@@ -6,6 +6,19 @@ Home Assistant, browser app, computer process, cloud service, or ongoing host
 heartbeat is required after commissioning. The actual Festavia stays paired to
 Hue. This is a separate firmware edition; it does not replace the HA integration.
 
+## See the Hue controls
+
+<img src="../docs/ui/10-hue-colour-and-position.jpg" width="320" alt="Actual Hue app showing the color wheel and Festavia Master, Colour and Position controls">
+
+These are virtual setting controls in the stock Hue app. **Master** sets actual
+output; **Colour**, **Position**, **Palette**, **Motion**, **Direction**, **Shape**
+and **Preset / Apply** edit the program. Scroll the bottom row and read the small
+role labels under Hue's generic light name. They do not represent separate pucks.
+
+[Follow the screenshot walkthrough](../docs/UI_GUIDE.md#hue-only-with-festavia-direct)
+or [open the illustrated PDF](../docs/ui/Festavia-Studio-UI-Walkthrough.pdf).
+The Hue captures were supplied by the project owner; the HA examples use demo data.
+
 ## Compatibility and limits
 
 - ESP32-C6 with at least 4 MB flash and a USB-to-UART interface for first setup;

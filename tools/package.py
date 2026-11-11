@@ -152,8 +152,10 @@ def main():
         "RELEASING.md",
         "COMPATIBILITY.md",
         "RELEASE_NOTES.md",
+        "UI_GUIDE.md",
     ):
         entries["docs/" + name] = (ROOT / "docs" / name).read_bytes()
+    add(ROOT / "docs/ui", "docs/ui")
     for name in (
         "first-install.py",
         "wifi_setup.py",
@@ -189,6 +191,8 @@ def main():
         name: raw
         for name, raw in entries.items()
         if name.startswith("custom_components/")
+        or name.startswith("docs/ui/")
+        or name == "docs/UI_GUIDE.md"
         or name in ("README.md", "LICENSE", "hacs.json", "docs/INSTALL.md", "docs/COMPATIBILITY.md")
     }
     write_zip(integration, native)

@@ -3,6 +3,9 @@
 This is the **Hue-only** edition. An ESP32-C6 joins your existing Hue bridge and
 runs the effects. After setup, you use the Hue app. The computer can be turned off.
 
+See [the Hue screenshot walkthrough](../docs/UI_GUIDE.md#hue-only-with-festavia-direct)
+for the actual controls and a worked three-color/snake example.
+
 ## Check before you start
 
 You need:
@@ -30,11 +33,11 @@ every count 1–48. Read [the validation record](VALIDATION.md) before buying ha
 
 ## 1. Download and extract
 
-Download **festavia-direct-0.5.0.zip** from the
+Download **festavia-direct-0.5.1.zip** from the
 [v0.13.0 project beta](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
 Choose the standalone **Festavia Direct** package and check it against the release's
 `SHA256SUMS`. Project and firmware versions are separate: this project release
-contains Direct firmware 0.5.0 and HA firmware 0.4.0.
+contains Direct firmware 0.5.1 and HA firmware 0.4.1.
 
 Extract the whole ZIP into a folder. **Do not run setup from inside the ZIP.**
 The package contains its firmware images, checksums, guide and installer.

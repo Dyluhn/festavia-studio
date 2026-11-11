@@ -4,6 +4,9 @@ Everything after first ESP32 setup lives in Home Assistant: connection settings,
 palettes, effects, scenes, Hue handoff and firmware updates. The optional palette
 card goes on your existing dashboard. It has no separate server or app.
 
+See the [illustrated UI guide](UI_GUIDE.md#home-assistant) for the color editor,
+separate snake/background palettes, saved scenes and native device controls.
+
 ## Choose a mode
 
 | What you want | What you need |

@@ -200,9 +200,14 @@ def main():
         "tools/transport.py",
         "tools/usb_link.py",
         "tools/wifi_setup.py",
+        "docs/UI_GUIDE.md",
     ]
     for relative in public_files:
         entries[relative] = (ROOT / relative).read_bytes()
+    for path in sorted((ROOT / "docs/ui").iterdir()):
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("Unexpected UI documentation asset")
+        entries[path.relative_to(ROOT).as_posix()] = path.read_bytes()
     for name in ("Setup Windows.cmd", "Setup macOS.command", "Setup Linux.sh"):
         launcher = ROOT / "hue-direct/launchers" / name
         if not launcher.is_file():
@@ -214,6 +219,8 @@ def main():
         b"Extract the ZIP, then open the Setup launcher for Windows, macOS or Linux.\n"
         b"It prepares the tools and walks through USB, Wi-Fi, Hue pairing and light selection.\n\n"
         b"The [full Hue control reference](hue-direct/README.md) explains everyday editing.\n\n"
+        b"See the [screenshot walkthrough](docs/UI_GUIDE.md#hue-only-with-festavia-direct) "
+        b"or the [illustrated PDF](docs/ui/Festavia-Studio-UI-Walkthrough.pdf).\n\n"
         b"This is the standalone ESP32-C6 + Hue edition. Home Assistant is not required.\n"
         b"Qualification and current limits are in [VALIDATION.md](hue-direct/VALIDATION.md).\n"
     )

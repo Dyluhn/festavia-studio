@@ -10,6 +10,29 @@ The Home Assistant edition **0.13.0** runs directly inside Home Assistant. **No 
 YAML package or separate dashboard is required.** An optional custom card makes
 palette editing visual. This is independent community software.
 
+## See it in action
+
+Build an ordered palette, choose an effect, and save the look. Use the native
+Home Assistant controls and optional card, or install the separate Direct edition
+to adjust settings through the stock Hue app.
+
+| Home Assistant: palette and playback | Hue app: the Direct controller |
+|:---:|:---:|
+| [<img src="docs/ui/02-ha-mobile-repeat.jpg" width="250" alt="Home Assistant card with three ordered colors repeating across 27 demo pucks">](docs/UI_GUIDE.md#home-assistant) | [<img src="docs/ui/10-hue-colour-and-position.jpg" width="290" alt="Hue app color wheel and the Festavia Master, Colour and Position controls">](docs/UI_GUIDE.md#hue-only-with-festavia-direct) |
+
+**A fixed background with a moving snake:** choose the background colors and a
+separate trail palette. The background returns after the trail passes.
+
+<img src="docs/ui/festavia-snake-preview.gif" width="290" alt="Recording of the Home Assistant preview with a white and cyan snake moving left over red, green and purple">
+
+The HA captures use the released UI with **27 demo pucks**. Hue screenshots are
+from the project owner's actual app. The animation records the **on-screen
+preview**, not physical light performance. Animated patterns use up to nine
+repeating positions; static colors can cover every detected puck, up to 48.
+
+[Explore the screenshot guide](docs/UI_GUIDE.md) ·
+[Download the illustrated PDF](docs/ui/Festavia-Studio-UI-Walkthrough.pdf)
+
 ## Choose your edition
 
 | Where you want to adjust your lights | Download | Start here |
@@ -174,6 +197,7 @@ Companion app once to load the updated card.
 | Color wave | Move a rolling wave of palette colors |
 | Breathing | Fade the repeated colors up and down |
 | Heartbeat | Pulse the repeated colors twice per cycle |
+| Snake over background | Move a separate trail over a fixed background that returns behind it |
 
 In YAML-managed dashboards, add the module resource
 `/festavia_studio/festavia-studio-card.js` to your dashboard resources manually.
