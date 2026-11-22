@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320">
+<rect width="1200" height="320" fill="#f6f7f9"/>
+<text x="40" y="35" font-family="sans-serif" font-size="22">garage-15ft-256 — 4572 mm — 11 lights</text>
+<path d="M60 145H1140" stroke="#53616d" stroke-width="22"/>
+<path d="M84.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M132.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M168.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M204.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M252.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M288.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M324.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M372.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M420.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M456.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M492.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M540.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M576.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M612.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M660.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M708.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M744.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M780.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M828.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M864.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M900.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M948.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M996.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M1032.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M1068.0 132V158" stroke="white" stroke-width="2"/>
+<path d="M1116.0 132V158" stroke="white" stroke-width="2"/>
+<circle cx="120.0" cy="145" r="9" fill="#faaf3c"/><text x="120.0" y="181" text-anchor="middle" font-size="11">L1</text>
+<circle cx="216.0" cy="145" r="9" fill="#faaf3c"/><text x="216.0" y="181" text-anchor="middle" font-size="11">L2</text>
+<circle cx="312.0" cy="145" r="9" fill="#faaf3c"/><text x="312.0" y="181" text-anchor="middle" font-size="11">L3</text>
+<circle cx="408.0" cy="145" r="9" fill="#faaf3c"/><text x="408.0" y="181" text-anchor="middle" font-size="11">L4</text>
+<circle cx="504.0" cy="145" r="9" fill="#faaf3c"/><text x="504.0" y="181" text-anchor="middle" font-size="11">L5</text>
+<circle cx="600.0" cy="145" r="9" fill="#faaf3c"/><text x="600.0" y="181" text-anchor="middle" font-size="11">L6</text>
+<circle cx="696.0" cy="145" r="9" fill="#faaf3c"/><text x="696.0" y="181" text-anchor="middle" font-size="11">L7</text>
+<circle cx="792.0" cy="145" r="9" fill="#faaf3c"/><text x="792.0" y="181" text-anchor="middle" font-size="11">L8</text>
+<circle cx="888.0" cy="145" r="9" fill="#faaf3c"/><text x="888.0" y="181" text-anchor="middle" font-size="11">L9</text>
+<circle cx="984.0" cy="145" r="9" fill="#faaf3c"/><text x="984.0" y="181" text-anchor="middle" font-size="11">L10</text>
+<circle cx="1080.0" cy="145" r="9" fill="#faaf3c"/><text x="1080.0" y="181" text-anchor="middle" font-size="11">L11</text>
+<path d="M89.0 110L96.0 125L103.0 110Z" fill="#268981"/><text x="96.0" y="95" text-anchor="middle" font-size="10">B1: 152.4</text>
+<path d="M233.0 110L240.0 125L247.0 110Z" fill="#268981"/><text x="240.0" y="95" text-anchor="middle" font-size="10">B2: 762</text>
+<path d="M377.0 110L384.0 125L391.0 110Z" fill="#268981"/><text x="384.0" y="95" text-anchor="middle" font-size="10">B3: 1371.6</text>
+<path d="M521.0 110L528.0 125L535.0 110Z" fill="#268981"/><text x="528.0" y="95" text-anchor="middle" font-size="10">B4: 1981.2</text>
+<path d="M665.0 110L672.0 125L679.0 110Z" fill="#268981"/><text x="672.0" y="95" text-anchor="middle" font-size="10">B5: 2590.8</text>
+<path d="M809.0 110L816.0 125L823.0 110Z" fill="#268981"/><text x="816.0" y="95" text-anchor="middle" font-size="10">B6: 3200.4</text>
+<path d="M953.0 110L960.0 125L967.0 110Z" fill="#268981"/><text x="960.0" y="95" text-anchor="middle" font-size="10">B7: 3810</text>
+<path d="M1097.0 110L1104.0 125L1111.0 110Z" fill="#268981"/><text x="1104.0" y="95" text-anchor="middle" font-size="10">B8: 4419.6</text>
+<text x="60" y="230" font-family="sans-serif" font-size="15">Orange: lights · Green: brackets · White: joints. All positions measured from the LEFT cap face.</text>
+<text x="60" y="260" font-family="sans-serif" font-size="15">Use assembly.csv for pin direction and cut-list.csv for piece numbers. Schematic: cross-section not to scale.</text>
+</svg>

@@ -81,6 +81,18 @@ On macOS its application executable is commonly
 `/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD`.
 The output folder must be new; existing folders are never overwritten.
 
+### Read the plan before printing
+
+To preview the included 15 ft example, run this from the track directory and open `my-preview/layout.svg` in a browser.
+
+```sh
+python make_track.py --config examples/garage-256.json --plan-only --output my-preview
+```
+
+![Desktop exporter layout with 11 orange pucks, eight bracket positions and the numbered run’s seams](../assets/manual/desktop-layout.svg)
+
+The first bracket in this example sits **152.4 mm from the left cap face**. Read the other green bracket labels from the same end. Orange circles show the pucks and white ticks show the seams. Look up each section in `cut-list.csv` and its pin direction in `assembly.csv`. To make printable files, run the command again without `--plan-only` and give it a new output folder.
+
 ### Saved configurations
 
 Copy a file in `examples/`, change its name and measurements, then run:
