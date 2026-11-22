@@ -9,32 +9,37 @@ a Hue integration. Independent community design; not affiliated with Signify.
 
 ![A completed straight track with the Festavia pucks illuminating the siding](assets/installed-run.jpg)
 
-## Start here
+## Build your first run
 
-**[Customize on MakerWorld](https://makerworld.com/en/models/3665672-festavia-track-modular-soffit-mount-for-hue)** · **[Download the complete track kit](https://raw.githubusercontent.com/Dyluhn/festavia-studio/track-downloads/v0.1.1/Festavia-MakerWorld.zip)**. Extract the ZIP and open `workbench/index.html` in your browser, or use the three SCAD files in MakerWorld.
+### 1. Measure one straight side
 
-1. [Configure your track (PDF)](docs/Festavia-Configuration-Guide.pdf) · [Phone/browser edition](docs/Festavia-Configuration-Guide.html). Measure your run, set puck spacing and bracket positions, then check and export the plates in MakerWorld.
-2. [Assemble your track (PDF)](docs/Festavia-Assembly-Manual.pdf) · [Phone/browser edition](docs/Festavia-Assembly-Manual.html). Follow the illustrated puck, joint, bracket and cable-routing sequence for your own layout.
-3. [Optional boxes and cable clips](accessories/README.md). Choose the cable slack box, the power-supply cradle or just the clips. The offline workbench includes all seven parts under **Boxes & clips**.
+Measure the finished length **from the outside face of one end cap to the outside face of the other**. Use the left cap as your zero for bracket and puck positions. At a corner or roof change, measure a second supported run. Check that the puck has a roughly 35 mm body and 49 × 20 mm mounting tabs.
 
-**Bambu users** can edit dimensions and generate printable plates online. Open the [MakerWorld guide and SCAD files](makerworld/README.md) for a single section, fit tests or a whole run. The workbench’s **Save MakerWorld model** button carries your current measurements into the online editor.
+![Length measured along a straight run between the two outside cap faces](assets/manual/measure.svg)
 
-Open the [offline HTML workbench](workbench/index.html) and choose **Design a section** to change its length, ends, holder and receiver positions, shell thickness and joint fit. **Design a run** recalculates puck positions, brackets, joints, sections and packed plates from your measurements. Both views generate STL geometry on your device using the release OpenSCAD model. Save a section as editable SCAD or a run as a JSON configuration for the whole-kit exporter. **Explore examples** opens the five reference layouts and the community ZIP verifier.
+Write down the length, your chosen puck spacing and the usable width and depth of your printer bed. For example, a 15 ft run is **4,572 mm** and 16 in spacing is **406.4 mm**. Bed dimensions stay in millimetres in both designers. [Configuration guide with settings and examples (PDF)](docs/Festavia-Configuration-Guide.pdf)
 
-1. Read [Getting started](docs/GETTING_STARTED.md).
-2. Print the small [fit-first kit](docs/ASSEMBLY.md#fit-first) with your intended
-   material and settings before making a complete run.
-3. Customize `festavia_track.scad` in OpenSCAD, or open the **Make Track** launcher
-   for your computer to export a complete kit. The launcher uses Python 3.12+ and
-   OpenSCAD. It prepares its own geometry-tool environment on the first build.
-4. Follow your generated `layout.svg`, `cut-list.csv` and `assembly.csv`.
+### 2. Generate the numbered pieces
 
-[Reference build and print settings (PDF)](docs/Festavia-Track-Guide.pdf)
+| Where to design | What to do |
+| --- | --- |
+| **MakerWorld** | Open the [model listing](https://makerworld.com/en/models/3665672-festavia-track-modular-soffit-mount-for-hue), select **Customize** and choose **Festavia-Run**. Enter dimensions in mm, select **Generate**, then check **Assemble View**. [Illustrated MakerWorld walkthrough](makerworld/README.md#try-it-online) |
+| **Offline workbench** | [Download the kit](https://raw.githubusercontent.com/Dyluhn/festavia-studio/track-downloads/v0.1.1/Festavia-MakerWorld.zip), extract it and open `workbench/index.html`. Choose **Design a run**, enter your measurements and wait for the puck, section and plate totals. [Illustrated workbench walkthrough](workbench/README.md) |
+| **Desktop exporter** | For a complete cut list, BOM and per-joint pin schedule, open the **Make Track** launcher in a [source checkout](https://github.com/Dyluhn/festavia-studio/tree/main/track) or the [desktop example archive](https://raw.githubusercontent.com/Dyluhn/festavia-studio/track-downloads/v0.1.1/festavia-track-0.1.0-community-beta.zip). [Desktop setup and export](docs/GETTING_STARTED.md#customize-your-run) |
 
-The [desktop example archive](https://raw.githubusercontent.com/Dyluhn/festavia-studio/track-downloads/v0.1.1/festavia-track-0.1.0-community-beta.zip) includes ready-to-slice STL and geometry-only 3MF examples for
-180 mm and 256 mm beds. The 3MF files contain individually named components;
-they contain **no printer-specific G-code or machine profile**. Slice them for
-your own printer. Use either packed plates or individual parts, not both.
+![Offline workbench with 180 inch run length, 16 inch puck spacing and 256 mm bed dimensions](assets/manual/workbench-run.jpg)
+
+With the pictured settings, expect **11 puck positions, 27 track sections and 12 plates**. To print a single replacement or check a joint fit, choose **Festavia-Section** in MakerWorld or **Design a section** in the workbench.
+
+### 3. Slice and assemble
+
+Open each generated 3MF in your slicer. Choose your printer and PETG profile, keep the parts at 100% scale, and use tree supports on the bracket and lever plates. In the supplied 15 ft P1S example, those are plates 8 and 9. Single-nozzle track sections have built-in breakaway ribs and print with slicer supports off.
+
+Start with a joint and a puck holder. With the string unplugged, seat the puck, turn its ring and fit the stop pin. Join the numbered sections on a padded bench. Fit each seam with two splice bars and two cross pins. Transfer the bracket positions to the soffit, lift the track with its levers open, then close each lever. [Follow the illustrated assembly steps](docs/ASSEMBLY.md) · [Print the assembly manual (PDF)](docs/Festavia-Assembly-Manual.pdf)
+
+### 4. Route the cable
+
+Use the rectangular cable box for low-voltage slack, the arched cradle for a compatible factory power supply, and flat or round clips for exposed cable. Each base has its own cover. [Choose the parts and follow the installation pictures](accessories/README.md).
 
 ## What you can change
 

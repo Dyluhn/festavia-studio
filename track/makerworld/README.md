@@ -1,6 +1,6 @@
 # Customize your Festavia track on MakerWorld
 
-[Configure your track (PDF)](../docs/Festavia-Configuration-Guide.pdf) · [Assembly picture manual (PDF)](../docs/Festavia-Assembly-Manual.pdf) · [Phone-friendly configuration](../docs/Festavia-Configuration-Guide.html) · [Phone-friendly assembly](../docs/Festavia-Assembly-Manual.html)
+[Configure your track (PDF)](../docs/Festavia-Configuration-Guide.pdf) · [Assembly picture manual (PDF)](../docs/Festavia-Assembly-Manual.pdf) · [Measure and plan on GitHub](../README.md#build-your-first-run) · [Assembly steps on GitHub](../docs/ASSEMBLY.md)
 
 For Philips Hue Festavia permanent outdoor puck lights. Start with the **section** to check the fit on your printer. Choose the **run** to lay out a complete straight soffit, including its brackets, end caps and joint hardware.
 
@@ -12,7 +12,7 @@ For Philips Hue Festavia permanent outdoor puck lights. Start with the **section
 
 ## Try it online
 
-Open [Festavia Track on MakerWorld](https://makerworld.com/en/models/3665672-festavia-track-modular-soffit-mount-for-hue) and select **Customize**. To load a downloaded SCAD file with your own settings, use the Creator Portal steps below.
+Open [Festavia Track on MakerWorld](https://makerworld.com/en/models/3665672-festavia-track-modular-soffit-mount-for-hue) and select **Customize**. Choose **Festavia-Run** for all pieces or **Festavia-Section** for a single piece. If you started on the listing, proceed to step 2. If you have a downloaded SCAD file, import it in step 1.
 
 1. Sign in to [MakerWorld Parametric Model Maker](https://makerworld.com/en/makerlab/parametricModelMaker). Choose **Creator Portal → Open SCAD File** and select one of the files above. Close the **Code** drawer with its × to see the model and controls together.
 2. Edit a measurement and select **Generate**. To try a section, change **piece length** from 180 to 207.5 mm. Both use the same puck opening and joint. The printed overall length includes the projecting tongue.
@@ -24,13 +24,19 @@ For example, 4,572 mm at 406.4 mm puck spacing on a 256 × 256 mm bed gives **11
 
 ![The online editor showing numbered puck sections on the first print plate](plate-preview.jpg)
 
+### Make one replacement
+
+Open **Festavia-Section** and choose the track section under **Output**. Match the section length, end types and position of the puck holder or bracket receiver to the original. Select **Generate** and compare the preview before downloading at 100% scale.
+
+![Single section in MakerWorld with the length and end settings beside the part](../assets/manual/online-section.png)
+
 ## Print the fit test first
 
 Open the 3MF in Bambu Studio, select your actual printer, plate and filament, and check the layer preview. The tested P1S download came with a 0.4 mm nozzle and **PLA** selected. Choose the intended **PETG** profile for the reference fit. With single-nozzle ribs enabled, the track prints supports-off. Brackets and levers have their own plates and need tree supports. For the 4,572 mm reference run, enable tree supports on plates 8 and 9. The joint coupon checks the splice bars and cross pins. The holder/receiver coupon checks the breakaway ribs and fit with your puck, ring and lever. The [assembly guide](../docs/ASSEMBLY.md) covers fitting and fastening.
 
 ## Take an offline design online
 
-In the [HTML workbench](../workbench/index.html), choose **Design a section** or **Design a run**, enter your dimensions, then select **Save MakerWorld model**. Import that file through **Open SCAD File**. The design opens with your settings as editable defaults. Run lengths entered in inches transfer as millimetres. Saving a run exports the complete parametric plan beginning with batch 1, whichever part is on screen. The existing run JSON export also produces a configuration for the desktop kit builder and its cut list and assembly schedule.
+Open the [offline workbench](../workbench/README.md) from the extracted kit. Choose **Design a section** or **Design a run**, enter your dimensions, then select **Save MakerWorld model**. Import that file through **Open SCAD File**. The design opens with your settings as editable defaults. Run lengths entered in inches transfer as millimetres. Saving a run exports the complete parametric plan beginning with batch 1, whichever part is on screen. The existing run JSON export also produces a configuration for the desktop kit builder and its cut list and assembly schedule.
 
 ## For the community listing
 

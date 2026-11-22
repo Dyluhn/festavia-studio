@@ -1,10 +1,10 @@
 # Print and assemble
 
-Follow the [illustrated bench and installation manual](Festavia-Assembly-Manual.pdf) or its [phone edition](Festavia-Assembly-Manual.html). Pages 6–7 cover the optional cable box, supply cradle and clips.
+Use these pictures at the bench, or [download the seven-page assembly manual](Festavia-Assembly-Manual.pdf) to print. For the optional boxes and clips, follow the [accessory installation guide](../accessories/README.md).
 
 ## Fit first
 
-Print these with the material, nozzle and layer height intended for the run:
+In MakerWorld choose **Festavia-Section** and select a joint test or holder/receiver test under **Output**. A complete desktop export provides the following files. Print with the material, nozzle and layer height intended for your run:
 
 1. `fit-first/joint-test.3mf`: two short track ends, two splice bars and two pins.
 2. `fit-first/nozzle-test.3mf`: a holder section and receiver section with
@@ -39,7 +39,7 @@ be inferred from a mesh check.
 
 ## Print the run
 
-Use your kit's `PRINT-LIST.txt` and `bom.csv`. Choose either:
+With MakerWorld, download each batch shown in **Assemble View** and print its packed plates once. With the desktop exporter, use the generated `PRINT-LIST.txt` and `bom.csv` and choose one printing method:
 
 - **Packed plates:** print each plate once; its quantity already includes spares.
 - **Individual parts:** print each numbered track once, and the `print_total`
@@ -54,18 +54,25 @@ exporter have their bases at z=0. The cable channel faces the soffit when instal
 
 ## Assemble on the bench
 
-![Holder with ring and stop pin](../assets/02_light_holder_ring.png)
+Work left to right as seen from the street, following the engraved numbers. Keep the string unplugged and lay the visible faces on a padded bench.
 
-1. Work left to right as seen from the street, piece 1 through N. Protect the
-   visible faces on the bench. Keep the light string unpowered during assembly.
-2. Fit the pucks, turn each ring 20° to lock, and insert its ring stop pin.
-   Lay loose cable along the centre; do not stretch it between holders.
-3. Lower the next piece's **left tongue end** into the previous piece's **right
-   socket end**. Press one splice bar into each side slot, legs down.
-4. Insert two cross pins from the side listed in `assembly.csv`. The row names
-   the exact piece to approach from. Both pins go in from that same piece.
-5. Add the two end caps and their selected gates last. A wire gate goes wherever
-   cable must leave the run. Keep factory connectors and seals intact.
+### Seat each puck and lock the ring
+
+| 1. Seat the puck | 2. Turn the ring | 3. Fit the stop pin |
+| --- | --- | --- |
+| ![Puck lowered through the face opening](../assets/manual/light-puck.png) | ![Ring turning on the back of the holder](../assets/manual/light-turn.png) | ![Stop pin sliding into the locked ring](../assets/manual/light-pin.png) |
+
+Guide the lens through the opening, align the ring tabs with the gaps and seat the ring flat. Looking into the open back, turn the ring **20° counterclockwise** to its stop. Press in the ring stop pin and check that the ring cannot turn back. Leave cable slack loose down the middle of the channel.
+
+### Join two sections
+
+| 1. Lower the tongues | 2. Seat both bars | 3. Slide in both pins |
+| --- | --- | --- |
+| ![Tongues aligned above the previous section’s sockets](../assets/manual/joint-seat.png) | ![One splice bar over each side of the seam](../assets/manual/joint-bars.png) | ![Two pins approaching from the same numbered section](../assets/manual/joint-pins.png) |
+
+Lower the next section’s left tongues into the previous section’s right sockets. Press one bar into each side slot, legs down. Insert both cross pins lengthwise **from the same numbered section** until the barbs catch. The desktop kit names that piece in `assembly.csv`. With MakerWorld, use the side with more clearance to the nearest puck or receiver. A side with no feature is clear. For equal clearances use the left section. Check the insertion path before seating the pins.
+
+Slide a cap onto each end. Fit a slotted gate where the cable enters or exits and a blank gate at a closed end. Keep the factory connectors accessible.
 
 The joint has a deliberate 0.4 mm seam. Do not glue or force the seam closed.
 Crush ribs seat on first assembly, so reassembled joints may feel different.
@@ -73,10 +80,9 @@ Inspect them and replace damaged bars/pins before reuse.
 
 ## Mount the run
 
-![Bracket with its lever open and the track being lifted](../assets/04_bracket_lever_lift.png)
+![Transferring the receiver centres from an assembled track to a marked strip](../assets/manual/bracket-transfer.svg)
 
-1. Mark bracket centres from `layout.svg` / `plan.json`, measured from the **left
-   end-cap face**. Use backing suitable for the complete loaded run.
+1. Mark the **outside face of the left cap** and each receiver centre on a nonstretch strip laid along the assembled run. Transfer the marks to sound backing with the same left-hand zero. A desktop kit also lists these positions in `layout.svg` and `plan.json`.
 2. Use two exterior screws per bracket and two per end cap. CAD has 4.6 mm through
    holes/slots and 9 mm bracket-head recesses. A suitable approximately 4 mm shank,
    head no larger than 8.5 mm and head height no greater than 3.8 mm leaves fit
@@ -86,6 +92,10 @@ Inspect them and replace damaged bars/pins before reuse.
 4. Slide every lever to the locked position; check each latch and captive stop.
    Secure the end-cap ears. Confirm the cable is free and every puck is retained.
 5. Power and check the lights using their normal Hue setup.
+
+![Open receivers lifted straight into their brackets](../assets/manual/install-lift.png)
+
+![Lever sliding closed after the track has seated](../assets/manual/install-lock.png)
 
 Place brackets at most 24 in apart and within 8 in of each end. Fasten into solid
 backing behind the soffit. Keep electrical connections in their factory housings

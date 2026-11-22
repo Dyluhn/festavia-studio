@@ -1,6 +1,6 @@
 # Make a track for your run
 
-Start with the [parametric configuration walkthrough](Festavia-Configuration-Guide.pdf) or its [phone edition](Festavia-Configuration-Guide.html). It covers measurement, two worked bed sizes, MakerWorld exports and the optional accessories.
+Start with the [parametric configuration walkthrough](Festavia-Configuration-Guide.pdf) or the [illustrated steps on GitHub](../README.md#build-your-first-run). It covers measurement, two worked bed sizes, MakerWorld exports and the optional accessories.
 
 ## Choose the route
 
@@ -23,7 +23,7 @@ before committing to a large print. See the [Hue product specification](https://
 
 ## Use ready-made files
 
-The release package's `printable-examples/` directory includes a 15 ft / 16 in
+The [desktop example archive](https://raw.githubusercontent.com/Dyluhn/festavia-studio/track-downloads/v0.1.1/festavia-track-0.1.0-community-beta.zip) contains the `printable-examples/` directory. It includes a 15 ft / 16 in
 spacing example for a 256 mm bed and a 10 ft example for a 180 mm bed. These are
 complete example runs, not universal tracks that must fit every house.
 

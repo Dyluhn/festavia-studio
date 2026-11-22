@@ -33,7 +33,7 @@ every count 1–48. Read [the validation record](VALIDATION.md) before buying ha
 
 ## 1. Download and extract
 
-Download **festavia-direct-0.5.1.zip** from the
+Download [festavia-direct-0.5.1.zip](https://github.com/Dyluhn/festavia-studio/releases/download/v0.13.0/festavia-direct-0.5.1.zip) from the
 [v0.13.0 project beta](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
 Choose the standalone **Festavia Direct** package and check it against the release's
 `SHA256SUMS`. Project and firmware versions are separate: this project release
@@ -63,9 +63,17 @@ Python environment; you do not need to run pip or create a virtual environment.
 
 ## 3. Follow the named choices
 
-Choose **New controller** for an ESP32-C6 you intend to install.
+When the launcher asks for a number, you should see this menu. Choose **1** for a new board. Once it is paired, use **2**, **3** or **4** to work with that existing controller.
 
-The wizard:
+```text
+Festavia Direct setup
+  1. New controller - first USB installation
+  2. Continue/repair saved setup
+  3. Update firmware over Wi-Fi
+  4. Check a controller without changing it
+```
+
+Follow the prompts in this order.
 
 1. Finds USB-to-UART ports and asks you to choose if there are several.
 2. Asks for your 2.4 GHz Wi-Fi name.
@@ -99,6 +107,10 @@ check. An existing gradient/effect may be refused before playback starts.
 Then open the new **Festavia Direct** zone and recall **Festavia preset 1**.
 The initial saved program runs at 9%. Use **Festavia · Master** to stop it.
 
+<img src="../docs/ui/09-hue-direct-zone.jpg" width="305" alt="Festavia Direct zone in the Hue app with Festavia preset 1 under My scenes">
+
+Look for **Festavia preset 1** under **My scenes**, as shown above. The tile under **Lights** opens the controller.
+
 That completes installation. You can disconnect the USB data cable and power
 the C6 from a suitable USB supply. Keep it powered; it runs the effects.
 **Home Assistant and the installer computer are not needed for daily use.**
@@ -109,7 +121,13 @@ The named "lights" in the control zone are parameter controls. Open the individu
 control you want to change. **Master is the real output brightness.** Brightness
 on the other controls is a setting value, not lamp brightness.
 
-For a repeating three-color layout:
+### Set a static repeat
+
+Open the controller tile and swipe the strip under the color wheel until you see **Festavia · Master**, **Festavia · Colour** and **Festavia · Position**. Hue can give several tiles the same large title, **Extended color light 1**. Use the smaller role name on each tile to choose which setting to change.
+
+<img src="../docs/ui/10-hue-colour-and-position.jpg" width="305" alt="Hue color wheel with the Master, Colour and Position roles labeled on the bottom strip">
+
+To repeat three colors across the run:
 
 1. Leave **Master off**. Set **Preset / Apply** to **1%** to select slot 1 before editing.
 2. Open **Palette**. Select the **coldest white** position and set brightness to
@@ -123,7 +141,13 @@ For a repeating three-color layout:
 
 The colors repeat `1, 2, 3, 1, 2, 3…` across the detected puck count.
 
-For a snake with a background that returns after it passes:
+### Make a moving snake
+
+Swipe the same strip to reach **Palette**, **Motion** and **Direction**. These control the layers and movement of the saved program.
+
+<img src="../docs/ui/11-hue-palette-motion-direction.jpg" width="305" alt="Hue controller strip scrolled to Position, Palette, Motion and Direction">
+
+To keep a fixed background and move a different-colored trail over it:
 
 1. Keep those background colors. Turn **Master off** while setting up the next layer.
 2. Set **Palette** to the **middle white** position, then brightness to **2%** for
@@ -132,6 +156,12 @@ For a snake with a background that returns after it passes:
    to **5%** for normal speed or **10%** for double speed.
 4. Set **Direction** to **1%** for left or **100%** for right. Save at **50%** on
    **Preset / Apply**, then turn **Master on**.
+
+### Save and recall it
+
+After saving the program, recall **Festavia preset 1** in the zone to use it again. **Master off** stops playback and restores the captured light state. To keep another look, select a different preset slot *before editing*, then save it and create a Hue scene for recall. [Preset slot commands and how to save a Hue scene](../docs/UI_GUIDE.md#adjust-shape-and-save-a-complete-preset).
+
+<img src="../docs/ui/12-hue-shape-and-presets.jpg" width="305" alt="Far end of the Hue control strip with the Preset / Apply tile beside Shape">
 
 The [complete control reference](README.md#daily-use-in-the-hue-app) covers snake
 width, smoothing, individually colored pucks, the other modes, and saving more

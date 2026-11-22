@@ -1,11 +1,6 @@
 # Install Festavia Studio
 
-Everything after first ESP32 setup lives in Home Assistant: connection settings,
-palettes, effects, scenes, Hue handoff and firmware updates. The optional palette
-card goes on your existing dashboard. It has no separate server or app.
-
-See the [illustrated UI guide](UI_GUIDE.md#home-assistant) for the color editor,
-separate snake/background palettes, saved scenes and native device controls.
+Install the integration, connect your Hue bridge, then build a palette on your Studio device or dashboard. If you already have Studio running, jump to [your first palette](#5-make-your-first-palette) or [the pictured guide to editing and saving scenes](UI_GUIDE.md#home-assistant).
 
 ## Choose a mode
 
@@ -20,33 +15,27 @@ cut strings; no size selection or different firmware is needed. Physical testing
 uses one 27-position installation. Other Festavia models/versions can use bridge
 gradients; they are not automatically qualified for direct puck control.
 
-Native static palettes can have one unique color per detected puck. Native
-animations use up to nine repeating color positions. A larger static palette
-takes several seconds to apply. These are different transports, not an arbitrary
-full-string animation promise. See [compatibility](COMPATIBILITY.md).
+Native static palettes can have one unique color per detected puck. A larger static palette takes several seconds to apply. Native animations use up to nine repeating color positions. [Compatibility details](COMPATIBILITY.md)
 
 HAOS and HA Container work. Keep the original Hue integration if you already use
 it. The lights stay paired to Hue. The round first-generation bridge is unsupported.
 
+**Which steps apply?** For bridge gradients, follow steps 1 and 2, then skip to [step 5](#5-make-your-first-palette). For individual puck effects, follow all five steps. The Home Assistant screenshots show Studio 0.13.0 with a demo fixture.
+
 ## 1. Install the integration
 
 Download the [v0.13.0 public beta](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
-Choose a Home Assistant archive below; the separate Direct ZIP is the Hue-only edition.
+For a new ESP32-C6, get the [full Studio setup ZIP](https://github.com/Dyluhn/festavia-studio/releases/download/v0.13.0/festavia-studio-0.13.0.zip). For bridge gradients or a controller already running the HA firmware, the [integration ZIP](https://github.com/Dyluhn/festavia-studio/releases/download/v0.13.0/festavia-studio-integration-0.13.0.zip) is sufficient. Choose one installation method below.
 
 ### Release ZIP: works without HACS
 
-1. For a new C6, download `festavia-studio-0.13.0.zip`; it includes the integration
-   and setup launcher. Otherwise the smaller `festavia-studio-integration-0.13.0.zip`
-   is sufficient. Compare the download against `festavia-studio-0.13.0-SHA256SUMS`.
+1. Compare your downloaded ZIP against `festavia-studio-0.13.0-SHA256SUMS` on the release page.
 2. Extract the ZIP. Copy its `custom_components/festavia_studio` folder into your
    HA configuration's `custom_components` folder. The final path must be
    `<config>/custom_components/festavia_studio/manifest.json`; avoid an extra
    nested `festavia-studio` or `custom_components` directory.
 3. Restart Home Assistant. Open **Settings → Devices & services → Add integration
    → Festavia Studio**.
-
-Use the integration ZIP for HA. The larger `festavia-studio-<version>.zip` includes
-the first USB installer, firmware, source, licenses and developer tests.
 
 ### Marketplace on Home Assistant 2026.11+
 
@@ -114,7 +103,17 @@ Connect the C6's UART port, then open the launcher in the extracted
 The launcher prepares its Python environment and installs its dependencies. You
 do not need to run pip, create a venv or edit configuration files.
 
-Choose **New controller**. Setup finds USB-to-UART ports, asks you to choose when
+The launcher opens this menu. Choose **1** for a new C6.
+
+```text
+Festavia Studio · Home Assistant setup
+  1. New controller · USB installation
+  2. Continue an interrupted installation
+  3. Get the HA connection file again · Wi-Fi
+  4. Check a controller · Wi-Fi
+```
+
+Setup finds USB-to-UART ports, asks you to choose when
 several exist, and asks for the Wi-Fi name. Check the board/port, then type
 **INSTALL** to replace firmware/settings on **that C6**. It verifies the bundled
 image before flashing, prompts privately for the Wi-Fi password, and verifies
@@ -183,31 +182,27 @@ at a time.
 
 ## 5. Make your first palette
 
-Open the Studio device in **Devices & services**. Set its brightness limit and
-keep **Allow Hue takeover** enabled if Hue should regain control when you use it.
-For the first check, set the limit to **15%** and playback brightness to **9%**.
-Choose a solid color/white on the actual Festavia in Hue and stop native Hue
-scenes/effects so Studio can capture a restorable baseline. Choose Static repeat
-and three colors, then enable
-Studio playback. Each color occupies one puck, in order, and repeats. Stop and
-restore returns the pre-play appearance. Return control to Hue hands off without
-restoring an earlier scene.
+After setup, look for this entry on the **Devices & services** page. Select its device to open the playback controls.
 
-For visual editing, edit an existing dashboard, choose **Add card → By card**, search for
-**Festavia Studio**, and pick its playback entity in the visual editor. The
-integration registers the card resource automatically. Use an editable dashboard;
-HA’s automatic Home dashboard has different editing controls. Native device
-controls work without adding any dashboard or card. No separate card repository,
-editor app or dashboard is installed.
+<img src="ui/05-ha-native-integration.jpg" width="720" alt="Completed Festavia Studio entry in Home Assistant Devices and services with its controller device">
+
+1. Open **Settings → Devices & services → Festavia Studio** and open its device. Under **Configuration**, set **Brightness limit** to 15% for a first check. Set playback brightness to 9%. For individual puck effects, first choose a plain color on the physical light in Hue and stop any running Hue effect so Studio can restore that appearance later.
+2. On the device, choose the static effect and set **Palette** to `#ff0000, #00ff00, #9900ff`. For a fixture with fewer than three available palette positions, enter only as many colors as it supports. Press **Play**. In **Bridge gradients**, Hue spreads your colors across the string. In **Individual puck effects**, the colors repeat in your chosen order, one per puck.
+3. Choose **Stop and restore** to return to the captured appearance. For individual puck effects, **Return control to Hue** releases control at the current appearance. Enable **Allow Hue takeover** if ordinary Hue changes should end Studio playback.
+
+<img src="ui/06-ha-native-device-settings.jpg" width="720" alt="Studio device in Home Assistant with playback, brightness limit and Hue takeover controls">
+
+### Edit colors on a dashboard
+
+On an editable dashboard, choose **Edit → Add card → By card → Festavia Studio**, choose the Studio playback sensor, and save the card. Tap **+** to add a color, then tap its numbered swatch. Use the wheel to change the color and **Move** to change where it appears in the repeat. The preview follows the order of the swatches.
+
+<img src="ui/03-ha-color-picker.jpg" width="315" alt="A selected swatch in the card opens a color wheel, hue slider and Move controls">
+
+Save the colors with **Save palette**. To recall the brightness, direction, speed and animation together with the colors, use **Save scene**. [See both save controls and make a moving snake over a fixed background](UI_GUIDE.md#give-the-snake-its-own-colors).
 
 For a YAML-managed dashboard, use `type: custom:festavia-studio-card` and your
 Studio playback sensor as `entity`, and register the module resource
 `/festavia_studio/festavia-studio-card.js` in that dashboard's resources.
-
-Tap a numbered swatch to edit it. **Color palette** saves colors; **Scene** saves
-colors plus animation, brightness, speed and direction. Snake over background
-has separate background and snake palettes. No card is required for native
-entities or automation actions.
 
 ## Updates and recovery
 
