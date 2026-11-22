@@ -1,0 +1,18 @@
+{
+  "kit_version": "0.1.0",
+  "printer": "",
+  "nozzle_mm": null,
+  "material_brand_type_color": "",
+  "layer_height_mm": null,
+  "fit_profile": "A0",
+  "structure_profile": "as_installed",
+  "single_nozzle": true,
+  "joint_seats_and_latches": "untested",
+  "rib_removal": "untested",
+  "puck_and_ring_fit": "untested",
+  "bracket_lever_travel_and_latch": "untested",
+  "cable_clearance": "untested",
+  "repeated_assembly": "untested",
+  "outdoor_duration_days": null,
+  "notes": ""
+}

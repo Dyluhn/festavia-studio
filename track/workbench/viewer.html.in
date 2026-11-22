@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob:; worker-src blob:; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'"><title>Festavia Track · Community workbench</title><style>/*THEME*/</style></head>
+<body>
+<header><div class="mast"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><strong>Festavia Track</strong><span class="mast-divider">/</span><span class="mast-sub">Community workbench</span><span class="ver">v0.1.0</span></div></header>
+<main>
+<section class="intro"><div><h1>Track workbench</h1><p>Change dimensions to regenerate the track in your browser.</p></div>
+<div class="import"><label class="primary file-label"><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19V7h7l2 3h9l-3 9zM3 7V5h7l2 2h7v3"/></svg><span id="openLabel">Open desktop example ZIP</span><input id="archive" type="file" accept=".zip,application/zip"></label><span id="source" class="badge">Built-in examples</span></div></section>
+<div id="feedback" role="status" aria-live="polite" hidden></div>
+<nav class="modes" aria-label="Workbench mode"><button data-mode="section" aria-pressed="true">Design a section</button><button data-mode="run" aria-pressed="false">Design a run</button><button data-mode="accessories" aria-pressed="false">Boxes &amp; clips</button><button data-mode="examples" aria-pressed="false">Explore examples</button></nav>
+<section class="workspace">
+<article class="viewer card">
+<div class="card-head"><div><div class="eyebrow">Part viewer</div><h2 id="modelTitle">Loading model…</h2></div><span class="file-tag">STL</span></div>
+<div class="viewport"><canvas id="canvas" tabindex="0" aria-label="3D part preview. Drag to rotate or use the arrow keys."></canvas>
+<div class="viewnote">Drag to rotate</div><div class="viewtools"><button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button><button id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button><button id="reset" title="Reset view" aria-label="Reset view">↺</button></div></div>
+<div class="model-info"><span id="bounds">—</span><span id="bodies"></span></div>
+<div id="outputs"><div id="targetBox" hidden><label for="target">Preview model</label><select id="target"><option value="auto">First puck section</option></select></div><div class="actions"><button id="customStl" disabled>Download STL ↓</button><button id="customSettings" disabled>Save design ↓</button><button id="saveMakerWorld" disabled>Save MakerWorld model ↓</button></div>
+<p class="hint makerworld-help">To edit this design online, load the saved .scad file in <a href="https://makerworld.com/en/makerlab/parametricModelMaker" target="_blank" rel="noopener noreferrer">MakerWorld Parametric Model Maker</a> under Creator Portal → Open SCAD File.</p></div></article>
+__EDITOR__
+<aside id="examplesPanel" class="card controls" hidden><div class="eyebrow">Example kit</div><h2>Inspect a run</h2>
+<label for="example">Configuration</label><select id="example"></select>
+<div class="stats"><div><strong id="lights"></strong><span>Pucks</span></div><div><strong id="pieces"></strong><span>Sections</span></div><div><strong id="plates"></strong><span>Plates</span></div></div>
+<label for="part">Printable model</label><select id="part"></select>
+<button class="secondary" id="saveModel">Download STL <span aria-hidden="true">↓</span></button>
+<p class="hint" id="availability">Open the ZIP to browse every part and packed plate.</p>
+</aside></section>
+<section class="card layout" id="layoutCard" hidden><div class="layouthead"><div><div class="eyebrow">Assembly layout</div><h2 id="runTitle">Run layout</h2></div><div class="legend"><span><b class="puck"></b>Puck</span><span><b class="bracket"></b>Bracket</span><span><b class="joint"></b>Joint</span></div></div><div id="drawing"></div>
+<div class="layoutmeta"><span id="dimensions"></span><span id="material"></span></div></section>
+<div class="lower" id="examplesFiles" hidden><section class="card experiment"><div class="eyebrow">Layout calculator</div><h2>Try a run</h2><p>Choose from the 1,100 layouts tested with the kit’s planner.</p>
+<div class="fields"><label>Run (in)<select id="length"></select></label><label>Puck spacing (in)<select id="spacing"></select></label><label>Bed (mm)<select id="bed"></select></label></div>
+<p class="result" id="result" aria-live="polite"></p>
+<button id="saveConfig" class="textbtn">Save configuration JSON ↓</button><details><summary>Build this configuration</summary><p>Extract the community ZIP, place the saved JSON beside <code>make_track.py</code>, then run this command with Python 3.12+ and OpenSCAD installed.</p><code id="command"></code></details>
+</section>
+<section class="card downloads"><div class="eyebrow">Package files</div><h2>Test the download</h2><p id="checkText">Open the desktop example ZIP to verify and extract files for the selected kit. Everything runs on this device.</p>
+<label for="resource">File to extract</label><select id="resource" disabled><option value="pdf">Illustrated assembly guide · PDF</option><option value="bom.csv">Bill of materials · CSV</option><option value="cut-list.csv">Section cut list · CSV</option><option value="assembly.csv">Pin insertion schedule · CSV</option><option value="config.json">Original example configuration · JSON</option><option value="plan.json">Complete run plan · JSON</option><option value="layout.svg">Full layout drawing · SVG</option><option value="3mf">Selected model · 3MF</option></select>
+<button id="extract" class="secondary" disabled>Extract file <span aria-hidden="true">↓</span></button></section></div>
+<details class="credits"><summary>OpenSCAD engine and licenses</summary><p>Local rendering uses openscad-wasm 0.0.4 and the Liberation Sans font. <a href="https://github.com/openscad/openscad-wasm">Engine source and build instructions</a> · <a href="https://www.npmjs.com/package/openscad-wasm/v/0.0.4">Engine package</a></p><pre>__LICENSES__</pre></details></main>
+<script id="release" type="application/json">__RELEASE__</script><script type="application/octet-stream" id="runtime">__RUNTIME__</script><script type="text/plain" id="cadWorker">/*WORKER*/</script><script>/*APP*/
+/*CUSTOM*/</script>
+</body></html>

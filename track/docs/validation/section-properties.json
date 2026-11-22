@@ -1,0 +1,38 @@
+{
+  "openscad": "OpenSCAD version 2026.11.06",
+  "model_sha256": "2361cb69bc1c149056a19309aff5536abde3f6d940a3f4dc7dffc775593db3d2",
+  "section_x_mm": 30,
+  "rows": [
+    {
+      "profile": "as_installed",
+      "area_mm2": 189.11999999999995,
+      "centroid_z_mm": 7.8734348561759715,
+      "vertical_bending_I_mm4": 14716.97053671742,
+      "lateral_bending_I_mm4": 96153.30560000002,
+      "area_ratio": 1.0,
+      "vertical_I_ratio": 1.0,
+      "lateral_I_ratio": 1.0
+    },
+    {
+      "profile": "custom",
+      "area_mm2": 258.5599999999997,
+      "centroid_z_mm": 7.86138613861386,
+      "vertical_bending_I_mm4": 19389.86514587458,
+      "lateral_bending_I_mm4": 124252.43306666658,
+      "area_ratio": 1.3671742808798635,
+      "vertical_I_ratio": 1.3175174263955167,
+      "lateral_I_ratio": 1.2922325685146965
+    },
+    {
+      "profile": "reinforced",
+      "area_mm2": 337.9200000000001,
+      "centroid_z_mm": 8.175757575757574,
+      "vertical_bending_I_mm4": 24785.107006060633,
+      "lateral_bending_I_mm4": 157587.8656,
+      "area_ratio": 1.7868020304568537,
+      "vertical_I_ratio": 1.6841174577488067,
+      "lateral_I_ratio": 1.6389230158718533
+    }
+  ],
+  "meaning": "Geometric second moments at a plain channel cross-section. EI comparisons assume identical material and print properties. Not FEA, joint stiffness, strength, creep, wind or service-life qualification."
+}

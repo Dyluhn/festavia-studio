@@ -1,7 +1,9 @@
 name: Validate package
 on:
   push:
+    paths-ignore: ['track/**', '.github/workflows/track.yml', '.github/ISSUE_TEMPLATE/track.yml']
   pull_request:
+    paths-ignore: ['track/**', '.github/workflows/track.yml', '.github/ISSUE_TEMPLATE/track.yml']
   workflow_dispatch:
 permissions:
   contents: read

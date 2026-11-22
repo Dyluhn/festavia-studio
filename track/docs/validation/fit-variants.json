@@ -1,0 +1,70 @@
+{
+  "model_sha256": "2361cb69bc1c149056a19309aff5536abde3f6d940a3f4dc7dffc775593db3d2",
+  "openscad": "OpenSCAD version 2026.11.06",
+  "cases": [
+    {
+      "fit": "A0",
+      "profile": "as_installed",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "A0",
+      "profile": "custom",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "A0",
+      "profile": "reinforced",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "loose",
+      "profile": "as_installed",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "loose",
+      "profile": "custom",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "loose",
+      "profile": "reinforced",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "tight",
+      "profile": "as_installed",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "tight",
+      "profile": "custom",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "fit": "tight",
+      "profile": "reinforced",
+      "bodies": 6,
+      "pass": true
+    },
+    {
+      "support_gap": 0.2,
+      "bodies": 2,
+      "pass": true
+    },
+    {
+      "support_gap": 0.5,
+      "bodies": 2,
+      "pass": true
+    }
+  ]
+}

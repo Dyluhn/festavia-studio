@@ -1,0 +1,154 @@
+{
+  "openscad": "OpenSCAD version 2026.11.06",
+  "reference_sha256": "b04a94a8a9aa144c2dfcb2df290633b1172209e26a7b2b4b5caff2e500b9eaf8",
+  "model_sha256": "2361cb69bc1c149056a19309aff5536abde3f6d940a3f4dc7dffc775593db3d2",
+  "cases": [
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 1
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 2
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 3
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 5
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 7
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 8
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "piece",
+      "parameters": {
+        "piece_number": 27
+      },
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "bracket",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "lever",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "splice_bar",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "jb6_pin",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "end_cap",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "gate_wire",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "gate_blank",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "lock_ring",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "ring_stop_pin",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "bracket_stop_pin",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "clip_flat",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    },
+    {
+      "part": "clip_round",
+      "parameters": {},
+      "symmetric_difference_percent": 0.0,
+      "bbox_max_delta_mm": 0.0,
+      "pass": true
+    }
+  ]
+}

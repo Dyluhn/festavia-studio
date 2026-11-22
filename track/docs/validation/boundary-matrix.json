@@ -1,0 +1,1160 @@
+{
+  "openscad": "OpenSCAD version 2026.11.06",
+  "model_sha256": "2361cb69bc1c149056a19309aff5536abde3f6d940a3f4dc7dffc775593db3d2",
+  "cases": [
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 24,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 5,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 24,
+      "spacing_in": 16,
+      "lights": 2,
+      "pieces": 6,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 24,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 5,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 48,
+      "spacing_in": 12,
+      "lights": 4,
+      "pieces": 10,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 48,
+      "spacing_in": 16,
+      "lights": 3,
+      "pieces": 10,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 48,
+      "spacing_in": 21,
+      "lights": 2,
+      "pieces": 9,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 64,
+      "spacing_in": 12,
+      "lights": 5,
+      "pieces": 11,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 64,
+      "spacing_in": 16,
+      "lights": 4,
+      "pieces": 13,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 64,
+      "spacing_in": 21,
+      "lights": 3,
+      "pieces": 13,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 96,
+      "spacing_in": 12,
+      "lights": 8,
+      "pieces": 20,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 96,
+      "spacing_in": 16,
+      "lights": 6,
+      "pieces": 19,
+      "brackets": 7,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 96,
+      "spacing_in": 21,
+      "lights": 5,
+      "pieces": 19,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 120,
+      "spacing_in": 12,
+      "lights": 10,
+      "pieces": 25,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 120,
+      "spacing_in": 16,
+      "lights": 8,
+      "pieces": 24,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 120,
+      "spacing_in": 21,
+      "lights": 6,
+      "pieces": 23,
+      "brackets": 7,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 180,
+      "spacing_in": 12,
+      "lights": 15,
+      "pieces": 38,
+      "brackets": 8,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 180,
+      "spacing_in": 16,
+      "lights": 11,
+      "pieces": 34,
+      "brackets": 12,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 180,
+      "spacing_in": 21,
+      "lights": 9,
+      "pieces": 35,
+      "brackets": 9,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 300,
+      "spacing_in": 12,
+      "lights": 25,
+      "pieces": 63,
+      "brackets": 13,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 300,
+      "spacing_in": 16,
+      "lights": 19,
+      "pieces": 66,
+      "brackets": 15,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 300,
+      "spacing_in": 21,
+      "lights": 14,
+      "pieces": 57,
+      "brackets": 15,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 125,
+      "brackets": 26,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 600,
+      "spacing_in": 16,
+      "lights": 38,
+      "pieces": 114,
+      "brackets": 29,
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        180
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 115,
+      "brackets": 29,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 24,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 3,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 24,
+      "spacing_in": 16,
+      "lights": 2,
+      "pieces": 5,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 24,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 48,
+      "spacing_in": 12,
+      "lights": 4,
+      "pieces": 7,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 48,
+      "spacing_in": 16,
+      "lights": 3,
+      "pieces": 7,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 48,
+      "spacing_in": 21,
+      "lights": 2,
+      "pieces": 7,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 64,
+      "spacing_in": 12,
+      "lights": 5,
+      "pieces": 10,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 64,
+      "spacing_in": 16,
+      "lights": 4,
+      "pieces": 9,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 64,
+      "spacing_in": 21,
+      "lights": 3,
+      "pieces": 9,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 96,
+      "spacing_in": 12,
+      "lights": 8,
+      "pieces": 13,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 96,
+      "spacing_in": 16,
+      "lights": 6,
+      "pieces": 15,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 96,
+      "spacing_in": 21,
+      "lights": 5,
+      "pieces": 14,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 120,
+      "spacing_in": 12,
+      "lights": 10,
+      "pieces": 16,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 120,
+      "spacing_in": 16,
+      "lights": 8,
+      "pieces": 18,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 120,
+      "spacing_in": 21,
+      "lights": 6,
+      "pieces": 19,
+      "brackets": 7,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 180,
+      "spacing_in": 12,
+      "lights": 15,
+      "pieces": 23,
+      "brackets": 9,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 180,
+      "spacing_in": 16,
+      "lights": 11,
+      "pieces": 27,
+      "brackets": 8,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 180,
+      "spacing_in": 21,
+      "lights": 9,
+      "pieces": 25,
+      "brackets": 12,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 300,
+      "spacing_in": 12,
+      "lights": 25,
+      "pieces": 38,
+      "brackets": 14,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 300,
+      "spacing_in": 16,
+      "lights": 19,
+      "pieces": 38,
+      "brackets": 20,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 300,
+      "spacing_in": 21,
+      "lights": 14,
+      "pieces": 44,
+      "brackets": 15,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "brackets": 26,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 600,
+      "spacing_in": 16,
+      "lights": 38,
+      "pieces": 77,
+      "brackets": 37,
+      "pass": true
+    },
+    {
+      "bed": [
+        220,
+        220
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "brackets": 30,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 24,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 3,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 24,
+      "spacing_in": 16,
+      "lights": 2,
+      "pieces": 5,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 24,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 48,
+      "spacing_in": 12,
+      "lights": 4,
+      "pieces": 7,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 48,
+      "spacing_in": 16,
+      "lights": 3,
+      "pieces": 7,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 48,
+      "spacing_in": 21,
+      "lights": 2,
+      "pieces": 7,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 64,
+      "spacing_in": 12,
+      "lights": 5,
+      "pieces": 10,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 64,
+      "spacing_in": 16,
+      "lights": 4,
+      "pieces": 9,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 64,
+      "spacing_in": 21,
+      "lights": 3,
+      "pieces": 9,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 96,
+      "spacing_in": 12,
+      "lights": 8,
+      "pieces": 13,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 96,
+      "spacing_in": 16,
+      "lights": 6,
+      "pieces": 15,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 96,
+      "spacing_in": 21,
+      "lights": 5,
+      "pieces": 14,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 120,
+      "spacing_in": 12,
+      "lights": 10,
+      "pieces": 16,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 120,
+      "spacing_in": 16,
+      "lights": 8,
+      "pieces": 18,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 120,
+      "spacing_in": 21,
+      "lights": 6,
+      "pieces": 15,
+      "brackets": 7,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 180,
+      "spacing_in": 12,
+      "lights": 15,
+      "pieces": 23,
+      "brackets": 9,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 180,
+      "spacing_in": 16,
+      "lights": 11,
+      "pieces": 27,
+      "brackets": 8,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 180,
+      "spacing_in": 21,
+      "lights": 9,
+      "pieces": 25,
+      "brackets": 12,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 300,
+      "spacing_in": 12,
+      "lights": 25,
+      "pieces": 38,
+      "brackets": 14,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 300,
+      "spacing_in": 16,
+      "lights": 19,
+      "pieces": 38,
+      "brackets": 20,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 300,
+      "spacing_in": 21,
+      "lights": 14,
+      "pieces": 44,
+      "brackets": 15,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "brackets": 26,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 600,
+      "spacing_in": 16,
+      "lights": 38,
+      "pieces": 77,
+      "brackets": 37,
+      "pass": true
+    },
+    {
+      "bed": [
+        256,
+        256
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "brackets": 30,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 24,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 3,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 24,
+      "spacing_in": 16,
+      "lights": 2,
+      "pieces": 5,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 24,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "brackets": 2,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 48,
+      "spacing_in": 12,
+      "lights": 4,
+      "pieces": 7,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 48,
+      "spacing_in": 16,
+      "lights": 3,
+      "pieces": 7,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 48,
+      "spacing_in": 21,
+      "lights": 2,
+      "pieces": 7,
+      "brackets": 3,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 64,
+      "spacing_in": 12,
+      "lights": 5,
+      "pieces": 10,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 64,
+      "spacing_in": 16,
+      "lights": 4,
+      "pieces": 9,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 64,
+      "spacing_in": 21,
+      "lights": 3,
+      "pieces": 9,
+      "brackets": 4,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 96,
+      "spacing_in": 12,
+      "lights": 8,
+      "pieces": 13,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 96,
+      "spacing_in": 16,
+      "lights": 6,
+      "pieces": 15,
+      "brackets": 5,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 96,
+      "spacing_in": 21,
+      "lights": 5,
+      "pieces": 14,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 120,
+      "spacing_in": 12,
+      "lights": 10,
+      "pieces": 16,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 120,
+      "spacing_in": 16,
+      "lights": 8,
+      "pieces": 18,
+      "brackets": 6,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 120,
+      "spacing_in": 21,
+      "lights": 6,
+      "pieces": 15,
+      "brackets": 7,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 180,
+      "spacing_in": 12,
+      "lights": 15,
+      "pieces": 23,
+      "brackets": 9,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 180,
+      "spacing_in": 16,
+      "lights": 11,
+      "pieces": 27,
+      "brackets": 8,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 180,
+      "spacing_in": 21,
+      "lights": 9,
+      "pieces": 25,
+      "brackets": 12,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 300,
+      "spacing_in": 12,
+      "lights": 25,
+      "pieces": 38,
+      "brackets": 14,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 300,
+      "spacing_in": 16,
+      "lights": 19,
+      "pieces": 38,
+      "brackets": 20,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 300,
+      "spacing_in": 21,
+      "lights": 14,
+      "pieces": 44,
+      "brackets": 15,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "brackets": 26,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 600,
+      "spacing_in": 16,
+      "lights": 38,
+      "pieces": 77,
+      "brackets": 37,
+      "pass": true
+    },
+    {
+      "bed": [
+        350,
+        320
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "brackets": 30,
+      "pass": true
+    }
+  ],
+  "passed": 96,
+  "failed": 0
+}

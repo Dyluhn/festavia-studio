@@ -94,6 +94,8 @@ def main():
     def add(folder, target):
         for path in sorted(folder.rglob("*")):
             relative_parts = path.relative_to(folder).parts
+            if target == ".github" and path.name == "track.yml":
+                continue
             if set(relative_parts) & excluded:
                 continue
             if path.is_symlink():
@@ -118,8 +120,11 @@ def main():
                 raise ValueError("Private runtime file in release source")
             entries[(Path(target) / path.relative_to(folder)).as_posix()] = path.read_bytes()
 
+    # In a source checkout the root README introduces both projects. The extracted
+    # Studio kit already carries the standalone controller guide at README.md.
+    guide = ROOT / "STUDIO.md"
+    entries["README.md"] = (guide if guide.is_file() else ROOT / "README.md").read_bytes()
     for name in (
-        "README.md",
         "CONTRIBUTING.md",
         "SECURITY.md",
         "CHANGELOG.md",

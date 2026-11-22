@@ -1,0 +1,356 @@
+{
+  "openscad": "OpenSCAD version 2026.11.06",
+  "model_sha256": "2361cb69bc1c149056a19309aff5536abde3f6d940a3f4dc7dffc775593db3d2",
+  "cases": [
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 12,
+      "spacing_in": 12,
+      "result": "refused: mechanisms cannot fit this short run",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 12,
+      "spacing_in": 21,
+      "result": "refused: mechanisms cannot fit this short run",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 16,
+      "spacing_in": 12,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 16,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 20,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 4,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 20,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 599,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 599,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        180,
+        400
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 12,
+      "spacing_in": 12,
+      "result": "refused: mechanisms cannot fit this short run",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 12,
+      "spacing_in": 21,
+      "result": "refused: mechanisms cannot fit this short run",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 16,
+      "spacing_in": 12,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 16,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 20,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 4,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 20,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 599,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 599,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        180
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 12,
+      "spacing_in": 12,
+      "result": "refused: mechanisms cannot fit this short run",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 12,
+      "spacing_in": 21,
+      "result": "refused: mechanisms cannot fit this short run",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 16,
+      "spacing_in": 12,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 16,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 20,
+      "spacing_in": 12,
+      "lights": 2,
+      "pieces": 4,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 20,
+      "spacing_in": 21,
+      "lights": 1,
+      "pieces": 3,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 599,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 599,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 600,
+      "spacing_in": 12,
+      "lights": 50,
+      "pieces": 76,
+      "result": "valid layout",
+      "pass": true
+    },
+    {
+      "bed": [
+        400,
+        400
+      ],
+      "length_in": 600,
+      "spacing_in": 21,
+      "lights": 29,
+      "pieces": 86,
+      "result": "valid layout",
+      "pass": true
+    }
+  ],
+  "passed": 30,
+  "failed": 0
+}

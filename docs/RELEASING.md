@@ -6,6 +6,16 @@ edition. Direct firmware keeps its independent image version. Never publish a
 separate `hue-direct-v...` release in this repository: HACS reads the shared feed
 and would offer the wrong product tag as an integration version.
 
+## Printable track downloads
+
+Track has its own version and [source directory](https://github.com/Dyluhn/festavia-studio/tree/main/track). From that directory, run the Track tests, then build the complete ZIP with:
+
+```sh
+python makerworld/package.py --reference-3mf examples/Festavia-15ft-P1S.3mf --output dist/Festavia-MakerWorld.zip
+```
+
+Publish print archives in a new version directory on the [track-downloads branch](https://github.com/Dyluhn/festavia-studio/tree/track-downloads). Include SHA256SUMS and update the download links in the project guides. Keep previous version directories available for existing links and reproducible builds. This keeps HACS and Marketplace on Studio's version stream. If preparing a software release from a track-only commit, run **Validate package** using its manual workflow trigger.
+
 ## Prepare and validate
 
 1. Align the integration manifest, const.py and card header. Keep the image version

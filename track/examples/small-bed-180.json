@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "name": "small-bed-10ft",
+  "parameters": {
+    "run_length": 120,
+    "light_spacing": 16,
+    "bed_x": 180,
+    "bed_y": 180
+  }
+}

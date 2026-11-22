@@ -32,6 +32,10 @@ class SetupPackageTests(unittest.TestCase):
             report = json.loads(result.stdout)
             with zipfile.ZipFile(report["archive"]) as archive:
                 archive.extractall(root / "build/folder with spaces")
+                self.assertFalse(
+                    any(n.startswith("festavia-studio/track/") for n in archive.namelist())
+                )
+                self.assertIn(b"## Install and connect", archive.read("festavia-studio/README.md"))
                 for name in ("Setup Home Assistant Linux.sh", "Setup Home Assistant macOS.command"):
                     self.assertTrue(
                         archive.getinfo("festavia-studio/" + name).external_attr >> 16 & 0o111
@@ -75,6 +79,8 @@ class SetupPackageTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             with zipfile.ZipFile(report["integration_archive"]) as archive:
                 self.assertIn("docs/INSTALL.md", archive.namelist())
+                self.assertIn(b"## Install and connect", archive.read("README.md"))
+                self.assertFalse(any(n.startswith("track/") for n in archive.namelist()))
                 self.assertIn("custom_components/festavia_studio/connection.py", archive.namelist())
                 self.assertFalse(
                     any("launchers" in n or n.startswith("tools/") for n in archive.namelist())

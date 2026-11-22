@@ -1,0 +1,29 @@
+name: Track design, fit or printing
+description: Report a fit result or a problem with the track planner, printed parts or assembly guides
+body:
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part are you working with?
+      options:
+        - Planning a run or exporting plates
+        - Puck holder, track or joint
+        - Bracket or lever
+        - Boxes, covers or cable clips
+        - Assembly or configuration guide
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Track version and setup
+      description: Include the design tool you used. For print or fit reports, include printer, nozzle and material.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What did you try and what happened?
+      description: Include relevant measurements and settings, such as bed size, puck spacing or joint fit.
+    validations:
+      required: true

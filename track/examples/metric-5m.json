@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "metric-5m",
+  "parameters": {
+    "length_unit": "mm",
+    "run_length": 5000,
+    "light_spacing": 400,
+    "light_margin_min": 100,
+    "bracket_spacing_max": 600,
+    "bracket_end_max": 200
+  }
+}

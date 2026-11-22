@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "name": "large-bed-25ft",
+  "parameters": {
+    "run_length": 300,
+    "light_spacing": 16,
+    "bed_x": 350,
+    "bed_y": 320
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "version": "0.1.0",
+  "date": "2026-11-18",
+  "qualification": "CAD-validated community beta; no new physical prints or load/outdoor qualification",
+  "model_sha256": "2361cb69bc1c149056a19309aff5536abde3f6d940a3f4dc7dffc775593db3d2",
+  "exporter_sha256": "f0479395cb658d3aeab2960a500039345142fd589443c0c6c8b3f1db05a00416",
+  "regression_tests_passed": 13,
+  "dense_layouts_passed": 1100,
+  "boundary_matrix_layouts_passed": 96,
+  "extra_boundary_cases": {
+    "valid_layouts": 24,
+    "correct_short_run_refusals": 6
+  },
+  "complete_kits": 9,
+  "stl_models": 426,
+  "matching_3mf_models": 426,
+  "public_example_kits": [
+    {
+      "name": "garage-15ft-256",
+      "run_mm": 4572,
+      "lights": 11,
+      "pieces": 27,
+      "brackets": 8,
+      "plates": 12,
+      "stl_3mf_pairs": 51
+    },
+    {
+      "name": "small-bed-10ft",
+      "run_mm": 3048,
+      "lights": 8,
+      "pieces": 24,
+      "brackets": 6,
+      "plates": 15,
+      "stl_3mf_pairs": 51
+    },
+    {
+      "name": "reinforced-15ft",
+      "run_mm": 4572,
+      "lights": 11,
+      "pieces": 27,
+      "brackets": 8,
+      "plates": 12,
+      "stl_3mf_pairs": 51
+    },
+    {
+      "name": "metric-5m",
+      "run_mm": 5000,
+      "lights": 13,
+      "pieces": 25,
+      "brackets": 12,
+      "plates": 13,
+      "stl_3mf_pairs": 50
+    },
+    {
+      "name": "large-bed-25ft",
+      "run_mm": 7620,
+      "lights": 19,
+      "pieces": 38,
+      "brackets": 20,
+      "plates": 14,
+      "stl_3mf_pairs": 64
+    }
+  ],
+  "additional_export_cases": "Three saved-coordinate house runs and one rotated-bed/custom-shell/cable-clip configuration; private house coordinates excluded from this distribution",
+  "reference_part_comparisons": 19,
+  "previous_model_printed_geometry_oracles": {
+    "cases_passed": 20,
+    "max_symmetric_difference_percent": 0.24364661568575618,
+    "meaning": "Prior-model comparison to saved manufacturing meshes, using its documented tolerances/engraving allowances; no new physical fit test"
+  },
+  "interface_swept_positions_per_profile": 175,
+  "interface_profiles": [
+    "as_installed",
+    "reinforced"
+  ],
+  "deliberate_bad_bore_control": "failed as expected",
+  "coupon_variant_checks_passed": 11,
+  "slicer_checks_passed": 29,
+  "sliced_input_hashes_match_final_3mf": true,
+  "legacy_backend": {
+    "version": "OpenSCAD 2021.01",
+    "reference_parts": 19,
+    "coupons": 2,
+    "measured_plans": 3,
+    "timing": "Same part geometry; before final boundary/spare/print-list corrections"
+  },
+  "untested": [
+    "New physical printer/material fit and rib release",
+    "Whole-assembly strength, wind, thermal creep, weathering and service life",
+    "Windows/macOS launcher execution",
+    "MakerWorld cloud runtime"
+  ],
+  "evidence_folder": "validation/"
+}

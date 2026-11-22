@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "name": "reinforced-15ft",
+  "parameters": {
+    "run_length": 180,
+    "structure_profile": "reinforced"
+  }
+}

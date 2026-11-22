@@ -1,0 +1,40 @@
+<aside class="card controls editor" id="editor">
+<h2 id="editorTitle">Section dimensions</h2>
+<form id="params" novalidate>
+<div id="sectionInputs">
+<label>Section length (mm)<input id="piece_length" type="number" value="180" min="40" max="240" step="any" required></label>
+<input id="lengthSlider" type="range" min="40" max="240" step="1" value="180" aria-label="Adjust section length in millimetres">
+<div class="pair"><label>Left end<select id="left_end"><option value="tongue">Tongue</option><option value="cap">Cap end</option></select></label><label>Right end<select id="right_end"><option value="socket">Socket</option><option value="cap">Cap end</option></select></label></div>
+<div class="pair"><label class="check"><input id="has_light" type="checkbox" checked>Puck holder</label><label class="check"><input id="has_mount" type="checkbox">Bracket receiver</label></div>
+<div class="pair"><label>Holder offset (mm)<input id="light_mm" type="number" step="any" value="32" required></label><label>Receiver offset (mm)<input id="mount_mm" type="number" step="any" value="-35" required></label></div>
+<p class="hint">Offsets start at the section centre. Negative values move a feature left.</p>
+</div>
+<div id="runInputs" hidden>
+<div class="pair"><label>Length unit<select id="length_unit"><option value="in">Inches</option><option value="mm">Millimetres</option></select></label><label>Run length<input id="run_length" type="number" step="any" value="180" required></label></div>
+<div class="pair"><label>Puck spacing<input id="light_spacing" type="number" step="any" value="16" required></label><label>Min. end margin<input id="light_margin_min" type="number" step="any" value="4" required></label></div>
+<div class="pair"><label>Bed width (mm)<input id="bed_x" type="number" min="180" max="400" step="any" value="256" required></label><label>Bed depth (mm)<input id="bed_y" type="number" min="180" max="400" step="any" value="256" required></label></div>
+<details><summary>Mounting, gates and hardware</summary>
+<div class="pair"><label>Max. bracket spacing<input id="bracket_spacing_max" type="number" value="24" step="any" required></label><label>Max. bracket end gap<input id="bracket_end_max" type="number" value="8" step="any" required></label></div>
+<div class="pair"><label>Light placement<select id="light_placement"><option value="auto">Centred</option><option value="fixed">Fixed first puck</option></select></label><label>First puck offset<input id="first_light_offset" type="number" value="10" step="any" required></label></div>
+<label>Existing bracket centres (mm)<input id="bracket_centres_mm" type="text" maxlength="2500" placeholder="Automatic, or enter comma-separated positions"></label>
+<div class="pair"><label>Start gate<select id="start_gate"><option value="blank">Blank</option><option value="wire">Wire exit</option></select></label><label>End gate<select id="end_gate"><option value="wire">Wire exit</option><option value="blank">Blank</option></select></label></div>
+<div class="pair"><label>Flat cable clips<input type="number" id="clips_flat" min="0" max="40" value="0" required></label><label>Round cable clips<input type="number" id="clips_round" min="0" max="40" value="0" required></label></div>
+<label>Spare hardware (%)<input type="number" id="spare_percent" min="0" max="50" value="10" required></label>
+<label class="check"><input id="engrave_numbers" type="checkbox" checked>Engrave section numbers</label>
+<label class="check"><input id="group_supported_pieces" type="checkbox" checked>Group supported sections on plates</label>
+</details></div>
+<div id="accessoryInputs" hidden>
+<label>Component<select id="component">
+<optgroup label="Cable storage"><option value="cable-base">Cable box base</option><option value="cable-lid">Cable box v2 lid</option></optgroup>
+<optgroup label="Power supply"><option value="psu-base">Power supply cradle</option><option value="psu-cover">Power supply v2 cover</option><option value="siding-shim">Siding shim</option></optgroup>
+<optgroup label="Cable management"><option value="flat-clip">Flat-wire clip</option><option value="round-clip">Round-cord clip</option></optgroup></select></label>
+<label>Copies on this plate<input id="small_part_copies" type="number" min="1" max="40" step="1" value="1" required></label>
+<div class="pair"><label>Usable bed width (mm)<input id="accessoryBedX" type="number" min="180" max="400" step="1" value="256" required></label><label>Usable bed depth (mm)<input id="accessoryBedY" type="number" min="180" max="400" step="1" value="256" required></label></div>
+<p class="hint" id="accessoryHint"></p>
+</div>
+<div id="trackSettings"><div class="pair"><label>Shell<select id="structure_profile"><option value="as_installed">Installed reference</option><option value="reinforced">Reinforced · 3.2 mm</option><option value="custom">Custom thickness</option></select></label><label>Joint fit<select id="fit_profile"><option value="A0">A0 reference</option><option value="loose">Looser</option><option value="tight">Tighter</option></select></label></div>
+<div class="pair" id="walls" hidden><label>Face (mm)<input id="face_skin" type="number" min="1.6" max="3.2" step="any" value="2.4" required></label><label>Side walls (mm)<input id="side_wall" type="number" min="1.8" max="3.2" step="any" value="2.4" required></label></div>
+<details><summary>Print settings</summary><label class="check"><input type="checkbox" checked id="single_nozzle">Single-nozzle breakaway ribs</label><label>Rib air gap (mm)<input id="support_gap" type="number" value="0.3" min="0.2" max="0.5" step="any" required></label><p class="hint">The puck bore and bracket interface use the dimensions of the installed hardware.</p></details>
+</div></form>
+<div id="customStatus" role="status" aria-live="polite"></div>
+</aside>

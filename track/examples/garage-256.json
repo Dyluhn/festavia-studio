@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "name": "garage-15ft-256",
+  "parameters": {
+    "run_length": 180,
+    "light_spacing": 16,
+    "bed_x": 256,
+    "bed_y": 256
+  }
+}

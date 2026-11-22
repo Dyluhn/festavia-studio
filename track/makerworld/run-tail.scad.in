@@ -1,0 +1,54 @@
+// MakerWorld invokes each plate module separately. A partial last batch leaves
+// unused slots empty. No top-level solids are added to the printable plates.
+BATCH_SIZE = plates_per_file;
+BATCHES = ceil(N_PLATES / BATCH_SIZE);
+FIRST_PLATE = (batch_number - 1) * BATCH_SIZE + 1;
+module checked_run() {
+    assert(SPACING >= SPACING_MIN-1e-6 && SPACING <= SPACING_MAX+1e-6,
+           "Enter puck spacing between 304.8 and 533.4 mm.");
+    assert(PLAN != undef, "No layout fits these measurements. Check end margins, spacing and bed size.");
+    assert(N_LIT == N_LIGHTS_FIT, "This layout would omit a puck. Adjust the margins, bed or spacing.");
+    assert(batch_number >= 1 && batch_number <= BATCHES && batch_number == floor(batch_number),
+           str("Batch number must be a whole number from 1 to ", BATCHES, "."));
+    checked_inputs() children();
+}
+module batch_plate(slot) {
+    n = FIRST_PLATE + slot - 1;
+    // The desktop packer measures from a bed corner. MakerWorld previews use a centered origin.
+    checked_run() if (slot <= BATCH_SIZE && n <= N_PLATES) translate([-bed_x/2, -bed_y/2, 0]) plate(n);
+}
+module mw_plate_1() { batch_plate(1); }
+module mw_plate_2() { batch_plate(2); }
+module mw_plate_3() { batch_plate(3); }
+module mw_plate_4() { batch_plate(4); }
+module mw_plate_5() { batch_plate(5); }
+module mw_plate_6() { batch_plate(6); }
+module mw_plate_7() { batch_plate(7); }
+module mw_plate_8() { batch_plate(8); }
+module mw_plate_9() { batch_plate(9); }
+module mw_plate_10() { batch_plate(10); }
+module mw_plate_11() { batch_plate(11); }
+module mw_plate_12() { batch_plate(12); }
+module mw_plate_13() { batch_plate(13); }
+module mw_plate_14() { batch_plate(14); }
+module mw_plate_15() { batch_plate(15); }
+module mw_plate_16() { batch_plate(16); }
+
+// The normalized strip reads left to right in physical installation order.
+// The whole diagram is a MakerWorld preview and is excluded from the 3MF.
+module mw_assembly_view() {
+    width = 160;
+    checked_run() translate([-width/2, 0, 0]) {
+        linear_extrude(0.8) {
+            text(str(_fmt(RUN), " mm  /  ", N_LIT, " pucks  /  ", NP, " sections"), size=5);
+            translate([0,-9]) text(str("Batch ", batch_number, " of ", BATCHES, "  /  plates ",
+                FIRST_PLATE, " to ", min(N_PLATES, FIRST_PLATE+BATCH_SIZE-1), " of ", N_PLATES), size=5);
+        }
+        translate([0,12]) {
+            color("Gray") cube([width,3,1]);
+            color("Orange") for(x=LIGHTS) translate([width*x/RUN,3,1]) cylinder(r=1.6,h=1,$fn=16);
+            color("Teal") for(x=BRACKETS) translate([width*x/RUN-0.6,-2,0]) cube([1.2,2,1]);
+            color("Black") for(x=JOINTS) translate([width*x/RUN-0.25,0,1]) cube([0.5,3,0.5]);
+        }
+    }
+}

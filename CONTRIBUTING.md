@@ -1,5 +1,9 @@
 # Contributing
 
+For the printable mount, work in `track/` and follow the [Track contributor guide](https://github.com/Dyluhn/festavia-studio/blob/main/track/CONTRIBUTING.md) for fit reports, CAD changes and tests.
+
+## Studio controllers
+
 Use ordinary Home Assistant config flows, entities, actions, update entities and
 diagnostics. Runtime settings must remain usable without the palette card. Do not
 add a separate application or generated dashboard as a requirement.

@@ -1,362 +1,42 @@
-# Festavia Studio
-
-![Festavia Studio](custom_components/festavia_studio/brand/icon.png)
-
-A Home Assistant custom integration for Philips Hue Festavia lights. Create an
-ordered palette, repeat one color per puck, animate it, and use it in ordinary
-Home Assistant automations. Your lights remain on their Hue bridge.
-
-The Home Assistant edition **0.13.0** runs directly inside Home Assistant. **No add-on, web app, iframe,
-YAML package or separate dashboard is required.** An optional custom card makes
-palette editing visual. This is independent community software.
-
-## See it in action
-
-Build an ordered palette, choose an effect, and save the look. Use the native
-Home Assistant controls and optional card, or install the separate Direct edition
-to adjust settings through the stock Hue app.
-
-| Home Assistant: palette and playback | Hue app: the Direct controller |
-|:---:|:---:|
-| [<img src="docs/ui/02-ha-mobile-repeat.jpg" width="250" alt="Home Assistant card with three ordered colors repeating across 27 demo pucks">](docs/UI_GUIDE.md#home-assistant) | [<img src="docs/ui/10-hue-colour-and-position.jpg" width="290" alt="Hue app color wheel and the Festavia Master, Colour and Position controls">](docs/UI_GUIDE.md#hue-only-with-festavia-direct) |
-
-**A fixed background with a moving snake:** choose the background colors and a
-separate trail palette. The background returns after the trail passes.
-
-<img src="docs/ui/festavia-snake-preview.gif" width="290" alt="Recording of the Home Assistant preview with a white and cyan snake moving left over red, green and purple">
-
-The HA captures use the released UI with **27 demo pucks**. Hue screenshots are
-from the project owner's actual app. The animation records the **on-screen
-preview**, not physical light performance. Animated patterns use up to nine
-repeating positions; static colors can cover every detected puck, up to 48.
-
-[Explore the screenshot guide](docs/UI_GUIDE.md) ·
-[Download the illustrated PDF](docs/ui/Festavia-Studio-UI-Walkthrough.pdf)
-
-## Choose your edition
-
-| Where you want to adjust your lights | Download | Start here |
-|---|---|---|
-| Home Assistant devices, automations and optional palette card | `festavia-studio-0.13.0.zip` for a new C6; integration ZIP for an existing controller | [Home Assistant installation](docs/INSTALL.md) |
-| Stock Hue app controls and scenes, with no HA required | `festavia-direct-0.5.1.zip` | [Hue-only installation](hue-direct/GETTING_STARTED.md) |
-
-Get both editions from the [v0.13.0 public beta release](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0).
-They use different ESP32 firmware; install one edition on a controller at a time.
-Normal same-edition updates are wireless. Initial setup requires USB, and recovery
-or switching editions can require it again. Existing lights stay paired to Hue.
-
-This is an experimental beta: LCX030 / 1.163.5 and a 27-puck BSB003 installation
-are physically qualified. Every quantity 1–48 and BSB002 responses have software
-tests; more household hardware reports are needed. See [compatibility](docs/COMPATIBILITY.md).
-
-## Snake over a background
-
-In the existing card, choose **Snake over background**. Set **Background colors**
-for the fixed pattern, then add and edit **Snake colors** for the moving block.
-The background returns in place after the snake passes. Direction and Speed
-control the movement; each chosen snake color occupies one puck at a whole step.
-Intermediate frames blend smoothly. Both layers share the main brightness control.
-
-The pattern repeats in at most nine puck positions. Its length is the largest
-multiple of the background palette count that fits nine slots (three background
-colors give nine positions; four give eight). Leave at least one background puck
-between snakes. The card shows the repeat and gap. On a 27-puck fixture this gives
-several repeated snakes, rather than one isolated snake across the entire string.
-It never animates the fixture's configuration map.
-
-Use **Palette to save** to save either layer as ordinary colors. Each layer also
-has its own saved-palette selector. A **Scene** saves both layers and movement.
-HA actions accept `effect: snake`, `colors: [...]` for the background and
-`snake_colors: [...]` for the moving block; palette actions accept
-`layer: background` or `layer: snake`.
-
-For control through the stock Hue app without Home Assistant, see the separate
-experimental [Festavia Direct guided setup](hue-direct/GETTING_STARTED.md). Its
-standalone ZIP includes setup launchers, firmware and a Hue control guide. It
-uses Hue light controls and scenes, with its own qualification limits.
-
-## Install and connect
-
-Start with the [installation guide](docs/INSTALL.md) for the Home Assistant
-download, guided USB setup on Windows/macOS/Linux, private connection-file import, and ordinary wireless updates.
-
-Requires Home Assistant **2026.10 or newer**, a square Hue Bridge or Bridge Pro,
-and Festavia lights already paired to that bridge. HA Container and HAOS are
-supported; Supervisor is not required. Bridge Pro is physically tested. The
-original round bridge lacks the required local API v2 and is unsupported.
-
-1. Extract the integration ZIP and copy `custom_components/festavia_studio` into
-   your HA configuration's `custom_components` directory. Restart HA once.
-2. Open **Settings → Devices & services → Add integration → Festavia Studio**.
-3. Choose an existing HA Hue bridge, or enter another bridge's IP address and
-   authorize it with its physical link button.
-4. Select only the Festavia lights you want. Choose bridge gradients for static
-   colors, or individual puck effects with an ESP32-C6.
-5. For puck effects, upload the private connection file from the setup launcher.
-   The integration guides Zigbee joining and verifies fixture identity, firmware
-   and logical count.
-
-Add this public repository through **Settings → Marketplace → Add from link** on
-HA 2026.11+, or as a HACS custom repository on HA 2026.10. Choose the Integration
-category and enable prereleases to select **v0.13.0**. The integration and its
-optional card install together. Manual ZIP installation also works. This project
-is not in the default catalog or Home Assistant Core.
-
-## Use it in Home Assistant
-
-Open the **Festavia Studio device** under the integration. Its controls work
-without any custom card:
-
-| Control | Behavior |
-|---|---|
-| Effect light | Standard `light.turn_on`/`turn_off`, brightness and effect controls |
-| Palette | Ordered hex colors, such as `#ff0000, #00ff00, #9900ff`; one color per puck, repeated |
-| Speed / Reverse direction | Adjust the animation while it runs |
-| Color palette | Save/load ordered colors without changing the animation, speed, direction or brightness |
-| Scene | Save/load the complete setup: colors, animation, speed, direction and brightness |
-| Stop and restore | Restore the appearance captured before Studio playback |
-| Brightness limit | Installation cap, under Configuration; persists across reloads |
-| Allow Hue takeover | Native configuration switch: let Hue changes end Studio playback |
-| Return control to Hue | Stop sending without restoring an old scene |
-| Firmware | Standard HA update entity; installs the bundled verified ESP32 image over Wi-Fi |
-
-Starting works when Hue already has the lights on, including above Studio’s
-brightness limit. Native startup switches off before setting the effect level,
-then turns on; bridge mode sends the requested brightness with its power-on update.
-The limit applies to Studio effects; **Stop and restore** returns the
-captured Hue appearance, including its previous brightness.
-
-With **Allow Hue takeover** enabled, the ESP effect yields to Hue changes reported
-by the bridge and to Home Assistant light commands. It stops sending without
-restoring an older scene. Use **Return control to Hue** for an explicit handoff;
-Studio starts again only when you press its playback switch.
-
-The option is under the native device’s Configuration controls and under
-Configure → Playback ownership. It defaults to on. A missed HA ownership heartbeat
-for about ten seconds stops the effect on its current frame, allowing Hue to take
-control. This includes HA restarts that exceed the lease. Disabling the option
-keeps autonomous playback through HA restarts. Explicit Stop and restore remains
-available; integration reloads also restore a still-owned session.
-
-Hue reports state changes, not a complete command log. Repeating an identical
-command in the Hue app may produce no event. A value that matches Studio’s
-current colors or pulsing brightness can also be ambiguous because Hue reports
-ESP output too. Use Return control to Hue in those cases, or change a light
-setting outside the active output. HA light commands are detected separately,
-including repeats. Extended retained static scenes emit no ongoing color updates,
-so later Hue color events can yield even when they match a color in the palette.
-Expected setup power and captured baseline reports are filtered
-while Play is starting; matching Hue app commands can be ambiguous there too.
-The automatic option applies to ESP native playback; bridge
-mode sends static settings once and does not continually overwrite Hue.
-
-After using a Hue gradient or special effect, choose a solid color or white in
-Hue before starting native Studio playback. Arbitrary Hue effect snapshots cannot
-be recovered by the native firmware; the integration reports this requirement
-before changing the fixture.
-
-Edits while off save your controls without turning on the lights. Edits while
-playing update the running effect. Studio playback starts your saved controls. Save colors with **Festavia Studio: Save color palette**, or save a complete setup
-with **Save scene**. Both actions are available in the optional card. Existing saved
-items remain full scenes, with their colors and animations preserved. Configure offers
-scene/palette removal and Zigbee status.
-Use the integration menu's **Reconfigure** to change connections, fixtures or mode,
-or to recover unfinished playback.
-Diagnostics are available from the integration's normal download menu.
-
-### Optional visual palette card
-
-On your existing dashboard, choose **Edit → Add card → By card**, search for **Festavia Studio**,
-and select the Studio playback entity in its visual editor. The integration installs
-the card resource automatically. No separate frontend download is needed.
-
-For a YAML-managed dashboard, the equivalent card is:
-
-```yaml
-type: custom:festavia-studio-card
-entity: sensor.festavia_studio_playback
-title: Festavia
-```
-
-The integration registers the resource. Tap a numbered swatch to edit its color,
-use the touch color wheel or quick colors, add/remove/reorder colors, choose an
-animation and enable Studio playback. Save colors and full scenes separately. Edits save automatically.
-For a large static palette, select **Static repeat**, then **Fill with spectrum**
-to populate every puck with a different color. Tap any swatch to change it.
-There is no additional app to open or synchronize. Native controls and the card
-share the same saved state. After upgrading, refresh the HA page or reopen the
-Companion app once to load the updated card.
-
-| Animation | What it does |
-|---|---|
-| Static repeat | Repeat your exact ordered colors, one per puck |
-| Smooth flow | Scroll the palette continuously |
-| Step chase | Move by whole pucks, keeping your selected colors exact |
-| Bounce | Scroll out and back |
-| Color fade | Fade the entire fixture through the palette together |
-| Color wave | Move a rolling wave of palette colors |
-| Breathing | Fade the repeated colors up and down |
-| Heartbeat | Pulse the repeated colors twice per cycle |
-| Snake over background | Move a separate trail over a fixed background that returns behind it |
-
-In YAML-managed dashboards, add the module resource
-`/festavia_studio/festavia-studio-card.js` to your dashboard resources manually.
-
-## Compatibility and automatic sizing
-
-| Mode | Sizing | Support |
-|---|---|---|
-| Hue bridge gradient | Reported API gradient color points across selected strings | Static ordered palettes; points may blend across multiple physical lights |
-| ESP32 individual pucks | Automatically reads the actual count and checks Hue metadata and full map coverage | LCX030 Permanent / firmware 1.163.5; Any detected count from 1 through 48, including cut strings. Physical regression on 27 positions |
-
-Native mode detects **any installed count from 1 through 48 pucks** and supports
-one ordered static color per puck. This is a continuous range, not a list of
-supported pack sizes: 7, 19, 27, 43 and every other count in that range use the
-same setup. No manual kit-size setting or size-specific image is needed.
-Setup reads the fixture count, original geometry and region capacity; it checks
-Hue’s reported pixel count when available. Cut strings use their detected length.
-After physically cutting or extending a configured string, use the integration’s
-**Reconfigure** flow to discover its new length. Firmware **0.4.0** is required
-for the expanded renderer; paired devices update wirelessly through the Firmware
-entity. Other Festavia models or fixture firmware versions remain capability-gated.
-
-Setup, playback, saved palettes and the mobile editor are tested for **every
-count from 1 through 48**. The available physical installation reports 27. Other lengths
-have not been physically tested here. Please include model, firmware and detected
-count when contributing hardware results.
-
-The custom card and HA actions edit the full detected palette. HA text states have
-a 255-character limit, so the native Palette text entity shows an instruction to
-use the card when a palette exceeds that length.
-
-A finite series of full-coverage layouts applies colors to individual pucks,
-then restores and verifies Hue's original layout and addresses. The lamp
-holds the pattern without repeated map writes. Applying a large static palette
-takes several seconds; initial discovery/setup takes longer. It updates in
-sections rather than appearing everywhere at precisely the same instant.
-
-Single-palette animations support **1–9 ordered colors** and up to **10 requested
-updates per second**: smooth flow, step chase, bounce, color fade, color wave,
-breathing and heartbeat. Snake over background combines two palettes into at
-most nine repeating positions, as described above. All retain the native FC03
-transport; its nine-slot limit is unchanged.
-The card disables animations for larger palettes. Continuous remapping for
-high-count animation is not enabled because its persistence/write behavior is
-unverified. See [research and evidence](docs/RESEARCH.md#retained-individual-colors).
-
-Brightness/tone is shared across
-native palette colors. Native colors must be non-black and have equal RGB maximum
-values; unsupported palettes are rejected immediately with an HA error. The encoder does not support independent arbitrary puck
-dimming in this mode. The card maintains a shared tone when editing colors.
-One ESP32 controls one native fixture at a time. Bridge mode may select multiple
-Festavia strings, with sequential writes. Native multi-fixture synchronization
-is not claimed.
-
-Other quantities are read from each fixture, never hard-coded to the test house.
-Other model/firmware combinations need mapping verification before native mode
-is enabled. Marketing LED count, gradient points and native logical count are
-separate quantities. Renaming another Hue product “Festavia” does not qualify it.
-
-## First ESP32 installation
-
-Use an **ESP32-C6, 4 MB flash or larger, with UART0 USB-to-serial access**. Other
-ESP32 families are not interchangeable with its 802.15.4 radio. First installation
-needs USB once; routine updates retain Wi-Fi, TLS identity and Hue network and
-use the HA firmware entity. Keep the board powered during an update.
-
-Download and extract `festavia-studio-0.13.0.zip`, then open its **Setup Home
-Assistant** launcher for your computer. It prepares the tools, walks through USB
-and Wi-Fi setup, and creates a private connection file to upload in HA. See the
-[installation guide](docs/INSTALL.md) for the full flow, requirements
-and recovery. The advanced `tools/first-install.py` CLI remains available.
-Do not publish your connection file.
-
-For Zigbee joining, Hue's **Add lights → Search** opens the joining window.
-The API link button authorizes bridge access; it does not open Zigbee joining.
-Do not reset or remove the Festavia from Hue.
-
-## Actions and automations
-
-All visual edits use the same native actions. Examples:
-
-```yaml
-action: festavia_studio.set_palette
-data:
-  colors: ['#ff0000', '#00ff00', '#9900ff', '#ffff00']
-```
-
-```yaml
-action: light.turn_on
-target:
-  entity_id: light.festavia_studio_effect_light
-data:
-  brightness_pct: 10
-  effect: flow
-```
-
-Additional actions: `configure`, `play`, `load_palette`, `save_palette`, `delete_palette`,
-`load_scene`, `save_scene`, `delete_scene`, `stop`, `off`. Legacy `load_preset` and
-`save_preset` remain aliases for complete scenes.
-When multiple Studio entries exist, supply `entry_id` for Studio actions. Standard
-light/text/number/select/switch actions use ordinary entity targets.
-
-## Troubleshooting and removal
-
-If unavailable, check local HTTPS reachability from HA to bridge and ESP32,
-then Reconfigure. A certificate change requires verification and updated connection
-settings; TLS checks are not silently disabled. A light selection must still be
-present in the current bridge inventory and be a Festavia product. Native setup
-rejects unverified firmware/mapping combinations rather than guessing.
-
-If a captured light was permanently removed or replaced in Hue, use
-**Reconfigure → Recover removed lights**. Explicit confirmation restores every
-captured light still present and discards recovery only for missing Hue resource
-IDs. Then reconfigure the selection to choose replacements. An offline light
-still present in Hue is retained for recovery.
-
-Use **Stop and restore** before replacing fixtures or changing mode. The integration
-refuses selection changes while a recovery lease exists, including when the entry
-is unloaded. The effect light reports Studio playback ownership; its off state does
-not mirror a Hue light switched on independently. Turning the effect light off
-switches the selected lights off. Stop and restore restores the captured appearance
-and respects an external power-off.
-
-Reload and removal drain pending actions and restore playback. If a reload
-cannot reach the device, HA retries setup and restores the retained lease on
-reconnection, without getting stuck in Failed unload. Online removal
-cleans private state and the optional card resource when the last entry is removed.
-If restoration cannot be confirmed, **Settings → System → Repairs** keeps a
-persistent Festavia recovery notice, including after an HA restart. Reconnect the
-original equipment. If the entry still exists, use **Reconfigure → Recover
-playback** or reload it; connection changes belong in **Reconfigure → Connection**.
-If removed, **add Festavia Studio again**, select the original bridge/lights and
-confirm recovery when offered. Updated credentials can be entered during setup.
-The notice clears only after recovery. It deliberately offers no generic Repair
-confirmation when the component is unloaded. Do not manually delete recovery
-files before restoration. Remove any card you added yourself, then the component
-files. Removing the integration does not reset or unpair Hue lights or the ESP32.
-
-When connected through an existing HA Hue integration, Studio follows that entry's
-renewed key and changed address after verifying bridge identity and certificate.
-Manual authorization stays independent. Authentication failures start HA's normal
-reauthentication flow. A manually entered replacement Hue key detaches automatic
-key following; choose the Hue integration again in Reconfigure to reconnect it.
-Bridge hostnames are accepted when all DNS answers are private LAN/Tailscale IPs.
-A DHCP reservation for both bridge and ESP32 is still useful.
-
-The old experimental companion cannot be migrated automatically from an arbitrary
-installation. Its private installation, device credentials, palettes and journals
-must first be copied into `.storage/festavia_studio/<entry_id>/` by an administrator
-while the companion is stopped. The schema-1 migration then retains registry IDs.
-A missing private installation fails migration without discarding the old entry.
-Fresh installations use only the native flow described above.
-
-## Development and contribution
-
-See [HA design research](docs/HA_DESIGN.md), [acceptance results](docs/ACCEPTANCE.md), [contributing](CONTRIBUTING.md),
-[third-party notices](THIRD_PARTY_NOTICES.md), and [research](docs/RESEARCH.md).
-The firmware image/source manifest is checksum verified during packaging.
-Tests cover the actual HA runtime with simulated transports and separately cover
-protocol encoding, collision detection, restoration, OTA and mobile card behavior.
-Hardware acceptance is documented separately from simulated coverage. No HA
-Integration Quality Scale tier or Core/HACS acceptance is claimed.
+# Festavia Studio & Track
+
+**Festavia Studio** controls the colors and movement of your Philips Hue Festavia lights. **Festavia Track** is a printable soffit mount for Festavia permanent outdoor pucks. Use either project on its own, or mount a run with Track and light it with Studio.
+
+| Control the lights | Mount the pucks |
+| --- | --- |
+| [![Festavia Studio palette editor and animated preview in Home Assistant](docs/ui/01-ha-snake-desktop.jpg)](docs/UI_GUIDE.md) | [![Festavia pucks lighting the siding from a printed track above a garage](track/assets/installed-run.jpg)](track/README.md) |
+| [Set up Home Assistant](docs/INSTALL.md) · [Use the Hue app](hue-direct/GETTING_STARTED.md) | [Customize on MakerWorld](https://makerworld.com/en/models/3665672-festavia-track-modular-soffit-mount-for-hue) · [Download the complete track kit](https://raw.githubusercontent.com/Dyluhn/festavia-studio/track-downloads/v0.1.1/Festavia-MakerWorld.zip) |
+
+## Festavia Studio
+
+Build a palette in order, choose an effect and save it as a scene. Keep a red and green background fixed, for example, and send a white snake across it. Each puck returns to its background color as the snake passes. The lights stay paired to your Hue bridge.
+
+### Set up in Home Assistant
+
+1. **Choose your controls.** For static Hue gradients, start with Home Assistant 2026.10 or newer, a square Hue Bridge or Bridge Pro, and Festavia lights already paired to it. For individual puck colors and animations, add an ESP32-C6 with at least 4 MB flash and USB-to-UART access. Native effects support the Festavia Permanent LCX030 on firmware 1.163.5. [Hardware compatibility](docs/COMPATIBILITY.md)
+2. **Install Studio.** On HA 2026.11+, use **Settings → Marketplace → Add from link**. On HA 2026.10, add `https://github.com/Dyluhn/festavia-studio` to HACS as an **Integration**. Enable prereleases for **v0.13.0**. For manual installation or first-time C6 setup, choose the ZIP in the [installation guide](docs/INSTALL.md).
+3. **Connect and play.** Open **Settings → Devices & services → Add integration → Festavia Studio**. Select your bridge, lights and mode. For a new C6, run the **Setup Home Assistant** desktop launcher over USB and import its private connection file when prompted. On the Studio device, set a palette and enable playback. Routine controller updates run over Wi-Fi.
+
+For a visual color picker, open your dashboard and choose **Edit → Add card → Festavia Studio**. Tap a numbered swatch to change its color. Save a **palette** to reuse the colors or a **scene** to recall the colors, effect, speed, direction and brightness together. [See the controls and examples](docs/UI_GUIDE.md#home-assistant)
+
+### Use the Hue app instead
+
+Download **festavia-direct-0.5.1.zip** from the Studio release for a dedicated ESP32-C6. Extract it, connect the C6 by USB and start the **Setup** launcher for your computer. Select the existing Hue bridge and Festavia fixture. The installer creates a **Festavia Direct** zone and a preset scene. Open that zone in Hue to adjust the controls and recall scenes. Each C6 runs one controller edition at a time. [Hue-only setup](hue-direct/GETTING_STARTED.md) · [Hue controls in pictures](docs/UI_GUIDE.md#hue-only-with-festavia-direct)
+
+Native controller modes read the fixture’s actual puck count. Static palettes can use one color per detected puck, up to 48. Animations use up to nine repeating positions. [Full Studio guide, automations and troubleshooting](STUDIO.md) · [Software downloads](https://github.com/Dyluhn/festavia-studio/releases/tag/v0.13.0)
+
+## Festavia Track
+
+Build a straight run to fit your eaves and printer. Track holds each puck in a locking ring. Numbered sections join on the bench, then lift into sliding-lever soffit brackets. The mount works with the factory Hue setup and needs no controller or Home Assistant installation.
+
+1. **Measure.** Measure cap face to cap face along each straight side. Choose the puck spacing and enter your usable printer bed dimensions. Check the holder against your permanent puck, about 35 mm across with 49 × 20 mm mounting tabs. [Illustrated configuration guide](track/docs/Festavia-Configuration-Guide.pdf)
+2. **Design.** On MakerWorld select **Customize**, then choose **Festavia-Run** for a complete layout or **Festavia-Section** for a fit coupon or replacement. Select **Generate**, inspect **Assemble View** and download the plates. To work offline, extract the complete kit and open `workbench/index.html`. [MakerWorld walkthrough](track/makerworld/README.md)
+3. **Print and mount.** Keep the parts at 100% scale. For the reference PETG setup, use the built-in breakaway ribs on track sections and tree supports on bracket and lever plates. Lock each puck, pin the seams and close the bracket levers. For cable slack or the power supply, choose the optional boxes, covers and clips in **Festavia-Accessories**. [Assembly picture manual](track/docs/Festavia-Assembly-Manual.pdf) · [Accessory parts and fasteners](track/accessories/README.md)
+
+The included 15 ft example uses 16 in puck spacing on a 256 mm square bed. It produces **11 puck positions, 27 sections and 12 plates**. Change the measurements to generate your own layout. [Track source, settings and desktop exporter](track/README.md)
+
+## Help and contributions
+
+[Studio troubleshooting](STUDIO.md#troubleshooting-and-removal) · [Track fit and assembly](track/docs/ASSEMBLY.md#fit-first) · [Report an issue or a fit result](https://github.com/Dyluhn/festavia-studio/issues/new/choose) · [Contribute](CONTRIBUTING.md)
+
+Independent community projects for Philips Hue Festavia. [Studio license](LICENSE) · [Track license](track/LICENSE)
